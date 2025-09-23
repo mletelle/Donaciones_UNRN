@@ -66,7 +66,10 @@ public class AltaUsuario extends JFrame {
 		JButton aceptarButton = new JButton("Aceptar");
 		aceptarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
+				/// agregar validaciones
+				/// opcion 1: podrian colocarse excepciones en el caso de que hayan campos vacios
+				/// opcion 2: modificar a ENTITIES/Usuario, para que haga las validaciones ahí
+				/// opcion 3: Simplemente desactivar el boton "Aceptar" hasta que se completen los campos
 				RolDTO rol = roles.get(rolComboBox.getSelectedIndex());
 
 					api.registrarUsuario(usuarioTextField.getText(), contrasenaTextField.getText(),
