@@ -10,7 +10,7 @@ import ar.edu.unrn.seminario.modelo.Usuario;
 
 public class MemoryApi implements IApi {
 
-	private ArrayList<Rol> roles = new ArrayList();
+	private ArrayList<Rol> roles = new ArrayList<>();
 	private ArrayList<Usuario> usuarios = new ArrayList<>();
 
 	public MemoryApi() {
@@ -112,7 +112,8 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public void desactivarUsuario(String usuario) {
-		// TODO: desactivar usuario
+		Usuario user = this.buscarUsuario(usuario);
+		user.desactivar();
 	}
 
 	private Rol buscarRol(Integer codigo) {
