@@ -21,6 +21,7 @@ public class MemoryApi implements IApi {
 		this.roles.add(new Rol(3, "INVITADO"));
 		inicializarUsuarios();
 	}
+	//// two two one two
 
 	private void inicializarUsuarios() {
 		registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1);
