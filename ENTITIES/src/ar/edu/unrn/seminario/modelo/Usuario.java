@@ -9,7 +9,10 @@ public class Usuario {
 	private boolean activo;
 
 	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol) {
-
+		/// En caso de que se quiera hacer con excepciones (campos vacios en ventana/interfaz)
+		/// hay que crear una nueva clase llamada DataEmpty que extienda a exception
+		/// quedaria: public usuario(...) throws DataEmpty. Que conlleva cambios en demás clases (MemoryAPI,etc)
+		
 		this.usuario = usuario;
 		this.contrasena = contrasena;
 		this.nombre = nombre;
