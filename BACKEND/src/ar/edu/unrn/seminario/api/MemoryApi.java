@@ -14,14 +14,11 @@ public class MemoryApi implements IApi {
 	private ArrayList<Usuario> usuarios = new ArrayList<>();
 
 	public MemoryApi() {
-		/// saracatunga
-		// datos iniciales
 		this.roles.add(new Rol(1, "ADMIN"));
 		this.roles.add(new Rol(2, "ESTUDIANTE"));
 		this.roles.add(new Rol(3, "INVITADO"));
 		inicializarUsuarios();
 	}
-	//// two two one two
 
 	private void inicializarUsuarios() {
 		registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1);
@@ -29,8 +26,6 @@ public class MemoryApi implements IApi {
 		registrarUsuario("bjgorosito", "1234", "bjgorosito@unrn.edu.ar", "Bruno", 3);
 
 	}
-
-	@Override
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol) {
 
 		Rol role = this.buscarRol(rol);
@@ -39,7 +34,6 @@ public class MemoryApi implements IApi {
 
 	}
 
-	@Override
 	public List<UsuarioDTO> obtenerUsuarios() {
 		List<UsuarioDTO> dtos = new ArrayList<>();
 		for (Usuario u : this.usuarios) {
@@ -49,7 +43,6 @@ public class MemoryApi implements IApi {
 		return dtos;
 	}
 
-	@Override
 	public UsuarioDTO obtenerUsuario(String username) {
 		// TODO Auto-generated method stub
 		return null;

@@ -1,5 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
+import java.util.Date;
+
 public class Bien {
 
     // constantes 
@@ -17,6 +19,12 @@ public class Bien {
     private int cantidad;
     private int categoria;
 
+
+	private boolean perecedero;
+	private Date fecVec = new Date();
+    private Date fechaIngreso = new Date();
+    private String estado;
+    
     //constructores con todos los parametros
     public Bien(int tipo, int cantidad, int categoria) {
         this.tipo = tipo;
@@ -42,7 +50,7 @@ public class Bien {
         	this.categoria = CATEGORIA_ALTA;
         }
     }
-    //getters
+    //getters - setters
     public int obtenerTipo() {
         return tipo;
     }
@@ -54,6 +62,30 @@ public class Bien {
     public int obtenerCategoria() {
         return categoria;
     }
+    public Date getFecVec() {
+		return fecVec;
+	}
+	public void setFecVec(Date fecVec) {
+		this.fecVec = fecVec;
+	}
+	public Date getFechaIngreso() {
+		return fechaIngreso;
+	}
+	public void setFechaIngreso(Date fechaIngreso) {
+		this.fechaIngreso = fechaIngreso;
+	}
+	public String getEstado() {
+		return estado;
+	}
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+    public boolean isPerecedero() {
+		return perecedero;
+	}
+	public void setPerecedero(boolean perecedero) {
+		this.perecedero = perecedero;
+	}
     
     //calcular volumen: depende del tipo de bien
     //se utilizaria para saber el tipo de vehiculo necesario
@@ -95,7 +127,6 @@ public class Bien {
                 return "";
         }
     }
-
     @Override
         public String toString() {
             return cantidad + " x " + describirTipo() + describirCategoria();
