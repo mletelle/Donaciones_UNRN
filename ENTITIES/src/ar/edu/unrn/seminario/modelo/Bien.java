@@ -127,6 +127,17 @@ public class Bien {
                 return "";
         }
     }
+    // Sin implementacion
+    public void aceptarItem() {
+     System.out.println("Item aceptado");
+    }
+
+    public void rechazarItem() {
+     System.out.println("Item rechazado");
+    }
+    
+    
+    
     @Override
         public String toString() {
             return cantidad + " x " + describirTipo() + describirCategoria();
