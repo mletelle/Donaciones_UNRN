@@ -91,7 +91,7 @@ public class Bien {
     //se utilizaria para saber el tipo de vehiculo necesario
     //para transportar los bienes
     // no se usa en el main pero se deja por si se necesita
-    private double calcularVolumen() {
+    public double calcularVolumen() {
         if (tipo == TIPO_MOBILIARIO)// mobiliario ocupa medio metro cubico por unidad
             return cantidad * 0.5; 
         if (tipo == TIPO_ALIMENTO)
