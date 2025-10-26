@@ -116,4 +116,8 @@ public class Visita {
 	public List<Bien> obtenerBienes() {
 		return new ArrayList<>(bienesRetirados);
 	}
+	// Added method to retrieve associated vehicle
+	public Vehiculo obtenerVehiculo() {
+		return bienesRetirados.isEmpty() ? null : bienesRetirados.get(0).obtenerVehiculo();
+	}
 }

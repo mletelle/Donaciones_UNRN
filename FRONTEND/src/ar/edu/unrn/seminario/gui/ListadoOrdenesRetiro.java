@@ -29,7 +29,7 @@ public class ListadoOrdenesRetiro extends JFrame {
         tablaOrdenes = new JTable();
         tablaOrdenes.setModel(new DefaultTableModel(
             new Object[][] {},
-            new String[] {"ID", "Estado", "Fecha Creación"}
+            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} // Eliminado "ID"
         ));
 
         tablaOrdenes.addMouseListener(new MouseAdapter() {
@@ -55,7 +55,11 @@ public class ListadoOrdenesRetiro extends JFrame {
 
         List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesDeRetiro("PENDIENTE");
         for (OrdenRetiroDTO orden : ordenes) {
-            model.addRow(new Object[] {orden.getId(), orden.getEstado(), orden.getFechaCreacion()});
+            String estadoTexto = orden.getEstado() == 1 ? "Pendiente" : orden.getEstado() == 2 ? "En Ejecución" : "Completado";
+            String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehículo Desconocido";
+            String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
+
+            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); // Eliminado orden.getId()
         }
     }
 }

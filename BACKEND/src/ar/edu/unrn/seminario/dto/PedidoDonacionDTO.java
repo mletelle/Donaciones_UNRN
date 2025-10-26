@@ -1,7 +1,5 @@
 package ar.edu.unrn.seminario.dto;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
@@ -12,6 +10,9 @@ public class PedidoDonacionDTO {
     private String tipoVehiculo;
     private String observaciones;
     private int donanteId;
+    private String donante;
+    private String direccion;
+    private String estado;
 
     public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, String observaciones, int donanteId) {
         this.id = id;
@@ -36,6 +37,13 @@ public class PedidoDonacionDTO {
         this.observaciones = observaciones;
         this.donanteId = donanteId;
         this.bienes = bienes;
+    }
+
+    public PedidoDonacionDTO(int id, String donante, String direccion, String estado) {
+        this.id = id;
+        this.observaciones = estado;
+        this.tipoVehiculo = direccion;
+        this.fecha = donante;
     }
 
     public int getId() {
@@ -86,4 +94,36 @@ public class PedidoDonacionDTO {
         this.donanteId = donanteId;
     }
 
+    public String getDonante() {
+        return donante;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PedidoDonacionDTO that = (PedidoDonacionDTO) obj;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "PedidoDonacionDTO{" +
+                "id=" + id +
+                ", fecha='" + fecha + '\'' +
+                '}';
+    }
 }

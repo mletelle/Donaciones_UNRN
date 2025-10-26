@@ -97,6 +97,14 @@ public class PedidosDonacion {
         return this.donante != null ? this.donante.obtenerUbicacion() : "Ubicación no disponible";
     }
 
+    public String obtenerEstado() {
+        return ordenRetiro != null ? ordenRetiro.describirEstado() : "SIN ASIGNAR";
+    }
+
+    public String obtenerDireccion() {
+        return donante != null ? donante.obtenerUbicacion() : "Dirección no disponible";
+    }
+
     // relacion con la orden
     public void asignarOrden(OrdenRetiro o) {
         this.ordenRetiro = o;

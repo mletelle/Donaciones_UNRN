@@ -21,12 +21,13 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class AltaUsuario extends JFrame {
 
+
 	private JPanel contentPane;
 	private JTextField usuarioTextField;
 	private JTextField contrasenaTextField;
 	private JTextField nombreTextField;
 	private JTextField emailTextField;
-	private JComboBox rolComboBox;
+	private JComboBox<String> rolComboBox;
 
 	private List<RolDTO> roles = new ArrayList<>();
 
@@ -115,7 +116,7 @@ public class AltaUsuario extends JFrame {
 		contentPane.add(emailTextField);
 		emailTextField.setColumns(10);
 
-		rolComboBox = new JComboBox();
+		rolComboBox = new JComboBox<>();
 		rolComboBox.setBounds(148, 151, 160, 22);
 		contentPane.add(rolComboBox);
 

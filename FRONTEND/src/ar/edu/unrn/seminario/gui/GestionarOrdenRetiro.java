@@ -83,13 +83,8 @@ public class GestionarOrdenRetiro extends JFrame {
             String observacion = JOptionPane.showInputDialog(this, "Ingrese una observación:");
             String bienes = JOptionPane.showInputDialog(this, "Ingrese los bienes separados por comas:");
 
-            VisitaDTO visita = new VisitaDTO(
-                new java.text.SimpleDateFormat("dd/MM/yyyy").parse(fecha),
-                observacion,
-                List.of(bienes.split(","))
-            );
-
-            api.registrarVisita(idOrden, visita);
+            List<String> bienesList = List.of(bienes.split(","));
+            api.registrarVisita(idOrden, new VisitaDTO(fecha, observacion, bienesList));
             cargarDatos();
             JOptionPane.showMessageDialog(this, "Visita registrada con éxito.");
         } catch (Exception ex) {

@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ar.edu.unrn.seminario.modelo.Visita;
-import ar.edu.unrn.seminario.dto.VisitaDTO;
-
 public class OrdenRetiroDTO {
     private int id;
     private int estado;
     private Date fechaCreacion;
     private List<VisitaDTO> visitas;
+    private String donante;
+    private String vehiculo;
+    private String voluntario;
 
     public OrdenRetiroDTO(int id, int estado, Date fechaCreacion) {
         this.id = id;
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
-        this.visitas = new ArrayList<>(); 
+        this.visitas = new ArrayList<>();
     }
 
     public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas) {
@@ -27,21 +27,21 @@ public class OrdenRetiroDTO {
         this.visitas = visitas;
     }
 
-    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<Visita> visitas) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = new ArrayList<>();
-        for (Visita visita : visitas) {
-            this.visitas.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), visita.obtenerBienes()));
-        }
-    }
-
     public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas, boolean convertToDTO) {
         this.id = id;
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
         this.visitas = visitas;
+    }
+
+    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
+        this.id = id;
+        this.estado = estado;
+        this.fechaCreacion = fechaCreacion;
+        this.visitas = visitas;
+        this.donante = donante;
+        this.vehiculo = vehiculo;
+        this.voluntario = voluntario;
     }
 
     public int getId() {
@@ -74,5 +74,33 @@ public class OrdenRetiroDTO {
 
     public void setVisitas(List<VisitaDTO> visitas) {
         this.visitas = visitas;
+    }
+
+    public String getDonante() {
+        return donante;
+    }
+
+    public void setDonante(String donante) {
+        this.donante = donante;
+    }
+
+    public String getVehiculo() {
+        return vehiculo;
+    }
+
+    public void setVehiculo(String vehiculo) {
+        this.vehiculo = vehiculo;
+    }
+
+    public String getVoluntario() {
+        return voluntario;
+    }
+
+    public void setVoluntario(String voluntario) {
+        this.voluntario = voluntario;
+    }
+
+    public String getDescripcion() {
+        return "Donante: " + donante + ", Vehículo: " + vehiculo + ", Voluntario: " + voluntario;
     }
 }

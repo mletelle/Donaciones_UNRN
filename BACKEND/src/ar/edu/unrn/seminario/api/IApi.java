@@ -7,6 +7,7 @@ import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
@@ -43,6 +44,8 @@ public interface IApi {
 
 	List<PedidoDonacionDTO> obtenerPedidosPendientes();
 
+	List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
+
 	void generarOrdenRetiro(int idPedidoDonacion) throws ObjetoNuloException, ReglaNegocioException;
 
 	List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
@@ -52,4 +55,10 @@ public interface IApi {
 	void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException;
 
 	void actualizarEstadoOrdenRetiro(int idOrdenRetiro, int nuevoEstado) throws ReglaNegocioException;
+
+	List<VoluntarioDTO> obtenerVoluntarios();
+
+	void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
+
+	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 }

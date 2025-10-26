@@ -24,6 +24,7 @@ public class Bien {
     private Date fecVec = new Date();
     private Date fechaIngreso = new Date();
     private String estado;
+    private Vehiculo vehiculo;
     
     //constructores con todos los parametros
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
@@ -50,6 +51,10 @@ public class Bien {
         this.tipo = TIPO_ALIMENTO; 
         this.cantidad = 1; 
         this.categoria = CATEGORIA_MEDIA;
+    }
+    public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
+        this(tipo, cantidad, categoria);
+        this.vehiculo = vehiculo;
     }
     //getters - setters
     public int obtenerTipo() {
@@ -137,7 +142,14 @@ public class Bien {
      System.out.println("Item rechazado");
     }
     
+    // Added method to retrieve associated vehicle
+    public Vehiculo obtenerVehiculo() {
+        return vehiculo;
+    }
     
+    public void asignarVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
+    }
     
     @Override
         public String toString() {

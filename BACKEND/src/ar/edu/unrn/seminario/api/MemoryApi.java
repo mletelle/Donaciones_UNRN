@@ -16,6 +16,7 @@ import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
 import ar.edu.unrn.seminario.dto.BienDTO;
+import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
@@ -26,8 +27,9 @@ import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Rol;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Visita;
-import ar.edu.unrn.seminario.modelo.Ubicacion;
 import ar.edu.unrn.seminario.modelo.Voluntario;
+import ar.edu.unrn.seminario.modelo.Ubicacion;
+import ar.edu.unrn.seminario.modelo.Vehiculo;
 
 public class MemoryApi implements IApi {
 
@@ -37,6 +39,7 @@ public class MemoryApi implements IApi {
 	private List<PedidosDonacion> pedidos = new ArrayList<>();
 	private List<OrdenRetiro> ordenes = new ArrayList<>();
 	private ArrayList<Voluntario> voluntarios = new ArrayList<>();
+	private ArrayList<Vehiculo> vehiculosDisponibles = new ArrayList<>(); // Lista para vehículos fijos
 
 	public MemoryApi() throws CampoVacioException {
 		this.roles.add(new Rol(1, "ADMIN"));
@@ -46,6 +49,7 @@ public class MemoryApi implements IApi {
 		inicializarDonantes();
 		inicializarPedidos();
 		inicializarVoluntarios();
+		inicializarVehiculos(); // Añadir inicialización de vehículos
 	}
 
 	private void inicializarUsuarios() {
@@ -71,20 +75,23 @@ public class MemoryApi implements IApi {
 		try {
 			Donante donante1 = this.donantes.get(0);
 			List<Bien> bienes1 = new ArrayList<>();
-			bienes1.add(new Bien(1, 10, 2)); 
+			Vehiculo vehiculo1 = new Vehiculo("ABC123", "Disponible", "Camioneta", 1000);
+			bienes1.add(new Bien(1, 10, 2, vehiculo1)); 
 			this.pedidos.add(new PedidosDonacion(new Date(), new ArrayList<>(bienes1), PedidosDonacion.getVehiculoCamioneta(), "Sin observaciones", donante1));
 
 			if (this.donantes.size() > 1) {
 				Donante donante2 = this.donantes.get(1);
 				List<Bien> bienes2 = new ArrayList<>();
-				bienes2.add(new Bien(2, 5, 1)); 
-				bienes2.add(new Bien(3, 1, 3));
+				Vehiculo vehiculo2 = new Vehiculo("DEF456", "Disponible", "Camión", 5000);
+				bienes2.add(new Bien(2, 5, 1, vehiculo2)); 
+				bienes2.add(new Bien(3, 1, 3, vehiculo2));
 				Date fecha2 = new Date(System.currentTimeMillis() - 86400000); 
 				this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), PedidosDonacion.getVehiculoCamion(), "Mueble grande", donante2));
 			}
 
 			List<Bien> bienes3 = new ArrayList<>();
-			bienes3.add(new Bien(4, 15, 2)); 
+			Vehiculo vehiculo3 = new Vehiculo("GHI789", "Disponible", "Auto", 500);
+			bienes3.add(new Bien(4, 15, 2, vehiculo3)); 
 			Date fecha3 = new Date(System.currentTimeMillis() - 172800000); 
 			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), PedidosDonacion.getVehiculoAuto(), "Cajas pequeñas", donante1));
 		} catch (CampoVacioException | ObjetoNuloException e) {
@@ -93,9 +100,20 @@ public class MemoryApi implements IApi {
 	}
 
 	private void inicializarVoluntarios() {
-			this.voluntarios.add(new Voluntario("Carlos", "Lopez", "Zona Norte"));
-			this.voluntarios.add(new Voluntario("Ana", "Martinez", "Zona Sur"));
-			this.voluntarios.add(new Voluntario("Luis", "Gomez", "Zona Centro"));
+			try {
+				this.voluntarios.add(new Voluntario("Carlos", "Lopez", 12345678, new Ubicacion("Calle Falsa 123", "Zona Norte", "Barrio Norte", 0.0, 0.0)));
+				this.voluntarios.add(new Voluntario("Ana", "Martinez", 87654321, new Ubicacion("Calle Verdadera 456", "Zona Sur", "Barrio Sur", 0.0, 0.0)));
+				this.voluntarios.add(new Voluntario("Luis", "Gomez", 11223344, new Ubicacion("Avenida Siempre Viva", "Zona Centro", "Barrio Centro", 0.0, 0.0)));
+			} catch (CampoVacioException | ObjetoNuloException e) {
+				e.printStackTrace();
+			}
+	}
+
+	private void inicializarVehiculos() {
+	    // Hardcodear 3 vehículos fijos con patentes argentinas y datos inventados
+	    this.vehiculosDisponibles.add(new Vehiculo("AE 123 CD", "Disponible", "Auto", 500)); // Auto
+	    this.vehiculosDisponibles.add(new Vehiculo("AD 456 EF", "Disponible", "Camioneta", 1500)); // Camioneta
+	    this.vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camión", 4000)); // Camión
 	}
 
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol) throws CampoVacioException, ObjetoNuloException {
@@ -190,9 +208,10 @@ public class MemoryApi implements IApi {
 		}
 
 		ArrayList<Bien> bienes = new ArrayList<>();
-		for (BienDTO bienDTO : pedidoDTO.getBienes()) {
-			bienes.add(new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), bienDTO.getCategoria()));
-		}
+		Vehiculo vehiculo = new Vehiculo("XYZ123", "Disponible", "Camioneta", 1000);
+        for (BienDTO bienDTO : pedidoDTO.getBienes()) {
+            bienes.add(new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), bienDTO.getCategoria(), vehiculo));
+        }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
@@ -245,6 +264,9 @@ public class MemoryApi implements IApi {
 		if (pedido.obtenerOrden() != null) {
 			throw new ReglaNegocioException("El pedido ya tiene una orden de retiro asignada.");
 		}
+		if (pedido.obtenerDonante() == null) {
+			throw new ObjetoNuloException("El pedido de donación no tiene un donante asignado.");
+		}
 
 		OrdenRetiro orden = new OrdenRetiro(pedido, pedido.obtenerUbicacion());
 		pedido.asignarOrden(orden);
@@ -252,10 +274,12 @@ public class MemoryApi implements IApi {
 
 		List<VisitaDTO> visitasDTO = new ArrayList<>();
 		for (Visita visita : orden.obtenerVisitas()) {
-			visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), visita.obtenerBienes()));
+			visitasDTO.add(new VisitaDTO(
+				visita.obtenerFechaFormateada(),
+				visita.obtenerObservacion(),
+				convertirBienesAStrings(visita.obtenerBienes())
+			));
 		}
-
-		OrdenRetiroDTO ordenDTO = new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), new ArrayList<VisitaDTO>());
 	}
 
 	@Override
@@ -265,9 +289,12 @@ public class MemoryApi implements IApi {
 			if (orden.describirEstado().equalsIgnoreCase(estado)) {
 				List<VisitaDTO> visitasDTO = new ArrayList<>();
 				for (Visita visita : orden.obtenerVisitas()) {
-					visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), visita.obtenerBienes(), true));
+					visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
 				}
-				ordenesFiltradas.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), visitasDTO));
+				String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
+				String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehículo Desconocido";
+				String voluntario = orden.obtenerVoluntarioPrincipal() != null ? orden.obtenerVoluntarioPrincipal().obtenerNombre() : "Voluntario Desconocido";
+				ordenesFiltradas.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), visitasDTO, donante, vehiculo, voluntario));
 			}
 		}
 		return ordenesFiltradas;
@@ -277,7 +304,8 @@ public class MemoryApi implements IApi {
 	public OrdenRetiroDTO obtenerOrdenDeRetiroDetalle(int idOrden) {
 		for (OrdenRetiro orden : ordenes) {
 			if (orden.obtenerId() == idOrden) {
-				return new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), orden.obtenerVisitas());
+				// Adjusted constructor call for OrdenRetiroDTO to match the defined constructors
+				return new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), new ArrayList<>());
 			}
 		}
 		return null;
@@ -289,7 +317,20 @@ public class MemoryApi implements IApi {
 		if (orden == null) {
 			throw new ObjetoNuloException("La orden de retiro no existe.");
 		}
-		Visita visita = new Visita(visitaDTO.getFechaDeVisita(), visitaDTO.getObservacion(), convertirBienes(visitaDTO.getBienesRetirados()));
+
+		// Parse the date string from DTO
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		LocalDateTime fechaVisita = LocalDate.parse(visitaDTO.getFechaDeVisita(), formatter).atStartOfDay();
+		Date fechaVisitaDate = Date.from(fechaVisita.atZone(ZoneId.systemDefault()).toInstant());
+
+		List<Bien> bienesConvertidos = convertirBienes(visitaDTO.getBienesRetirados());
+
+		// Call the correct Visita constructor
+		Visita visita = new Visita(
+            fechaVisitaDate,
+            visitaDTO.getObservacion(),
+            bienesConvertidos
+        );
 		orden.agregarVisita(visita);
 	}
 
@@ -347,54 +388,109 @@ public class MemoryApi implements IApi {
 
 	private List<Bien> convertirBienes(List<String> bienesStr) throws CampoVacioException {
 		List<Bien> bienes = new ArrayList<>();
-		for (String bienStr : bienesStr) {
-			String[] parts = bienStr.split(","); 
-			if (parts.length != 3) {
-				throw new CampoVacioException("Formato de bien inválido: " + bienStr);
-			}
-			int tipo = mapTipo(parts[0]);
-			int cantidad = Integer.parseInt(parts[1]);
-			int categoria = Integer.parseInt(parts[2]);
-			bienes.add(new Bien(tipo, cantidad, categoria));
+		for (String nombreBien : bienesStr) {
+			bienes.add(new Bien(nombreBien.trim()));
 		}
 		return bienes;
 	}
 
-	private int mapTipo(String tipoStr) throws CampoVacioException {
-		switch (tipoStr.toLowerCase()) {
-			case "alimento":
-				return 1; // TIPO_ALIMENTO
-			case "ropa":
-				return 2; // TIPO_ROPA
-			case "mobiliario":
-				return 3; // TIPO_MOBILIARIO
-			case "higiene":
-				return 4; // TIPO_HIGIENE
-			default:
-				throw new CampoVacioException("Tipo desconocido: " + tipoStr);
+	@Override
+	public List<VoluntarioDTO> obtenerVoluntarios() {
+		List<VoluntarioDTO> voluntariosDTO = new ArrayList<>();
+		for (Voluntario voluntario : this.voluntarios) {
+			voluntariosDTO.add(new VoluntarioDTO(voluntario.obtenerId(), voluntario.obtenerNombre(), voluntario.obtenerApellido()));
 		}
+		return voluntariosDTO;
 	}
 
 	@Override
-	public List<PedidoDonacionDTO> obtenerPedidos() {
-		List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
-
-		for (PedidosDonacion pedido : pedidos) {
-			List<BienDTO> bienesDTO = new ArrayList<>();
-			for (Bien bien : pedido.obtenerBienes()) {
-				bienesDTO.add(new BienDTO(bien.getTipo(), bien.getCantidad(), bien.getCategoria()));
-			}
-
-			pedidosDTO.add(new PedidoDonacionDTO(
-				pedido.obtenerId(),
-				pedido.obtenerFecha().toString(),
-				pedido.describirTipoVehiculo(),
-				pedido.obtenerObservaciones(),
-				pedido.obtenerDonante().obtenerDni(),
-				bienesDTO
-			));
+	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException {
+		Voluntario voluntario = buscarVoluntarioPorId(idVoluntario);
+		if (voluntario == null) {
+			throw new ObjetoNuloException("Voluntario no encontrado.");
 		}
 
-		return pedidosDTO;
+		List<PedidosDonacion> pedidosAAsignar = new ArrayList<>();
+		for (Integer idPedido : idsPedidos) {
+			PedidosDonacion pedido = buscarPedidoPorId(idPedido);
+			if (pedido == null) {
+				throw new ObjetoNuloException("Pedido no encontrado.");
+			}
+			if (pedido.obtenerOrden() != null) {
+				throw new ReglaNegocioException("El pedido ya tiene una orden asignada.");
+			}
+			pedidosAAsignar.add(pedido);
+		}
+
+		OrdenRetiro nuevaOrden = new OrdenRetiro(voluntario, tipoVehiculo);
+
+		// Buscar un vehículo disponible del tipo requerido en la lista fija
+		Vehiculo vehiculoAsignado = null;
+		for (Vehiculo v : vehiculosDisponibles) {
+			if (v.getTipoVeh().equalsIgnoreCase(tipoVehiculo) && v.getEstado().equals("Disponible")) {
+				vehiculoAsignado = v;
+				break; // Asigna el primer vehículo disponible encontrado
+			}
+		}
+
+		nuevaOrden.asignarVehiculo(vehiculoAsignado);
+
+		for (PedidosDonacion pedido : pedidosAAsignar) {
+			pedido.asignarOrden(nuevaOrden);
+		}
+		this.ordenes.add(nuevaOrden);
+	}
+
+	private Voluntario buscarVoluntarioPorId(int idVoluntario) {
+		for (Voluntario voluntario : this.voluntarios) {
+			if (voluntario.obtenerId() == idVoluntario) {
+				return voluntario;
+			}
+		}
+		return null;
+	}
+
+	private List<String> convertirBienesAStrings(List<Bien> bienes) {
+        List<String> bienesStr = new ArrayList<>();
+        for (Bien bien : bienes) {
+            bienesStr.add(bien.toString()); // Assuming `Bien` has a meaningful `toString` implementation
+        }
+        return bienesStr;
+    }
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) {
+		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
+		for (OrdenRetiro orden : this.ordenes) {
+			if (orden.getVoluntario().getNombre().equals(voluntario)) {
+				ordenesAsignadas.add(new OrdenRetiroDTO(
+					orden.getId(),
+					orden.getEstado(),
+					orden.getFechaCreacion(),
+					null, // Visitas no incluidas en este contexto
+					orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
+					orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehículo",
+					orden.getVoluntario() != null ? orden.getVoluntario().getNombre() : "Sin Voluntario"
+				));
+			}
+		}
+		return ordenesAsignadas;
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
+	    List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
+	    for (OrdenRetiro orden : this.ordenes) {
+	        if (orden.getId() == idOrden) {
+	            PedidosDonacion pedido = orden.obtenerPedidoOrigen();
+	            pedidosDTO.add(new PedidoDonacionDTO(
+	                pedido.obtenerId(),
+	                pedido.obtenerDonante().getNombre(),
+	                pedido.obtenerDonante().getDireccion(),
+	                pedido.obtenerEstado()
+	            ));
+	        }
+	    }
+	    return pedidosDTO;
 	}
 }

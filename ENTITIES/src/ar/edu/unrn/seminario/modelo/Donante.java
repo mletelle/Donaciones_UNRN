@@ -53,4 +53,13 @@ public class Donante extends Persona {
         System.out.println("Donante " + this + ": " + mensaje);
     }
 
+    // Fixed method to use `obtenerNombre`
+    public String getNombre() {
+        return super.obtenerNombre();
+    }
+
+    public String getDireccion() {
+        return this.obtenerUbicacion();
+    }
+
 }

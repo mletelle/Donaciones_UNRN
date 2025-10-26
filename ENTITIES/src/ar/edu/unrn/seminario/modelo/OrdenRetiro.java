@@ -17,9 +17,11 @@ public class OrdenRetiro {
     private Date fechaGeneracion = new Date();
     private int estado;
     private Ubicacion destino;
-    private ArrayList<Colaborador> colaboradores;
+    private ArrayList<Voluntario> voluntarios;
     private PedidosDonacion pedidoOrigen;
     private ArrayList<Visita> visitas;
+    private int id;
+    private Vehiculo vehiculo;
 
     
 
@@ -29,10 +31,11 @@ public class OrdenRetiro {
         if (pedido == null) {
             throw new ObjetoNuloException("El pedido de donación no puede ser nulo.");
         }
+        this.id = ++secuencia;
         this.estado = ESTADO_PENDIENTE;
         this.destino = dest;
         this.pedidoOrigen = pedido;
-        this.colaboradores = new ArrayList<Colaborador>();
+        this.voluntarios = new ArrayList<Voluntario>();
         this.visitas = new ArrayList<Visita>();
         pedido.asignarOrden(this);
     }
@@ -44,15 +47,28 @@ public class OrdenRetiro {
         this.estado = ESTADO_PENDIENTE;
         this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // Assuming default values for Ubicacion
         this.pedidoOrigen = pedido;
-        this.colaboradores = new ArrayList<>();
+        this.voluntarios = new ArrayList<>();
         this.visitas = new ArrayList<>();
         pedido.asignarOrden(this);
     }
 
+    // constructor to handle multiple PedidosDonacion and Voluntario
+    public OrdenRetiro(Voluntario voluntario, String tipoVehiculo) {
+        this.estado = ESTADO_PENDIENTE;
+        this.voluntarios = new ArrayList<>();
+        this.visitas = new ArrayList<>();
+        this.voluntarios.add(voluntario);
+        this.destino = null; // Default destination, can be updated later
+        this.pedidoOrigen = null; // Default, as multiple pedidos can be associated
+    }
+
     // metodos
     // asignacion de voluntario
-    public void asignarVoluntario(Colaborador c) {
-        colaboradores.add(c);
+    public void asignarVoluntario(Voluntario voluntario) {
+        if (this.voluntarios == null) {
+            this.voluntarios = new ArrayList<>();
+        }
+        this.voluntarios.add(voluntario);
     }
   
     // actualizacion de estado
@@ -68,15 +84,15 @@ public class OrdenRetiro {
 	public boolean estaCompletada() {
 		return estado == ESTADO_COMPLETADO;
 	}
-    public Colaborador obtenerVoluntario() {
-      if (colaboradores.isEmpty()) {
-          return null; // No hay colaboradores disponibles
+    public Voluntario obtenerPrimerVoluntario() {
+      if (voluntarios.isEmpty()) {
+          return null; // No hay voluntarios disponibles
       }
-      return colaboradores.get(0); // Devuelve el primero de la lista
+      return voluntarios.get(0); // Devuelve el primero de la lista
     }
   
     public int obtenerId() {
-        return secuencia;
+        return this.id;
     }
 
     public Date obtenerFechaCreacion() {
@@ -108,5 +124,50 @@ public class OrdenRetiro {
 
     public void agregarVisita(Visita visita) {
         this.visitas.add(visita);
+    }
+
+    // Added methods to retrieve Donante and Vehiculo
+    public Donante obtenerDonante() {
+        return this.pedidoOrigen != null ? this.pedidoOrigen.obtenerDonante() : null;
+    }
+
+    public Vehiculo obtenerVehiculo() {
+        return this.vehiculo;
+    }
+
+    public void asignarVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
+    }
+
+    public Voluntario obtenerVoluntarioPrincipal() {
+        return voluntarios.isEmpty() ? null : voluntarios.get(0);
+    }
+
+    public Voluntario getVoluntario() {
+        return obtenerVoluntarioPrincipal();
+    }
+
+    public int getId() {
+        return obtenerId();
+    }
+
+    public int getEstado() {
+        return obtenerEstado();
+    }
+
+    public Date getFechaCreacion() {
+        return obtenerFechaCreacion();
+    }
+
+    public Donante getDonante() {
+        return obtenerDonante();
+    }
+
+    public Vehiculo getVehiculo() {
+        return obtenerVehiculo();
+    }
+
+    public PedidosDonacion obtenerPedidoOrigen() {
+        return this.pedidoOrigen;
     }
 }

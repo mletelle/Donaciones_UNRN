@@ -77,4 +77,24 @@ public class UsuarioDTO {
 		this.estado = estado;
 	}
 
+	@Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        UsuarioDTO that = (UsuarioDTO) obj;
+        return username.equals(that.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return username.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "UsuarioDTO{" +
+                "username='" + username + '\'' +
+                ", nombre='" + nombre + '\'' +
+                '}';
+    }
 }
