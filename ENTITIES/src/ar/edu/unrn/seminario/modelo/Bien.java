@@ -2,6 +2,8 @@ package ar.edu.unrn.seminario.modelo;
 
 import java.util.Date;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+
 public class Bien {
 
     // constantes 
@@ -18,37 +20,36 @@ public class Bien {
     private int tipo;
     private int cantidad;
     private int categoria;
-
-
-	private boolean perecedero;
-	private Date fecVec = new Date();
+    private boolean perecedero;
+    private Date fecVec = new Date();
     private Date fechaIngreso = new Date();
     private String estado;
     
     //constructores con todos los parametros
-    public Bien(int tipo, int cantidad, int categoria) {
+    public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
+        if (cantidad <= 0) {
+            throw new CampoVacioException("La cantidad debe ser mayor a cero.");
+        }
+        if (categoria < CATEGORIA_BAJA || categoria > CATEGORIA_ALTA) {
+            throw new CampoVacioException("La categoría es inválida.");
+        }
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.categoria = categoria;
     }
-    public Bien(String tipo, int cantidad, String cat) {
-        this.cantidad = cantidad;
-        if (tipo.equalsIgnoreCase("alimento")) {
-        	this.tipo = TIPO_ALIMENTO;
-        }else if (tipo.equalsIgnoreCase("ropa")) {
-        	this.tipo = TIPO_ROPA;
-        }else if (tipo.equalsIgnoreCase("mobiliario")) {
-        	this.tipo = TIPO_MOBILIARIO;
-        }else {
-        	this.tipo = TIPO_HIGIENE;
+    public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
+        this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
+        if (tipo == null || tipo.isEmpty()) {
+            throw new CampoVacioException("El tipo no puede estar vacío.");
         }
-        if (cat.equalsIgnoreCase("baja")) {
-        	this.categoria = CATEGORIA_BAJA;
-        }else if (cat.equalsIgnoreCase("media")) {
-        	this.categoria = CATEGORIA_MEDIA;
-        }else {
-        	this.categoria = CATEGORIA_ALTA;
+    }
+    public Bien(String tipo) throws CampoVacioException {
+        if (tipo == null || tipo.trim().isEmpty()) {
+            throw new CampoVacioException("El tipo no puede ser nulo o vacío.");
         }
+        this.tipo = TIPO_ALIMENTO; 
+        this.cantidad = 1; 
+        this.categoria = CATEGORIA_MEDIA;
     }
     //getters - setters
     public int obtenerTipo() {

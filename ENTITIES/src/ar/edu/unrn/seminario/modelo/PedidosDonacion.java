@@ -1,7 +1,13 @@
 package ar.edu.unrn.seminario.modelo;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class PedidosDonacion {
 
@@ -23,7 +29,16 @@ public class PedidosDonacion {
     private OrdenRetiro ordenRetiro; // 1 a 1
 
     // constructor con todos los parametros
-    public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) {
+    public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+        if (fecha == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula.");
+        }
+        if (bienes == null || bienes.isEmpty()) {
+            throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+        }
+        if (d == null) {
+            throw new ObjetoNuloException("El donante no puede ser nulo.");
+        }
         this.id = ++secuencia;//preincremta para arrancar desde el 1
         this.fecha = fecha;
         this.bienes = bienes;
@@ -31,26 +46,23 @@ public class PedidosDonacion {
         this.observaciones = observaciones;
         this.donante = d;
     }
-    public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) {
-        this.id = ++secuencia;//preincremta para arrancar desde el 1
-        this.fecha = fecha;
-        this.bienes = bienes;
-        this.observaciones = observaciones;
-        this.donante = d;
-        if (tipo.equalsIgnoreCase("auto")) {
-        	this.tipoVehiculo = 1;
-        }else if(tipo.equalsIgnoreCase("camioneta")) {
-        	this.tipoVehiculo = 2;
-        }else {
-        	this.tipoVehiculo = 3;
-
-        };
+    public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+        this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
+    }
+    public PedidosDonacion(String tipo, ArrayList<Bien> bienes, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
+        this(new Date(), bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, donante);
     }
     // constructor sin fecha (usa la actual)
-    public PedidosDonacion(ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) {
+    public PedidosDonacion(ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
         this(new Date(), bienes, tipoVehiculo, observaciones, d);
     }
 
+	// constructor to accept LocalDateTime
+	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
+		this(Date.from(fecha.atZone(ZoneId.systemDefault()).toInstant()), new ArrayList<>(bienes),
+			 tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION,
+			 observaciones, donante);
+	}
     // getters
     public int obtenerId() {
         return id;
@@ -75,7 +87,16 @@ public class PedidosDonacion {
     public OrdenRetiro obtenerOrden() {
         return ordenRetiro;
     }
-  
+
+    public String obtenerObservaciones() {
+        return this.observaciones;
+    }
+
+    public String obtenerUbicacion() {
+        // Assuming ubicacion is derived from donante or another attribute
+        return this.donante != null ? this.donante.obtenerUbicacion() : "Ubicación no disponible";
+    }
+
     // relacion con la orden
     public void asignarOrden(OrdenRetiro o) {
         this.ordenRetiro = o;
@@ -89,14 +110,14 @@ public class PedidosDonacion {
     }
   
     // metodo de ayuda para el toString
-    private String describirTipoVehiculo() {
+    public String describirTipoVehiculo() {
         switch (tipoVehiculo) {
             case VEHICULO_AUTO:
                 return "AUTO";
             case VEHICULO_CAMIONETA:
                 return "CAMIONETA";
             case VEHICULO_CAMION:
-                return "CAMIoN";
+                return "CAMION";
             default:
                 return "DESCONOCIDO";
         }
@@ -106,4 +127,16 @@ public class PedidosDonacion {
         (this.tipoVehiculo==obj.tipoVehiculo)&&
         (this.donante.equals(obj.donante));
     } 
+
+    public static int getVehiculoAuto() {
+        return VEHICULO_AUTO;
+    }
+
+    public static int getVehiculoCamioneta() {
+        return VEHICULO_CAMIONETA;
+    }
+
+    public static int getVehiculoCamion() {
+        return VEHICULO_CAMION;
+    }
 }

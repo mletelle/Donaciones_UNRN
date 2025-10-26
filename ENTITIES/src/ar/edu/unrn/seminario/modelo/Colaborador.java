@@ -1,14 +1,17 @@
 package ar.edu.unrn.seminario.modelo;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
 public class Colaborador extends Persona {
     // mantiene la orden en curso o null si no hay ninguna asignada
     private OrdenRetiro ordenActual;
 
     // constructores
-    public Colaborador(String nom, String ape, int dni, Ubicacion ubi) {
+    public Colaborador(String nom, String ape, int dni, Ubicacion ubi) throws CampoVacioException, ObjetoNuloException {
         super(nom, ape, dni, ubi);
     }
-    public Colaborador(String nom, String ape, int dni) {
+    public Colaborador(String nom, String ape, int dni) throws CampoVacioException {
         super(nom, ape, dni);
     }
 

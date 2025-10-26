@@ -3,6 +3,8 @@ package ar.edu.unrn.seminario.modelo;
 import java.util.ArrayList;
 import java.util.Date;
 
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
 public class OrdenRetiro {
 
     // variables y catalogos
@@ -17,16 +19,33 @@ public class OrdenRetiro {
     private Ubicacion destino;
     private ArrayList<Colaborador> colaboradores;
     private PedidosDonacion pedidoOrigen;
-    
+    private ArrayList<Visita> visitas;
+
     
 
 
     // constructor con todos los parametros
-    public OrdenRetiro(PedidosDonacion pedido, Ubicacion destino) {
+    public OrdenRetiro(PedidosDonacion pedido, Ubicacion dest) throws ObjetoNuloException {
+        if (pedido == null) {
+            throw new ObjetoNuloException("El pedido de donación no puede ser nulo.");
+        }
         this.estado = ESTADO_PENDIENTE;
-        this.destino = destino;
+        this.destino = dest;
         this.pedidoOrigen = pedido;
         this.colaboradores = new ArrayList<Colaborador>();
+        this.visitas = new ArrayList<Visita>();
+        pedido.asignarOrden(this);
+    }
+
+    public OrdenRetiro(PedidosDonacion pedido, String dest) throws ObjetoNuloException {
+        if (pedido == null || dest == null || dest.isEmpty()) {
+            throw new ObjetoNuloException("El pedido de donación o el destino no puede ser nulo o vacío.");
+        }
+        this.estado = ESTADO_PENDIENTE;
+        this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // Assuming default values for Ubicacion
+        this.pedidoOrigen = pedido;
+        this.colaboradores = new ArrayList<>();
+        this.visitas = new ArrayList<>();
         pedido.asignarOrden(this);
     }
 
@@ -56,9 +75,21 @@ public class OrdenRetiro {
       return colaboradores.get(0); // Devuelve el primero de la lista
     }
   
+    public int obtenerId() {
+        return secuencia;
+    }
+
+    public Date obtenerFechaCreacion() {
+        return this.fechaGeneracion;
+    }
+
+    public ArrayList<Visita> obtenerVisitas() {
+        return this.visitas;
+    }
+  
   
     // metodo de ayuda para el toString
-    private String describirEstado() {
+    public String describirEstado() {
         switch (estado) {
             case ESTADO_PENDIENTE:
                 return "PENDIENTE";
@@ -73,5 +104,9 @@ public class OrdenRetiro {
   
 	public boolean equals(OrdenRetiro obj) {
         return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidoOrigen.equals(obj.pedidoOrigen));
+    }
+
+    public void agregarVisita(Visita visita) {
+        this.visitas.add(visita);
     }
 }
