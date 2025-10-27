@@ -27,7 +27,7 @@ public class Visita {
         if (obs == null || obs.trim().isEmpty())  {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) {
+        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
         this.fechaDeVisita = fecha;
@@ -42,7 +42,7 @@ public class Visita {
         if (obs == null || obs.trim().isEmpty()) {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) {
+        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
         this.fechaDeVisita = fecha;
@@ -63,7 +63,7 @@ public class Visita {
         if (observacion == null || observacion.trim().isEmpty()) {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) {
+        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
         this.fechaDeVisita = new Date(); // Asume que la fecha es actual
@@ -71,6 +71,28 @@ public class Visita {
         this.observacion = observacion;
         this.bienesRetirados = new ArrayList<>(bienes);
     }
+
+    // -----------------------------------------------------------------
+    // NUEVO CONSTRUCTOR AÑADIDO
+    // -----------------------------------------------------------------
+    /**
+     * Constructor para visitas que no necesariamente retiran bienes
+     * (Ej. "Donante ausente", "Cancelado").
+     */
+    public Visita(Date fecha, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (fecha == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula");
+        }
+        if (obs == null || obs.trim().isEmpty())  {
+            throw new CampoVacioException("La observación no puede estar vacía");
+        }
+        
+        this.fechaDeVisita = fecha;
+        this.estado = ESTADO_REALIZADA; // Se asume realizada ya que se está registrando un resultado
+        this.observacion = obs;
+        this.bienesRetirados = new ArrayList<>(); // Inicializa una LISTA VACÍA
+    }
+
 
     // 
     @Override

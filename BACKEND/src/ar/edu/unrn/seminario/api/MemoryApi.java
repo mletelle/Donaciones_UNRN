@@ -311,6 +311,9 @@ public class MemoryApi implements IApi {
 		return null;
 	}
 
+	// -----------------------------------------------------------------
+	// MÉTODO CORREGIDO
+	// -----------------------------------------------------------------
 	@Override
 	public void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException {
 		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
@@ -318,21 +321,47 @@ public class MemoryApi implements IApi {
 			throw new ObjetoNuloException("La orden de retiro no existe.");
 		}
 
-		// Parse the date string from DTO
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-		LocalDateTime fechaVisita = LocalDate.parse(visitaDTO.getFechaDeVisita(), formatter).atStartOfDay();
-		Date fechaVisitaDate = Date.from(fechaVisita.atZone(ZoneId.systemDefault()).toInstant());
+		// Comprobar qué constructor del DTO se usó (chequeando el campo LocalDateTime)
+		if (visitaDTO.getFechaHora() != null) {
+			// Es el NUEVO DTO de RegistrarVisitaDialog
+			
+			// 1. Convertir LocalDateTime a Date
+			Date fechaVisitaDate = Date.from(visitaDTO.getFechaHora().atZone(ZoneId.systemDefault()).toInstant());
 
-		List<Bien> bienesConvertidos = convertirBienes(visitaDTO.getBienesRetirados());
+			// 2. Construir la observación
+			String resultadoStr = visitaDTO.getEstado() ? "Recolección Exitosa" : "Recolección Fallida/Cancelada";
+			String observacionFinal = "Resultado: " + resultadoStr + ". Observaciones: " + visitaDTO.getObservacion();
 
-		// Call the correct Visita constructor
-		Visita visita = new Visita(
-            fechaVisitaDate,
-            visitaDTO.getObservacion(),
-            bienesConvertidos
-        );
-		orden.agregarVisita(visita);
+			
+			// 3. Crear el objeto de dominio Visita
+			// *** CAMBIO CLAVE: ***
+			// Se llama al constructor Visita(Date, String) asumiendo que existe
+			// en el modelo, ya que este formulario no maneja una lista de bienes.
+			Visita visita = new Visita(
+				fechaVisitaDate,
+				observacionFinal
+			);
+			orden.agregarVisita(visita);
+			
+		} else {
+			// Es el DTO ANTIGUO (del popup de GestionarOrdenRetiro)
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			LocalDateTime fechaVisita = LocalDate.parse(visitaDTO.getFechaDeVisita(), formatter).atStartOfDay();
+			Date fechaVisitaDate = Date.from(fechaVisita.atZone(ZoneId.systemDefault()).toInstant());
+
+			List<Bien> bienesConvertidos = convertirBienes(visitaDTO.getBienesRetirados());
+
+			// Este constructor sí usa la lista de bienes, lo cual es correcto
+			// para el popup antiguo.
+			Visita visita = new Visita(
+				fechaVisitaDate,
+				visitaDTO.getObservacion(),
+				bienesConvertidos
+			);
+			orden.agregarVisita(visita);
+		}
 	}
+
 
 	@Override
 	public void actualizarEstadoOrdenRetiro(int idOrdenRetiro, int nuevoEstado) throws ReglaNegocioException {
@@ -388,9 +417,11 @@ public class MemoryApi implements IApi {
 
 	private List<Bien> convertirBienes(List<String> bienesStr) throws CampoVacioException {
 		List<Bien> bienes = new ArrayList<>();
-		for (String nombreBien : bienesStr) {
-			bienes.add(new Bien(nombreBien.trim()));
-		}
+        if (bienesStr != null) { // Añadida comprobación de nulidad
+		    for (String nombreBien : bienesStr) {
+			    bienes.add(new Bien(nombreBien.trim()));
+		    }
+        }
 		return bienes;
 	}
 
@@ -479,18 +510,44 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
-	    List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
-	    for (OrdenRetiro orden : this.ordenes) {
-	        if (orden.getId() == idOrden) {
-	            PedidosDonacion pedido = orden.obtenerPedidoOrigen();
-	            pedidosDTO.add(new PedidoDonacionDTO(
-	                pedido.obtenerId(),
-	                pedido.obtenerDonante().getNombre(),
-	                pedido.obtenerDonante().getDireccion(),
-	                pedido.obtenerEstado()
-	            ));
-	        }
-	    }
-	    return pedidosDTO;
+		List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
+		
+		for (PedidosDonacion pedido : this.pedidos) { 
+			
+			OrdenRetiro orden = pedido.obtenerOrden(); 
+			
+			if (orden != null && orden.obtenerId() == idOrden) { 
+				
+				PedidoDonacionDTO dto = this.convertirPedidoADTO(pedido);
+				
+				if (dto != null) {
+					pedidosDTO.add(dto); 
+				}
+			}
+		}
+		
+		return pedidosDTO;
 	}
+	
+	private PedidoDonacionDTO convertirPedidoADTO(PedidosDonacion pedido) {
+	    if (pedido == null) {
+	        return null;
+	    }
+	    Donante donante = pedido.obtenerDonante();
+	    if (donante == null) {
+	        System.out.println("Advertencia: El pedido " + pedido.obtenerId() + " no tiene un donante asociado.");
+	        return null;
+	    }
+
+	    return new PedidoDonacionDTO(
+	        pedido.obtenerId(),
+	        donante.getNombre(),     
+	        donante.getDireccion(),  
+	        pedido.obtenerEstado()
+	    );
+	}
+	
+	
+	
+	
 }

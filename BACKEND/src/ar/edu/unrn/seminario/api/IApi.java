@@ -61,4 +61,6 @@ public interface IApi {
 	void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
 
 	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
+	
+	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado);
 }

@@ -2,7 +2,6 @@ package ar.edu.unrn.seminario.dto;
 
 import java.util.List;
 
-
 public class PedidoDonacionDTO {
     private int id;
     private String fecha;
@@ -10,6 +9,8 @@ public class PedidoDonacionDTO {
     private String tipoVehiculo;
     private String observaciones;
     private int donanteId;
+    
+    // Estas son las variables que no se estaban asignando:
     private String donante;
     private String direccion;
     private String estado;
@@ -39,11 +40,14 @@ public class PedidoDonacionDTO {
         this.bienes = bienes;
     }
 
+    //
+    // AQUÍ ESTÁ LA CORRECCIÓN:
+    //
     public PedidoDonacionDTO(int id, String donante, String direccion, String estado) {
         this.id = id;
-        this.observaciones = estado;
-        this.tipoVehiculo = direccion;
-        this.fecha = donante;
+        this.donante = donante;     // CORREGIDO
+        this.direccion = direccion; // CORREGIDO
+        this.estado = estado;       // CORREGIDO
     }
 
     public int getId() {
@@ -94,6 +98,7 @@ public class PedidoDonacionDTO {
         this.donanteId = donanteId;
     }
 
+    // Estos getters ahora devolverán los valores correctos
     public String getDonante() {
         return donante;
     }
