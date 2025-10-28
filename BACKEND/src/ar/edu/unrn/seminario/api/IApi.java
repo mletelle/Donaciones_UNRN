@@ -63,4 +63,8 @@ public interface IApi {
 	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 	
 	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException;
+
+	List<VisitaDTO> obtenerVisitasPorVoluntario(String voluntario);
+
+	String obtenerNombreDonantePorId(int idPedido);
 }

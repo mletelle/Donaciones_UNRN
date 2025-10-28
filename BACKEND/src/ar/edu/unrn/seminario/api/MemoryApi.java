@@ -583,5 +583,28 @@ public class MemoryApi implements IApi {
 	    
 	    System.out.println("Éxito: Estado del Pedido " + idPedido + " actualizado a " + nuevoEstado);
 	}
+
+	@Override
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(String voluntario) {
+		List<VisitaDTO> visitas = new ArrayList<>();
+		for (OrdenRetiro orden : this.ordenes) {
+			if (orden.getVoluntario() != null && orden.getVoluntario().getNombre().equals(voluntario)) {
+				for (Visita visita : orden.obtenerVisitas()) {
+					visitas.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
+				}
+			}
+		}
+		return visitas;
+	}
+
+	@Override
+	public String obtenerNombreDonantePorId(int idPedido) {
+        for (PedidosDonacion pedido : this.pedidos) {
+            if (pedido.getId() == idPedido && pedido.getDonante() != null) {
+                return pedido.getDonante().getNombre();
+            }
+        }
+        return "Donante Desconocido";
+    }
 	
 }

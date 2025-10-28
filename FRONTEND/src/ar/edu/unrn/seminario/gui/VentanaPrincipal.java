@@ -21,6 +21,7 @@ import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.api.MemoryApi;
 import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+import ar.edu.unrn.seminario.dto.VisitaDTO;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -172,6 +173,27 @@ public class VentanaPrincipal extends JFrame {
             }
         });
         voluntarioMenu.add(registrarVisitaMenuItem);
+        
+        JMenuItem listadoVisitasMenuItem = new JMenuItem("Historial de Visitas");
+        listadoVisitasMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String voluntarioSeleccionado = (String) voluntarioSelectorComboBox.getSelectedItem();
+                if (voluntarioSeleccionado == null) {
+                    JOptionPane.showMessageDialog(VentanaPrincipal.this, "Debe seleccionar un voluntario.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntarioSeleccionado);
+                if (visitas == null || visitas.isEmpty()) {
+                    JOptionPane.showMessageDialog(VentanaPrincipal.this, "No hay visitas registradas para este voluntario.", "Información", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+                ListadoVisitasDialog listadoVisitasDialog = new ListadoVisitasDialog(api, voluntarioSeleccionado);
+                listadoVisitasDialog.setLocationRelativeTo(null);
+                listadoVisitasDialog.setVisible(true);
+            }
+        });
+        voluntarioMenu.add(listadoVisitasMenuItem);
 		// Menú Configuración
 		configuracionMenu = new JMenu("Configuración");
 		menuBar.add(configuracionMenu);
