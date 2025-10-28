@@ -19,10 +19,7 @@ public class Vehiculo {
 	public void cambiarEstado(String nuevoEstado) {
 		estado = nuevoEstado;
 	}
-	
-	
-	
-	
+
 	
 	/// Getters - setters
 	public String getPatente() {
@@ -50,7 +47,8 @@ public class Vehiculo {
 		this.capacidad = capacidad;
 	}
 	
-	
-	
-	
+	// Método para obtener la descripción del vehículo
+    public String getDescripcion() {
+        return "Tipo: " + tipoVeh + ", Patente: " + patente + ", Estado: " + estado + ", Capacidad: " + capacidad;
+    }
 }

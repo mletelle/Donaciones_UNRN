@@ -3,39 +3,63 @@ package ar.edu.unrn.seminario.modelo;
 import java.util.ArrayList;
 import java.util.Date;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
 public class Donante extends Persona {
 
-    // lista de pedidos que el donante genera
     private ArrayList<PedidosDonacion> pedidos;
 
-    // constructor principal, recibe los datos y crea la lista vacia
-    public Donante(String nom, String ape, int dni, Ubicacion ubi) {
+    public Donante(String nom, String ape, int dni, Ubicacion ubi) throws CampoVacioException, ObjetoNuloException {
         super(nom, ape, dni, ubi);
-        this.pedidos = new ArrayList<PedidosDonacion>();
+        if (ubi == null) {
+            throw new ObjetoNuloException("La ubicación no puede ser nula.");
+        }
+        this.pedidos = new ArrayList<>();
     }
 
-    // crear donante a partir de datos
-    public Donante(String nom, String ape, int dni,
-            String dir, String zona, String barrio,
-            double lat, double lon) {
+    public Donante(String nom, String ape, int dni, String dir, String zona, String barrio, double lat, double lon) throws CampoVacioException, ObjetoNuloException {
         this(nom, ape, dni, new Ubicacion(dir, zona, barrio, lat, lon));
     }
 
-    // fabrica un nuevo pedido usando la fecha indicada y lo agrega a la lista
-    // interna
-    public PedidosDonacion crearPedido(Date fecha, ArrayList<Bien> bienes, String tipo, String obs) {
+    public PedidosDonacion crearPedido(Date fecha, ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (fecha == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula.");
+        }
+        if (bienes == null || bienes.isEmpty()) {
+            throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+        }
+        if (tipo == null || tipo.isEmpty()) {
+            throw new CampoVacioException("El tipo de vehículo no puede estar vacío.");
+        }
         PedidosDonacion p = new PedidosDonacion(fecha, bienes, tipo, obs, this);
         pedidos.add(p);
         return p;
     }
 
-    // crea un pedido usando la fecha actual
-    public PedidosDonacion crearPedido(ArrayList<Bien> bienes, String tipo, String obs) {
-        return crearPedido(new Date(), bienes, tipo, obs);
+    public PedidosDonacion crearPedido(ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (bienes == null || bienes.isEmpty()) {
+            throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+        }
+        if (tipo == null || tipo.isEmpty()) {
+            throw new CampoVacioException("El tipo de vehículo no puede estar vacío.");
+        }
+        PedidosDonacion p = new PedidosDonacion(tipo, bienes, obs, this);
+        pedidos.add(p);
+        return p;
     }
 
-    // notificar al donante
     public void notificar(String mensaje) {
         System.out.println("Donante " + this + ": " + mensaje);
     }
+
+    // Fixed method to use `obtenerNombre`
+    public String getNombre() {
+        return super.obtenerNombre();
+    }
+
+    public String getDireccion() {
+        return this.obtenerUbicacion();
+    }
+
 }

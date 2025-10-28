@@ -16,21 +16,21 @@ import javax.swing.border.EmptyBorder;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.RolDTO;
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class AltaUsuario extends JFrame {
+
 
 	private JPanel contentPane;
 	private JTextField usuarioTextField;
 	private JTextField contrasenaTextField;
 	private JTextField nombreTextField;
 	private JTextField emailTextField;
-	private JComboBox rolComboBox;
+	private JComboBox<String> rolComboBox;
 
 	private List<RolDTO> roles = new ArrayList<>();
 
-	/**
-	 * Create the frame.
-	 */
 	public AltaUsuario(IApi api) {
 
 		// Obtengo los roles
@@ -66,18 +66,19 @@ public class AltaUsuario extends JFrame {
 		JButton aceptarButton = new JButton("Aceptar");
 		aceptarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				/// agregar validaciones
-				/// opcion 1: podrian colocarse excepciones en el caso de que hayan campos vacios
-				/// opcion 2: modificar a ENTITIES/Usuario, para que haga las validaciones ahí
-				/// opcion 3: Simplemente desactivar el boton "Aceptar" hasta que se completen los campos
-				RolDTO rol = roles.get(rolComboBox.getSelectedIndex());
+				try {
+					RolDTO rol = roles.get(rolComboBox.getSelectedIndex());
 
 					api.registrarUsuario(usuarioTextField.getText(), contrasenaTextField.getText(),
 							nombreTextField.getText(), emailTextField.getText(), rol.getCodigo());
 					JOptionPane.showMessageDialog(null, "Usuario registrado con exito!", "Info", JOptionPane.INFORMATION_MESSAGE);
 					setVisible(false);
 					dispose();
-
+				} catch (CampoVacioException | ObjetoNuloException ex) {
+					JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 		aceptarButton.setBounds(218, 215, 97, 25);
@@ -115,7 +116,7 @@ public class AltaUsuario extends JFrame {
 		contentPane.add(emailTextField);
 		emailTextField.setColumns(10);
 
-		rolComboBox = new JComboBox();
+		rolComboBox = new JComboBox<>();
 		rolComboBox.setBounds(148, 151, 160, 22);
 		contentPane.add(rolComboBox);
 

@@ -15,11 +15,10 @@ public class OrdenEntrega {
 
     // atributos
     private int id;
-    private Beneficiario beneficiario;
     private Date fechaGeneracion = new Date();
     private int estado;
     private Ubicacion destino;
-    private Colaborador voluntario;
+    private Voluntario voluntario;
     private ArrayList<Visita> visitas;
     private PedidosDonacion pedidoOrigen;
     private ArrayList<Bien> bienes;
@@ -41,15 +40,15 @@ public class OrdenEntrega {
     	ArrayList<Bien> bienes = new ArrayList<Bien>();
         /// pedido.asignarOrden(this);
     }
-    private void asignarRecursos(Colaborador c, Vehiculo v) {
-    	this.v = v;
-    	asignarVoluntario(c);
+    private void asignarRecursos(Voluntario v, Vehiculo vehiculo) {
+    	this.v = vehiculo;
+    	asignarVoluntario(v);
     }
 
     // metodos
     // asignacion de voluntario
-    public void asignarVoluntario(Colaborador c) {
-        voluntario = c;
+    public void asignarVoluntario(Voluntario v) {
+        voluntario = v;
     }
   
     // actualizacion de estado
@@ -67,15 +66,12 @@ public class OrdenEntrega {
     }
     public void cancelar(String motivo) {
         estado = ESTADO_CANCELADO;
-        /// sin implementación concreta
         System.out.println("Motivo de cancelacion: "+motivo);
     }
-    public Colaborador obtenerVoluntario() {
+    public Voluntario obtenerVoluntario() {
     	return this.voluntario;
     }
-    
-  
-    // agregar visita
+
     public void agregarVisita(Visita v) {
         visitas.add(v);
     }
@@ -134,7 +130,7 @@ public class OrdenEntrega {
         sb.append("OrdenDeRetiro").append(id)
                 .append(" Vivienda: ").append(nroVivienda)
                 .append(". Voluntario: ");
-        Colaborador v = obtenerVoluntario();
+        Voluntario v = obtenerVoluntario();
         sb.append(v != null ? v.obtenerNombre() + " " + v.obtenerApellido() : " ")
                 .append(" (Estado: ").append(describirEstado()).append("):\n");
 

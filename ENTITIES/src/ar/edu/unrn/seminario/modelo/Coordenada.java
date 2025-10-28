@@ -28,6 +28,6 @@ public class Coordenada {
     }
     @Override 
     public int hashCode() {
-        return java.util.Objects.hash(latitud, longitud); // usa Double.hashCode(...)
+        return java.util.Objects.hash(latitud, longitud); 
     }
 }
