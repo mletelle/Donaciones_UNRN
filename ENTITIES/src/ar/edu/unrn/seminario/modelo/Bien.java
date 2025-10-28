@@ -133,7 +133,6 @@ public class Bien {
                 return "";
         }
     }
-    // Sin implementacion
     public void aceptarItem() {
      System.out.println("Item aceptado");
     }
@@ -141,8 +140,6 @@ public class Bien {
     public void rechazarItem() {
      System.out.println("Item rechazado");
     }
-    
-    // Added method to retrieve associated vehicle
     public Vehiculo obtenerVehiculo() {
         return vehiculo;
     }

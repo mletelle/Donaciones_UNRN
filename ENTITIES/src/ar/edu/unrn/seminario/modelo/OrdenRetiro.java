@@ -51,8 +51,6 @@ public class OrdenRetiro {
         this.visitas = new ArrayList<>();
         pedido.asignarOrden(this);
     }
-
-    // constructor to handle multiple PedidosDonacion and Voluntario
     public OrdenRetiro(Voluntario voluntario, String tipoVehiculo) {
         this.estado = ESTADO_PENDIENTE;
         this.voluntarios = new ArrayList<>();

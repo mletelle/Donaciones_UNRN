@@ -21,10 +21,6 @@ public class GestionarOrdenVoluntario extends JFrame {
     private DefaultTableModel modeloTabla;
     private IApi api;
     private int idOrden;
-
-    
-    // Define los estados válidos. 
-    // Asegúrate de que coincidan con los valores de tu sistema.
     private String[] estadosValidos = {"PENDIENTE", "EN_EJECUCION", "COMPLETADO"};
     
     // flag, evita llamadas recursivas al listener mientras se actualiza la API
@@ -113,7 +109,7 @@ public class GestionarOrdenVoluntario extends JFrame {
         this.actualizandoDatos = false;
     }
 
-    /**
+    /*
      * Asigna un JComboBox a la columna "Estado" de la tabla.
      */
     private void configurarEditorDeEstado() {
@@ -126,7 +122,7 @@ public class GestionarOrdenVoluntario extends JFrame {
         estadoColumn.setCellEditor(new DefaultCellEditor(comboBoxEstados));
     }
 
-    /**
+    /*
      * Llama a la API para persistir el cambio de estado de un pedido.
      */
     private void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) {

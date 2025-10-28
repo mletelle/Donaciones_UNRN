@@ -17,7 +17,6 @@ public class Beneficiario {
 	public void cambiarUbicacion(Ubicacion u) {
 		setUbicacion(u);
 	}
-	// Sin implementación R E A L
 	public void notificar(String mensaje) {
 		System.out.println("Mensaje: " +mensaje);
 	}

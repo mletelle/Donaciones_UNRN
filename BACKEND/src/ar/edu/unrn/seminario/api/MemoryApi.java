@@ -200,25 +200,16 @@ public class MemoryApi implements IApi {
 		user.desactivar();
 	}
 
-	// En MemoryApi.java (método registrarPedidoDonacion)
 	@Override
 	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
 	    Donante donante = buscarDonantePorId(pedidoDTO.getDonanteId());
 	    if (donante == null) {
 	        throw new ObjetoNuloException("El donante no existe.");
 	    }
-
 	    ArrayList<Bien> bienes = new ArrayList<>();
 	    Vehiculo vehiculo = new Vehiculo("XYZ123", "Disponible", "Camioneta", 1000);
-	    
-	    // Asignamos una categoría de calidad fija para pasar la validación del modelo.
-	    // CATEGORIA_MEDIA es generalmente 2. Asumimos el valor 2.
 	    final int CATEGORIA_CALIDAD_POR_DEFECTO = 2; 
-
 	    for (BienDTO bienDTO : pedidoDTO.getBienes()) {
-	        
-	        // El BienDTO.getTipo() y BienDTO.getCantidad() están bien.
-	        // Forzamos la categoría a 2 para pasar la validación del modelo Bien.java (1-3).
 	        bienes.add(new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), CATEGORIA_CALIDAD_POR_DEFECTO, vehiculo));
 	    }
 
@@ -321,9 +312,6 @@ public class MemoryApi implements IApi {
 		return null;
 	}
 
-	// -----------------------------------------------------------------
-	// MÉTODO registrarVisita
-	// -----------------------------------------------------------------
 	@Override
 	public void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException {
 		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
@@ -554,19 +542,16 @@ public class MemoryApi implements IApi {
 	    );
 	}
 	
-	/**
-	 * Mapea el estado de String (GUI) a int (Modelo)
-	 * @param estado Estado en formato String (ej: "PENDIENTE")
-	 * @return Estado en formato int (ej: 1)
-	 */
+
+//	 Mapea el estado de String (GUI) a int (Modelo)
 	private int mapearEstadoPedidoAInt(String estado) throws ReglaNegocioException {
         switch (estado.toUpperCase()) {
             case "PENDIENTE":
-                return 1; // Asumiendo que 1 es PENDIENTE
+                return 1; //   1  PENDIENTE
             case "EN_EJECUCION":
-                return 2; // Asumiendo que 2 es EN_EJECUCION
+                return 2; //   2 EN_EJECUCION
             case "COMPLETADO":
-                return 3; // Asumiendo que 3 es COMPLETADO
+                return 3; //  3  COMPLETADO
             default:
                 throw new ReglaNegocioException("Estado de pedido inválido: " + estado);
         }

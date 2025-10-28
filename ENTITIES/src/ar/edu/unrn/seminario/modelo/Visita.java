@@ -71,14 +71,6 @@ public class Visita {
         this.observacion = observacion;
         this.bienesRetirados = new ArrayList<>(bienes);
     }
-
-    // -----------------------------------------------------------------
-    // NUEVO CONSTRUCTOR AÑADIDO
-    // -----------------------------------------------------------------
-    /**
-     * Constructor para visitas que no necesariamente retiran bienes
-     * (Ej. "Donante ausente", "Cancelado").
-     */
     public Visita(Date fecha, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
@@ -86,7 +78,6 @@ public class Visita {
         if (obs == null || obs.trim().isEmpty())  {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        
         this.fechaDeVisita = fecha;
         this.estado = ESTADO_REALIZADA; // Se asume realizada ya que se está registrando un resultado
         this.observacion = obs;
@@ -94,7 +85,7 @@ public class Visita {
     }
 
 
-    // 
+
     @Override
     public String toString() {
         return "Visita " + fechaDeVisita + ", " + describirEstado();

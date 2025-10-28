@@ -66,15 +66,12 @@ public class OrdenEntrega {
     }
     public void cancelar(String motivo) {
         estado = ESTADO_CANCELADO;
-        /// sin implementación concreta
         System.out.println("Motivo de cancelacion: "+motivo);
     }
     public Voluntario obtenerVoluntario() {
     	return this.voluntario;
     }
-    
-  
-    // agregar visita
+
     public void agregarVisita(Visita v) {
         visitas.add(v);
     }

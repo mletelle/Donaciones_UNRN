@@ -142,15 +142,13 @@ public class RegistrarVisitaDialog extends JDialog {
         add(panelPrincipal);
     }
 
-    /**
+    /*
      * Constructor que recibe el idPedido.
      * Llama al constructor principal y LUEGO asigna el idPedido al campo de texto.
      */
     public RegistrarVisitaDialog(IApi api, int idOrden, int idPedido) {
         this(api, idOrden); // Llama al constructor que construye la GUI
         this.idPedido = idPedido;
-        
-        // **CORRECCIÓN IMPORTANTE**: Asigna el valor DESPUÉS de que la GUI esté construida
         this.txtIdPedido.setText(String.valueOf(this.idPedido)); 
     }
 
@@ -174,8 +172,6 @@ public class RegistrarVisitaDialog extends JDialog {
 
             LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
             VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones);
-
-            // Asumo que tu api.registrarVisita espera el ID de la ORDEN
             api.registrarVisita(idOrden, visita); 
             
             JOptionPane.showMessageDialog(this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);

@@ -14,7 +14,7 @@ public class PedidosDonacion {
 	// variables de clase
 	private static int secuencia = 0;//para usarlo de id
 
-	// ESTADOS DE PEDIDO (Asumidos del contexto de la GUI)
+	// ESTADOS DE PEDIDO 
 	private static final int ESTADO_PENDIENTE = 1;
 	private static final int ESTADO_EN_EJECUCION = 2;
 	private static final int ESTADO_COMPLETADO = 3;

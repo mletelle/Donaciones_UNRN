@@ -19,10 +19,7 @@ public class Vehiculo {
 	public void cambiarEstado(String nuevoEstado) {
 		estado = nuevoEstado;
 	}
-	
-	
-	
-	
+
 	
 	/// Getters - setters
 	public String getPatente() {

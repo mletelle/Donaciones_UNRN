@@ -9,8 +9,6 @@ public class PedidoDonacionDTO {
     private String tipoVehiculo;
     private String observaciones;
     private int donanteId;
-    
-    // Estas son las variables que no se estaban asignando:
     private String donante;
     private String direccion;
     private String estado;
@@ -40,14 +38,11 @@ public class PedidoDonacionDTO {
         this.bienes = bienes;
     }
 
-    //
-    // AQUÍ ESTÁ LA CORRECCIÓN:
-    //
     public PedidoDonacionDTO(int id, String donante, String direccion, String estado) {
         this.id = id;
-        this.donante = donante;     // CORREGIDO
-        this.direccion = direccion; // CORREGIDO
-        this.estado = estado;       // CORREGIDO
+        this.donante = donante;     
+        this.direccion = direccion; 
+        this.estado = estado;       
     }
 
     public int getId() {
@@ -97,8 +92,6 @@ public class PedidoDonacionDTO {
     public void setDonanteId(int donanteId) {
         this.donanteId = donanteId;
     }
-
-    // Estos getters ahora devolverán los valores correctos
     public String getDonante() {
         return donante;
     }
