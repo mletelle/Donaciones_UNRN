@@ -45,11 +45,13 @@ public class MemoryApi implements IApi {
 		this.roles.add(new Rol(1, "ADMIN"));
 		this.roles.add(new Rol(2, "ESTUDIANTE"));
 		this.roles.add(new Rol(3, "INVITADO"));
+		
+		// Inicialización en orden
 		inicializarUsuarios();
 		inicializarDonantes();
-		inicializarPedidos();
 		inicializarVoluntarios();
-		inicializarVehiculos(); // Añadir inicialización de vehículos
+		inicializarVehiculos(); 
+		inicializarPedidos(); // Ahora solo crea pedidos, sin asignar órdenes
 	}
 
 	private void inicializarUsuarios() {
@@ -70,30 +72,37 @@ public class MemoryApi implements IApi {
 			e.printStackTrace();
 		}
 	}
-
 	private void inicializarPedidos() {
 		try {
-			Donante donante1 = this.donantes.get(0);
-			List<Bien> bienes1 = new ArrayList<>();
-			Vehiculo vehiculo1 = new Vehiculo("ABC123", "Disponible", "Camioneta", 1000);
-			bienes1.add(new Bien(1, 10, 2, vehiculo1)); 
-			this.pedidos.add(new PedidosDonacion(new Date(), new ArrayList<>(bienes1), PedidosDonacion.getVehiculoCamioneta(), "Sin observaciones", donante1));
+			Donante donante1 = this.donantes.get(0); // Juan Perez
+			Donante donante2 = this.donantes.get(1); // Maria Gomez
+			
+			// Vehículos temporales solo para la creación del Bien
+			Vehiculo vehiculoCamioneta = new Vehiculo("TEMP-CAMIONETA", "Disponible", "Camioneta", 1000);
+			Vehiculo vehiculoCamion = new Vehiculo("TEMP-CAMION", "Disponible", "Camión", 5000);
+			Vehiculo vehiculoAuto = new Vehiculo("TEMP-AUTO", "Disponible", "Auto", 500);
 
+			// PEDIDO 1 (ID 1 - Donante Juan Perez)
+			List<Bien> bienes1 = new ArrayList<>();
+			bienes1.add(new Bien(1, 10, 2, vehiculoCamioneta)); 
+			this.pedidos.add(new PedidosDonacion(new Date(), new ArrayList<>(bienes1), PedidosDonacion.getVehiculoCamioneta(), "Pedido 1: Sin observaciones", donante1));
+
+			// PEDIDO 2 (ID 2 - Donante Maria Gomez)
 			if (this.donantes.size() > 1) {
-				Donante donante2 = this.donantes.get(1);
 				List<Bien> bienes2 = new ArrayList<>();
-				Vehiculo vehiculo2 = new Vehiculo("DEF456", "Disponible", "Camión", 5000);
-				bienes2.add(new Bien(2, 5, 1, vehiculo2)); 
-				bienes2.add(new Bien(3, 1, 3, vehiculo2));
+				bienes2.add(new Bien(2, 5, 1, vehiculoCamion)); 
+				bienes2.add(new Bien(3, 1, 3, vehiculoCamion));
 				Date fecha2 = new Date(System.currentTimeMillis() - 86400000); 
-				this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), PedidosDonacion.getVehiculoCamion(), "Mueble grande", donante2));
+				this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), PedidosDonacion.getVehiculoCamion(), "Pedido 2: Mueble grande", donante2));
 			}
 
+			// PEDIDO 3 (ID 3 - Donante Juan Perez)
 			List<Bien> bienes3 = new ArrayList<>();
-			Vehiculo vehiculo3 = new Vehiculo("GHI789", "Disponible", "Auto", 500);
-			bienes3.add(new Bien(4, 15, 2, vehiculo3)); 
+			bienes3.add(new Bien(4, 15, 2, vehiculoAuto)); 
 			Date fecha3 = new Date(System.currentTimeMillis() - 172800000); 
-			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), PedidosDonacion.getVehiculoAuto(), "Cajas pequeñas", donante1));
+			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), PedidosDonacion.getVehiculoAuto(), "Pedido 3: Cajas pequeñas", donante1));
+			
+			
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			e.printStackTrace();
 		}
@@ -101,8 +110,11 @@ public class MemoryApi implements IApi {
 
 	private void inicializarVoluntarios() {
 			try {
+				// DNI 12345678
 				this.voluntarios.add(new Voluntario("Carlos", "Lopez", 12345678, new Ubicacion("Calle Falsa 123", "Zona Norte", "Barrio Norte", 0.0, 0.0)));
+				// DNI 87654321
 				this.voluntarios.add(new Voluntario("Ana", "Martinez", 87654321, new Ubicacion("Calle Verdadera 456", "Zona Sur", "Barrio Sur", 0.0, 0.0)));
+				// DNI 11223344
 				this.voluntarios.add(new Voluntario("Luis", "Gomez", 11223344, new Ubicacion("Avenida Siempre Viva", "Zona Centro", "Barrio Centro", 0.0, 0.0)));
 			} catch (CampoVacioException | ObjetoNuloException e) {
 				e.printStackTrace();
@@ -110,12 +122,11 @@ public class MemoryApi implements IApi {
 	}
 
 	private void inicializarVehiculos() {
-	    // Hardcodear 3 vehículos fijos con patentes argentinas y datos inventados
+	    // Vehículos fijos que SÍ se usarán en las órdenes
 	    this.vehiculosDisponibles.add(new Vehiculo("AE 123 CD", "Disponible", "Auto", 500)); // Auto
 	    this.vehiculosDisponibles.add(new Vehiculo("AD 456 EF", "Disponible", "Camioneta", 1500)); // Camioneta
 	    this.vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camión", 4000)); // Camión
 	}
-
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol) throws CampoVacioException, ObjetoNuloException {
 
 		Rol role = this.buscarRol(rol);
@@ -488,7 +499,8 @@ public class MemoryApi implements IApi {
 	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
 		for (OrdenRetiro orden : this.ordenes) {
-			if (orden.getVoluntario().getNombre().equals(voluntario)) {
+			// Comprobación segura de voluntario
+			if (orden.getVoluntario() != null && orden.getVoluntario().getNombre().equals(voluntario)) {
 				ordenesAsignadas.add(new OrdenRetiroDTO(
 					orden.getId(),
 					orden.getEstado(),
@@ -565,6 +577,8 @@ public class MemoryApi implements IApi {
 	    }
 
 	    int nuevoEstadoInt = mapearEstadoPedidoAInt(nuevoEstado);
+	    
+	    // Asumiendo que PedidosDonacion tiene el método actualizarEstado(int) que agregamos
 	    pedido.actualizarEstado(nuevoEstadoInt); 
 	    
 	    System.out.println("Éxito: Estado del Pedido " + idPedido + " actualizado a " + nuevoEstado);

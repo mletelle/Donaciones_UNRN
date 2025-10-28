@@ -14,13 +14,13 @@ public class VoluntarioDTO {
     public VoluntarioDTO(String nombre, String apellido) {
         this.nombre = nombre;
         this.apellido = apellido;
-        this.id = 0; // Default ID as it is not provided
+        this.id = 0; 
     }
 
     public VoluntarioDTO(String nombre, String apellido, String ubicacion) {
         this.nombre = nombre;
         this.apellido = apellido;
-        this.id = 0; // Default ID as it is not provided
+        this.id = 0; 
     }
 
     public int getId() {
