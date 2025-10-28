@@ -52,6 +52,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL; // Rellena horizontalmente
         gbc.weightx = 1.0; // Permite que el campo crezca
         txtFecha = new JTextField(10);
+        txtFecha.setText(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))); // Set current date
         panelCampos.add(txtFecha, gbc);
 
         // Fila 1: Hora
@@ -68,6 +69,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         txtHora = new JTextField(10);
+        txtHora.setText(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))); // Set current time
         panelCampos.add(txtHora, gbc);
 
         // Fila 2: Resultado
