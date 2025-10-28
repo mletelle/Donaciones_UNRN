@@ -108,29 +108,38 @@ public class RegistrarPedidoDonacion extends JDialog {
                     String tipoVehiculo = (String) tipoVehiculoComboBox.getSelectedItem();
                     int idDonanteSeleccionado;
 
+                    if (bienes == null || bienes.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donación.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+                        return; // Detiene la ejecución si no hay bienes
+                    }
+
                     if (!donanteComboBox.isEnabled()) {
                         idDonanteSeleccionado = donanteId; 
                     } else {
                         DonanteDTO donanteSeleccionado = (DonanteDTO) donanteComboBox.getSelectedItem();
-                        idDonanteSeleccionado = donanteSeleccionado.getId();
+                        // Asumiendo que DonanteDTO.getId() es el DNI o identificador correcto
+                        idDonanteSeleccionado = donanteSeleccionado.getId(); 
                     }
 
+                    // 1. Parseo de Fecha
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate fechaParsed = LocalDate.parse(fechaStr, formatter);
                     LocalDateTime fechaCompleta = fechaParsed.atStartOfDay();
 
-                    // Formatear LocalDateTime de vuelta a String para el DTO
+                    // 2. Formateo de vuelta a String para el DTO
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
 
+                    // 3. Creación y Registro
                     PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, "", idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
                     JOptionPane.showMessageDialog(null, "Pedido registrado con éxito.");
                     dispose();
+                    
                 } catch (java.time.format.DateTimeParseException ex) {
                     JOptionPane.showMessageDialog(null, "Formato de fecha inválido. Use dd/MM/yyyy.", "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar el pedido.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar el pedido: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

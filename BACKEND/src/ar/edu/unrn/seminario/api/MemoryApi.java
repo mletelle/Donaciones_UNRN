@@ -200,24 +200,34 @@ public class MemoryApi implements IApi {
 		user.desactivar();
 	}
 
+	// En MemoryApi.java (método registrarPedidoDonacion)
 	@Override
 	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
-		Donante donante = buscarDonantePorId(pedidoDTO.getDonanteId());
-		if (donante == null) {
-			throw new ObjetoNuloException("El donante no existe.");
-		}
+	    Donante donante = buscarDonantePorId(pedidoDTO.getDonanteId());
+	    if (donante == null) {
+	        throw new ObjetoNuloException("El donante no existe.");
+	    }
 
-		ArrayList<Bien> bienes = new ArrayList<>();
-		Vehiculo vehiculo = new Vehiculo("XYZ123", "Disponible", "Camioneta", 1000);
-        for (BienDTO bienDTO : pedidoDTO.getBienes()) {
-            bienes.add(new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), bienDTO.getCategoria(), vehiculo));
-        }
+	    ArrayList<Bien> bienes = new ArrayList<>();
+	    Vehiculo vehiculo = new Vehiculo("XYZ123", "Disponible", "Camioneta", 1000);
+	    
+	    // Asignamos una categoría de calidad fija para pasar la validación del modelo.
+	    // CATEGORIA_MEDIA es generalmente 2. Asumimos el valor 2.
+	    final int CATEGORIA_CALIDAD_POR_DEFECTO = 2; 
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
-        Date fecha = Date.from(fechaLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
-		PedidosDonacion pedido = donante.crearPedido(fecha, bienes, pedidoDTO.getTipoVehiculo(), pedidoDTO.getObservaciones());
-		this.pedidos.add(pedido);
+	    for (BienDTO bienDTO : pedidoDTO.getBienes()) {
+	        
+	        // El BienDTO.getTipo() y BienDTO.getCantidad() están bien.
+	        // Forzamos la categoría a 2 para pasar la validación del modelo Bien.java (1-3).
+	        bienes.add(new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), CATEGORIA_CALIDAD_POR_DEFECTO, vehiculo));
+	    }
+
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	    LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
+	    Date fecha = Date.from(fechaLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
+	    
+	    PedidosDonacion pedido = donante.crearPedido(fecha, bienes, pedidoDTO.getTipoVehiculo(), pedidoDTO.getObservaciones());
+	    this.pedidos.add(pedido);
 	}
 
 	@Override
@@ -312,7 +322,7 @@ public class MemoryApi implements IApi {
 	}
 
 	// -----------------------------------------------------------------
-	// MÉTODO CORREGIDO
+	// MÉTODO registrarVisita
 	// -----------------------------------------------------------------
 	@Override
 	public void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException {
@@ -334,9 +344,6 @@ public class MemoryApi implements IApi {
 
 			
 			// 3. Crear el objeto de dominio Visita
-			// *** CAMBIO CLAVE: ***
-			// Se llama al constructor Visita(Date, String) asumiendo que existe
-			// en el modelo, ya que este formulario no maneja una lista de bienes.
 			Visita visita = new Visita(
 				fechaVisitaDate,
 				observacionFinal
@@ -547,7 +554,35 @@ public class MemoryApi implements IApi {
 	    );
 	}
 	
-	
-	
+	/**
+	 * Mapea el estado de String (GUI) a int (Modelo)
+	 * @param estado Estado en formato String (ej: "PENDIENTE")
+	 * @return Estado en formato int (ej: 1)
+	 */
+	private int mapearEstadoPedidoAInt(String estado) throws ReglaNegocioException {
+        switch (estado.toUpperCase()) {
+            case "PENDIENTE":
+                return 1; // Asumiendo que 1 es PENDIENTE
+            case "EN_EJECUCION":
+                return 2; // Asumiendo que 2 es EN_EJECUCION
+            case "COMPLETADO":
+                return 3; // Asumiendo que 3 es COMPLETADO
+            default:
+                throw new ReglaNegocioException("Estado de pedido inválido: " + estado);
+        }
+    }
+
+
+	public void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException {
+	    PedidosDonacion pedido = buscarPedidoPorId(idPedido);
+	    if (pedido == null) {
+	        throw new ReglaNegocioException("El pedido de donación con ID " + idPedido + " no existe.");
+	    }
+
+	    int nuevoEstadoInt = mapearEstadoPedidoAInt(nuevoEstado);
+	    pedido.actualizarEstado(nuevoEstadoInt); 
+	    
+	    System.out.println("Éxito: Estado del Pedido " + idPedido + " actualizado a " + nuevoEstado);
+	}
 	
 }

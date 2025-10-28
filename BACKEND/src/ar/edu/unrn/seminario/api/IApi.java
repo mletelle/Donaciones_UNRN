@@ -19,7 +19,7 @@ public interface IApi {
 	UsuarioDTO obtenerUsuario(String username);
 
 	void eliminarUsuario(String username);
- 
+	
 	List<RolDTO> obtenerRoles();
 
 	List<RolDTO> obtenerRolesActivos();
@@ -62,5 +62,5 @@ public interface IApi {
 
 	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 	
-	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado);
+	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException;
 }

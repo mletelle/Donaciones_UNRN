@@ -13,6 +13,7 @@ import java.util.List;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class GestionarOrdenVoluntario extends JFrame {
 
@@ -96,7 +97,6 @@ public class GestionarOrdenVoluntario extends JFrame {
     }
 
     private void cargarPedidos() {
-        // --- NUEVO ---
         // Poner la bandera en true para que el listener no se dispare
         // mientras se cargan los datos iniciales.
         this.actualizandoDatos = true;
@@ -109,12 +109,10 @@ public class GestionarOrdenVoluntario extends JFrame {
             modeloTabla.addRow(new Object[]{pedido.getId(), pedido.getDonante(), pedido.getDireccion(), pedido.getEstado()});
         }
         
-        // --- NUEVO ---
         // Quitar la bandera
         this.actualizandoDatos = false;
     }
 
-    // --- NUEVO ---
     /**
      * Asigna un JComboBox a la columna "Estado" de la tabla.
      */
@@ -128,19 +126,24 @@ public class GestionarOrdenVoluntario extends JFrame {
         estadoColumn.setCellEditor(new DefaultCellEditor(comboBoxEstados));
     }
 
-    // --- NUEVO ---
     /**
      * Llama a la API para persistir el cambio de estado de un pedido.
      */
     private void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) {
         try {
-            System.out.println("Llamando a la API: actualizarEstadoPedido(" + idPedido + ", \"" + nuevoEstado + "\")");
-            JOptionPane.showMessageDialog(this, "Estado del pedido " + idPedido + " actualizado a " + nuevoEstado + " (Simulación)");
-
-        } catch (Exception ex) {
+            // Llamada real a la API con el método implementado
+            api.actualizarEstadoDelPedido(idPedido, nuevoEstado); 
+            
+            JOptionPane.showMessageDialog(this, "Estado del pedido " + idPedido + " actualizado a " + nuevoEstado + ".", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (ReglaNegocioException ex) {
+            // Captura la excepción de negocio (ej: "Pedido no existe")
             JOptionPane.showMessageDialog(this, "Error al actualizar el estado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            // Si falla la actualización, recargamos los datos para
-            // revertir el cambio visual en la tabla.
+            // Revertir el cambio visual
+            cargarPedidos(); 
+        } catch (Exception ex) {
+            // Captura otros errores (ej: NullPointerException, si la API falla)
+            JOptionPane.showMessageDialog(this, "Error inesperado al actualizar el estado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             cargarPedidos(); 
         }
     }
