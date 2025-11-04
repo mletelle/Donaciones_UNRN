@@ -1,6 +1,9 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
+import java.util.Date;
+
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class OrdenRetiro {
 
@@ -11,28 +14,59 @@ public class OrdenRetiro {
     private static final int ESTADO_COMPLETADO = 3;
 
     // atributos
-    private int id;
+    private Date fechaGeneracion = new Date();
     private int estado;
     private Ubicacion destino;
-    private ArrayList<Colaborador> colaboradores;
-    private ArrayList<Visita> visitas;
+    private ArrayList<Voluntario> voluntarios;
     private PedidosDonacion pedidoOrigen;
+    private ArrayList<Visita> visitas;
+    private int id;
+    private Vehiculo vehiculo;
+
+    
+
 
     // constructor con todos los parametros
-    public OrdenRetiro(PedidosDonacion pedido, Ubicacion destino) {
+    public OrdenRetiro(PedidosDonacion pedido, Ubicacion dest) throws ObjetoNuloException {
+        if (pedido == null) {
+            throw new ObjetoNuloException("El pedido de donación no puede ser nulo.");
+        }
         this.id = ++secuencia;
         this.estado = ESTADO_PENDIENTE;
-        this.destino = destino;
+        this.destino = dest;
         this.pedidoOrigen = pedido;
-        this.colaboradores = new ArrayList<Colaborador>();
+        this.voluntarios = new ArrayList<Voluntario>();
         this.visitas = new ArrayList<Visita>();
         pedido.asignarOrden(this);
     }
 
+    public OrdenRetiro(PedidosDonacion pedido, String dest) throws ObjetoNuloException {
+        if (pedido == null || dest == null || dest.isEmpty()) {
+            throw new ObjetoNuloException("El pedido de donación o el destino no puede ser nulo o vacío.");
+        }
+        this.estado = ESTADO_PENDIENTE;
+        this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // Assuming default values for Ubicacion
+        this.pedidoOrigen = pedido;
+        this.voluntarios = new ArrayList<>();
+        this.visitas = new ArrayList<>();
+        pedido.asignarOrden(this);
+    }
+    public OrdenRetiro(Voluntario voluntario, String tipoVehiculo) {
+        this.estado = ESTADO_PENDIENTE;
+        this.voluntarios = new ArrayList<>();
+        this.visitas = new ArrayList<>();
+        this.voluntarios.add(voluntario);
+        this.destino = null; // Default destination, can be updated later
+        this.pedidoOrigen = null; // Default, as multiple pedidos can be associated
+    }
+
     // metodos
     // asignacion de voluntario
-    public void asignarVoluntario(Colaborador c) {
-        colaboradores.add(c);
+    public void asignarVoluntario(Voluntario voluntario) {
+        if (this.voluntarios == null) {
+            this.voluntarios = new ArrayList<>();
+        }
+        this.voluntarios.add(voluntario);
     }
   
     // actualizacion de estado
@@ -40,45 +74,36 @@ public class OrdenRetiro {
         this.estado = nuevoEstado;
     }
   
-    // metodos para cambiar el estado
-    public void comenzar() {
-        estado = ESTADO_EN_EJECUCION;
-    }
-
-    public void finalizar() {
-        estado = ESTADO_COMPLETADO;
-    }
-  
-    // agregar visita
-    public void agregarVisita(Visita v) {
-        visitas.add(v);
-    }
-  
     // getters
     public int obtenerEstado() {
         return estado;
     }
 
-    public ArrayList<Visita> obtenerVisitas() {
-      return visitas;
-    }
 	public boolean estaCompletada() {
 		return estado == ESTADO_COMPLETADO;
 	}
-    public Colaborador obtenerVoluntario() {
-      if (colaboradores.isEmpty()) {
-          return null; // No hay colaboradores disponibles
+    public Voluntario obtenerPrimerVoluntario() {
+      if (voluntarios.isEmpty()) {
+          return null; // No hay voluntarios disponibles
       }
-      return colaboradores.get(0); // Devuelve el primero de la lista
+      return voluntarios.get(0); // Devuelve el primero de la lista
     }
   
-    @Override
-    public String toString() {
-        return "Orden#" + id + " -> " + destino + ": " + describirEstado();
+    public int obtenerId() {
+        return this.id;
     }
+
+    public Date obtenerFechaCreacion() {
+        return this.fechaGeneracion;
+    }
+
+    public ArrayList<Visita> obtenerVisitas() {
+        return this.visitas;
+    }
+  
   
     // metodo de ayuda para el toString
-    private String describirEstado() {
+    public String describirEstado() {
         switch (estado) {
             case ESTADO_PENDIENTE:
                 return "PENDIENTE";
@@ -91,30 +116,56 @@ public class OrdenRetiro {
         }
     }
   
-    // metodo para imprimir el detalle de la orden
-    public String imprimirDetalle(int nroVivienda) {//no es tostring porque recibe nroVivienda
-        StringBuilder sb = new StringBuilder();
-        sb.append("OrdenDeRetiro").append(id)
-                .append(" Vivienda: ").append(nroVivienda)
-                .append(". Voluntario: ");
-        Colaborador v = obtenerVoluntario();
-        sb.append(v != null ? v.obtenerNombre() + " " + v.obtenerApellido() : " ")
-                .append(" (Estado: ").append(describirEstado()).append("):\n");
-
-        if (visitas.isEmpty()) {
-            sb.append("sin visitas\n");
-        } else {
-            for (int i = 0; i < visitas.size(); i++) {
-                Visita vi = visitas.get(i);
-                sb.append("  Visita ").append(i + 1)
-                        .append(": Fecha: ").append(vi.obtenerFechaFormateada())
-                        .append("\n    Obs.: ").append(vi.obtenerObservacion()).append("\n");
-            }
-        }
-        return sb.toString();
-    }
-
 	public boolean equals(OrdenRetiro obj) {
         return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidoOrigen.equals(obj.pedidoOrigen));
+    }
+
+    public void agregarVisita(Visita visita) {
+        this.visitas.add(visita);
+    }
+
+    // Added methods to retrieve Donante and Vehiculo
+    public Donante obtenerDonante() {
+        return this.pedidoOrigen != null ? this.pedidoOrigen.obtenerDonante() : null;
+    }
+
+    public Vehiculo obtenerVehiculo() {
+        return this.vehiculo;
+    }
+
+    public void asignarVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
+    }
+
+    public Voluntario obtenerVoluntarioPrincipal() {
+        return voluntarios.isEmpty() ? null : voluntarios.get(0);
+    }
+
+    public Voluntario getVoluntario() {
+        return obtenerVoluntarioPrincipal();
+    }
+
+    public int getId() {
+        return obtenerId();
+    }
+
+    public int getEstado() {
+        return obtenerEstado();
+    }
+
+    public Date getFechaCreacion() {
+        return obtenerFechaCreacion();
+    }
+
+    public Donante getDonante() {
+        return obtenerDonante();
+    }
+
+    public Vehiculo getVehiculo() {
+        return obtenerVehiculo();
+    }
+
+    public PedidosDonacion obtenerPedidoOrigen() {
+        return this.pedidoOrigen;
     }
 }

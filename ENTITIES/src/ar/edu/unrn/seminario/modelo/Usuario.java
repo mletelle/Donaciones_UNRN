@@ -1,5 +1,8 @@
 package ar.edu.unrn.seminario.modelo;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
 public class Usuario {
 	private String usuario;
 	private String contrasena;
@@ -8,11 +11,23 @@ public class Usuario {
 	private Rol rol;
 	private boolean activo;
 
-	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol) {
-		/// En caso de que se quiera hacer con excepciones (campos vacios en ventana/interfaz)
-		/// hay que crear una nueva clase llamada DataEmpty que extienda a exception
-		/// quedaria: public usuario(...) throws DataEmpty. Que conlleva cambios en demás clases (MemoryAPI,etc)
-		
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol) throws CampoVacioException, ObjetoNuloException {
+		if (usuario == null || usuario.isEmpty()) {
+			throw new CampoVacioException("El campo 'usuario' no puede estar vacío.");
+		}
+		if (contrasena == null || contrasena.isEmpty()) {
+			throw new CampoVacioException("El campo 'contraseña' no puede estar vacío.");
+		}
+		if (nombre == null || nombre.isEmpty()) {
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+		}
+		if (email == null || email.isEmpty()) {
+			throw new CampoVacioException("El campo 'email' no puede estar vacío.");
+		}
+		if (rol == null) {
+			throw new ObjetoNuloException("El campo 'rol' no puede ser nulo.");
+		}
+
 		this.usuario = usuario;
 		this.contrasena = contrasena;
 		this.nombre = nombre;

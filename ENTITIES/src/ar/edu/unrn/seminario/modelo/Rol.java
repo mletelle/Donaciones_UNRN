@@ -1,5 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+
 public class Rol {
 	private Integer codigo;
 	private String nombre;
@@ -9,8 +11,14 @@ public class Rol {
 
 	}
 
-	public Rol(Integer codigo, String nombre) {
-		super();
+	public Rol(Integer codigo, String nombre) throws CampoVacioException {
+		if (codigo == null) {
+			throw new CampoVacioException("El campo 'codigo' no puede ser nulo.");
+		}
+		if (nombre == null || nombre.isEmpty()) {
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+		}
+
 		this.codigo = codigo;
 		this.nombre = nombre;
 	}

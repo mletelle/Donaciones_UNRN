@@ -29,9 +29,6 @@ public class ListadoUsuario extends JFrame {
 	JButton activarButton;
 	JButton desactivarButton;
 
-	/**
-	 * Create the frame.
-	 */
 	public ListadoUsuario(IApi api) {
 		this.api = api;
 
@@ -58,9 +55,7 @@ public class ListadoUsuario extends JFrame {
 		});
 		modelo = new DefaultTableModel(new Object[][] {}, titulos);
 
-		// Obtiene la lista de usuarios a mostrar
 		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		// Agrega los usuarios en el model
 		for (UsuarioDTO u : usuarios) {
 			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
 		}
@@ -130,14 +125,10 @@ public class ListadoUsuario extends JFrame {
 	}
 
 	private void actualizarTabla() {
-		// Obtiene el model del table
 		DefaultTableModel modelo = (DefaultTableModel) table.getModel();
-		// Obtiene la lista de usuarios a mostrar
 		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		// Resetea el model
 		modelo.setRowCount(0);
 
-		// Agrega los usuarios en el model
 		for (UsuarioDTO u : usuarios) {
 			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
 		}
