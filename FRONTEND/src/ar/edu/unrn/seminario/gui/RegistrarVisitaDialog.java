@@ -52,6 +52,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL; // Rellena horizontalmente
         gbc.weightx = 1.0; // Permite que el campo crezca
         txtFecha = new JTextField(10);
+        txtFecha.setText(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))); // Set current date
         panelCampos.add(txtFecha, gbc);
 
         // Fila 1: Hora
@@ -68,6 +69,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         txtHora = new JTextField(10);
+        txtHora.setText(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))); // Set current time
         panelCampos.add(txtHora, gbc);
 
         // Fila 2: Resultado
@@ -167,20 +169,33 @@ public class RegistrarVisitaDialog extends JDialog {
                 return;
             }
 
+            // Validar que la fecha y hora sean válidas antes de continuar
+            if (fecha == null || fecha.isEmpty() || !fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                JOptionPane.showMessageDialog(this, "La fecha es inválida o está vacía. Use el formato YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (hora == null || hora.isEmpty() || !hora.matches("\\d{2}:\\d{2}")) {
+                JOptionPane.showMessageDialog(this, "La hora es inválida o está vacía. Use el formato HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Obtener el resultado y las observaciones antes de crear el DTO
             String resultado = (String) cmbResultado.getSelectedItem();
             String observaciones = txtObservaciones.getText();
 
-            LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
-            VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones);
-            api.registrarVisita(idOrden, visita); 
-            
-            JOptionPane.showMessageDialog(this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            dispose();
-            
-        } catch (DateTimeParseException ex) {
-             JOptionPane.showMessageDialog(this, "Fecha u hora inválida. Verifique los valores.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-        } 
-        catch (Exception ex) {
+            try {
+                LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
+                String nombreDonante = api.obtenerNombreDonantePorId(idPedido);
+                VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
+                api.registrarVisita(idOrden, visita);
+
+                JOptionPane.showMessageDialog(this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+            } catch (DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al registrar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }

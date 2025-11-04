@@ -104,6 +104,14 @@ public class PedidosDonacion {
 		return this.donante != null ? this.donante.obtenerUbicacion() : "Ubicación no disponible";
 	}
 
+	public int getId() {
+		return this.id;
+	}
+
+	public Donante getDonante() {
+		return this.donante;
+	}
+
 	/**
 	 * Devuelve el estado del pedido como String (para la GUI)
 	 */

@@ -10,6 +10,7 @@ public class VisitaDTO {
     private List<String> bienesRetirados;
     private boolean estado;
     private LocalDateTime fechaHora;
+    private String donante;
 
     public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados) {
         this.fechaDeVisita = fechaDeVisita;
@@ -24,10 +25,11 @@ public class VisitaDTO {
         this.estado = estado;
     }
 
-    public VisitaDTO(LocalDateTime fechaHora, String resultado, String observacion) {
+    public VisitaDTO(LocalDateTime fechaHora, String resultado, String observacion, String donante) {
         this.fechaHora = fechaHora;
         this.observacion = observacion;
         this.estado = "Recolección Exitosa".equals(resultado);
+        this.donante = donante;
     }
 
     // Getters
@@ -49,5 +51,17 @@ public class VisitaDTO {
 
     public LocalDateTime getFechaHora() {
         return fechaHora;
+    }
+
+    public LocalDateTime getFecha() {
+        return fechaHora;
+    }
+
+    public String getDonante() {
+        return donante;
+    }
+
+    public String getResultado() {
+        return estado ? "Recolección Exitosa" : "Cancelado"; // Adjust logic as needed
     }
 }
