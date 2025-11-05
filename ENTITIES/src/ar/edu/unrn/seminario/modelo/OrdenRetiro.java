@@ -1,8 +1,9 @@
 package ar.edu.unrn.seminario.modelo;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 
+import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class OrdenRetiro {
@@ -14,7 +15,7 @@ public class OrdenRetiro {
     private static final int ESTADO_COMPLETADO = 3;
 
     // atributos
-    private Date fechaGeneracion = new Date();
+    private LocalDateTime fechaGeneracion = LocalDateTime.now();
     private int estado;
     private Ubicacion destino;
     private ArrayList<Voluntario> voluntarios;
@@ -45,19 +46,20 @@ public class OrdenRetiro {
             throw new ObjetoNuloException("El pedido de donación o el destino no puede ser nulo o vacío.");
         }
         this.estado = ESTADO_PENDIENTE;
-        this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // Assuming default values for Ubicacion
+        this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // valores por defecto
         this.pedidoOrigen = pedido;
         this.voluntarios = new ArrayList<>();
         this.visitas = new ArrayList<>();
         pedido.asignarOrden(this);
     }
     public OrdenRetiro(Voluntario voluntario, String tipoVehiculo) {
+        this.id = ++secuencia; // Inicializar el ID
         this.estado = ESTADO_PENDIENTE;
         this.voluntarios = new ArrayList<>();
         this.visitas = new ArrayList<>();
         this.voluntarios.add(voluntario);
-        this.destino = null; // Default destination, can be updated later
-        this.pedidoOrigen = null; // Default, as multiple pedidos can be associated
+        this.destino = null; // por defecto
+        this.pedidoOrigen = null; // defecto xq se usa en otros metodos
     }
 
     // metodos
@@ -72,6 +74,25 @@ public class OrdenRetiro {
     // actualizacion de estado
     public void actualizarEstado(int nuevoEstado) {
         this.estado = nuevoEstado;
+    }
+    public String obtenerNombreEstado() {
+        return describirEstado();
+    }
+
+    public void actualizarEstado(String nuevoEstado) {
+        switch (nuevoEstado.toUpperCase()) {
+            case "PENDIENTE":
+                this.estado = ESTADO_PENDIENTE;
+                break;
+            case "EN_EJECUCION":
+                this.estado = ESTADO_EN_EJECUCION;
+                break;
+            case "COMPLETADO":
+                this.estado = ESTADO_COMPLETADO;
+                break;
+            default:
+                throw new IllegalArgumentException("Estado desconocido: " + nuevoEstado);
+        }
     }
   
     // getters
@@ -93,7 +114,7 @@ public class OrdenRetiro {
         return this.id;
     }
 
-    public Date obtenerFechaCreacion() {
+    public LocalDateTime obtenerFechaCreacion() {
         return this.fechaGeneracion;
     }
 
@@ -124,7 +145,20 @@ public class OrdenRetiro {
         this.visitas.add(visita);
     }
 
-    // Added methods to retrieve Donante and Vehiculo
+    public void registrarVisita(LocalDateTime fechaHora, String observacion) throws ObjetoNuloException, CampoVacioException {
+        if (fechaHora == null) {
+            throw new ObjetoNuloException("La fecha de la visita no puede ser nula.");
+        }
+        if (observacion == null || observacion.isEmpty()) {
+            throw new ObjetoNuloException("La observación no puede ser nula o vacía.");
+        }
+        Visita nuevaVisita = new Visita(fechaHora, observacion);
+        if (this.visitas == null) {
+            this.visitas = new ArrayList<>();
+        }
+        this.visitas.add(nuevaVisita);
+    }
+
     public Donante obtenerDonante() {
         return this.pedidoOrigen != null ? this.pedidoOrigen.obtenerDonante() : null;
     }
@@ -153,7 +187,7 @@ public class OrdenRetiro {
         return obtenerEstado();
     }
 
-    public Date getFechaCreacion() {
+    public LocalDateTime getFechaCreacion() {
         return obtenerFechaCreacion();
     }
 

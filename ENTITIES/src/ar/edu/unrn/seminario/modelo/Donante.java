@@ -1,7 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -22,12 +22,17 @@ public class Donante extends Persona {
         this(nom, ape, dni, new Ubicacion(dir, zona, barrio, lat, lon));
     }
 
-    public PedidosDonacion crearPedido(Date fecha, ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
+    public PedidosDonacion crearPedido(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula.");
         }
         if (bienes == null || bienes.isEmpty()) {
             throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+        }
+        for (Bien bien : bienes) {
+            if (bien.obtenerCantidad() <= 0) {
+                throw new CampoVacioException("La cantidad de cada bien debe ser mayor a cero.");
+            }
         }
         if (tipo == null || tipo.isEmpty()) {
             throw new CampoVacioException("El tipo de vehículo no puede estar vacío.");
@@ -53,7 +58,6 @@ public class Donante extends Persona {
         System.out.println("Donante " + this + ": " + mensaje);
     }
 
-    // Fixed method to use `obtenerNombre`
     public String getNombre() {
         return super.obtenerNombre();
     }

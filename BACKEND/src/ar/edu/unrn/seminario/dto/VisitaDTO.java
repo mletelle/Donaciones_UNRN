@@ -62,6 +62,6 @@ public class VisitaDTO {
     }
 
     public String getResultado() {
-        return estado ? "Recolección Exitosa" : "Cancelado"; // Adjust logic as needed
+        return estado ? "Recolección Exitosa" : "Cancelado"; // segun logica de negocio
     }
 }

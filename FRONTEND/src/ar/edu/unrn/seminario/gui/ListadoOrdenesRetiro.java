@@ -29,7 +29,7 @@ public class ListadoOrdenesRetiro extends JFrame {
         tablaOrdenes = new JTable();
         tablaOrdenes.setModel(new DefaultTableModel(
             new Object[][] {},
-            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} // Eliminado "ID"
+            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} 
         ));
 
         tablaOrdenes.addMouseListener(new MouseAdapter() {
@@ -59,7 +59,7 @@ public class ListadoOrdenesRetiro extends JFrame {
             String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehículo Desconocido";
             String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
 
-            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); // Eliminado orden.getId()
+            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 
         }
     }
 }

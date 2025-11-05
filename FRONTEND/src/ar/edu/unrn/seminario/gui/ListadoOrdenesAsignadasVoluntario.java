@@ -9,15 +9,16 @@ import java.util.List;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
+import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 
 public class ListadoOrdenesAsignadasVoluntario extends JFrame {
 
     private JTable tablaOrdenes;
     private DefaultTableModel modeloTabla;
     private IApi api;
-    private String voluntarioActual;
+    private VoluntarioDTO voluntarioActual;
 
-    public ListadoOrdenesAsignadasVoluntario(IApi api, String voluntarioActual) {
+    public ListadoOrdenesAsignadasVoluntario(IApi api, VoluntarioDTO voluntarioActual) {
         this.api = api;
         this.voluntarioActual = voluntarioActual;
 
@@ -52,13 +53,13 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
     }
 
     public ListadoOrdenesAsignadasVoluntario(IApi api) {
-        this(api, "Carlos"); // Hardcodear voluntario para pruebas
+        this(api, new VoluntarioDTO("Carlos", "Perez", "carlos.perez@example.com")); // VoluntarioDTO de prueba
     }
 
     private void cargarOrdenesAsignadas() {
-        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual);
+        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getNombre());
         for (OrdenRetiroDTO orden : ordenes) {
-            modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstado(), orden.getDescripcion()});
+            modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstadoTexto(), orden.getDescripcion()});
         }
     }
 }

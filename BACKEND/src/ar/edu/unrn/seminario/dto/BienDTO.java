@@ -17,11 +17,23 @@ public class BienDTO {
     public static final int TIPO_NUEVO = 1;
     public static final int TIPO_USADO = 2;
 
+    private int id;
     private int tipo;
     private int cantidad;
     private int categoria;
     private String descripcion;
     private LocalDate fechaVencimiento;
+    private int peso;
+
+    public BienDTO(int id, int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento, int peso) {
+        this.id = id;
+        this.tipo = tipo;
+        this.cantidad = cantidad;
+        this.categoria = categoria;
+        this.descripcion = descripcion;
+        this.fechaVencimiento = fechaVencimiento;
+        this.peso = peso;
+    }
 
     public BienDTO(int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento) {
         this.tipo = tipo;
@@ -69,5 +81,21 @@ public class BienDTO {
 
     public void setCategoria(int categoria) {
         this.categoria = categoria;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPeso() {
+        return peso;
+    }
+
+    public void setPeso(int peso) {
+        this.peso = peso;
     }
 }

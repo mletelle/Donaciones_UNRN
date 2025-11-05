@@ -21,41 +21,37 @@ public class RegistrarVisitaDialog extends JDialog {
     private int idOrden;
     private int idPedido;
 
-    /**
-     * Constructor principal que construye la GUI.
-     */
     public RegistrarVisitaDialog(IApi api, int idOrden) {
         this.api = api;
         this.idOrden = idOrden;
 
         setTitle("Registrar Visita");
-        setSize(450, 350); // Ajustado el tamaño para el nuevo layout
+        setSize(450, 350); 
         setModal(true);
         setLocationRelativeTo(null);
 
-        JPanel panelPrincipal = new JPanel(new BorderLayout(5, 5)); // Panel principal con borde
+        JPanel panelPrincipal = new JPanel(new BorderLayout(5, 5)); // panel principal con borde
 
-        // Panel de campos con GridBagLayout para un formulario limpio
         JPanel panelCampos = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4); // Espaciado entre componentes
-        gbc.anchor = GridBagConstraints.EAST; // Alinea etiquetas a la derecha
+        gbc.insets = new Insets(4, 4, 4, 4); // espaciado entre componentes
+        gbc.anchor = GridBagConstraints.EAST; // alinea etiquetas a la derecha
 
-        // Fila 0: Fecha
+        // Fecha
         gbc.gridx = 0;
         gbc.gridy = 0;
         panelCampos.add(new JLabel("Fecha (YYYY-MM-DD):"), gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST; // Alinea campos a la izquierda
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Rellena horizontalmente
-        gbc.weightx = 1.0; // Permite que el campo crezca
+        gbc.anchor = GridBagConstraints.WEST; //  campos a la izquierda
+        gbc.fill = GridBagConstraints.HORIZONTAL; //  horizontalmente
+        gbc.weightx = 1.0; // dinamico
         txtFecha = new JTextField(10);
-        txtFecha.setText(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))); // Set current date
+        txtFecha.setText(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))); // fecha actual
         panelCampos.add(txtFecha, gbc);
 
-        // Fila 1: Hora
+        // Hora
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
@@ -69,7 +65,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         txtHora = new JTextField(10);
-        txtHora.setText(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))); // Set current time
+        txtHora.setText(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))); // hora actual
         panelCampos.add(txtHora, gbc);
 
         // Fila 2: Resultado
@@ -88,7 +84,7 @@ public class RegistrarVisitaDialog extends JDialog {
         cmbResultado = new JComboBox<>(new String[]{"Recolección Exitosa", "Donante Ausente", "Recolección Parcial", "Cancelado"});
         panelCampos.add(cmbResultado, gbc);
 
-        // Fila 3: ID Pedido (movido aquí para mejor flujo)
+        // pedido id
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.EAST;
@@ -101,30 +97,29 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        txtIdPedido = new JTextField(10); // Inicializado aquí
-        txtIdPedido.setEditable(false); // Hecho no editable
+        txtIdPedido = new JTextField(10); //
+        txtIdPedido.setEditable(false); //  no editable
         panelCampos.add(txtIdPedido, gbc);
 
-        // Fila 4: Observaciones (etiqueta)
+        // Observaciones
         gbc.gridx = 0;
         gbc.gridy = 4;
-        gbc.anchor = GridBagConstraints.NORTHEAST; // Alinea arriba y a la derecha
+        gbc.anchor = GridBagConstraints.NORTHEAST; // 
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         panelCampos.add(new JLabel("Observaciones:"), gbc);
 
-        // Fila 5: Observaciones (área de texto)
         gbc.gridx = 0;
         gbc.gridy = 5;
-        gbc.gridwidth = 2; // Ocupa ambas columnas
-        gbc.fill = GridBagConstraints.BOTH; // Rellena en ambas direcciones
-        gbc.weightx = 1.0; // Ocupa espacio horizontal
-        gbc.weighty = 1.0; // Ocupa todo el espacio vertical restante
+        gbc.gridwidth = 2; 
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0; 
+        gbc.weighty = 1.0; 
         txtObservaciones = new JTextArea(5, 20);
         panelCampos.add(new JScrollPane(txtObservaciones), gbc);
 
         // Panel de botones
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // Alinea botones a la derecha
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT)); 
         JButton btnGuardar = new JButton("Guardar");
         btnGuardar.addActionListener(new ActionListener() {
             @Override
@@ -134,20 +129,16 @@ public class RegistrarVisitaDialog extends JDialog {
         });
         panelBotones.add(btnGuardar);
 
-        // Añadir paneles al principal
+        // Al principal
         panelPrincipal.add(panelCampos, BorderLayout.CENTER);
         panelPrincipal.add(panelBotones, BorderLayout.SOUTH);
 
-        // Añadir un borde vacío para margen
+        //  vacio para margen
         panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         add(panelPrincipal);
     }
 
-    /*
-     * Constructor que recibe el idPedido.
-     * Llama al constructor principal y LUEGO asigna el idPedido al campo de texto.
-     */
     public RegistrarVisitaDialog(IApi api, int idOrden, int idPedido) {
         this(api, idOrden); // Llama al constructor que construye la GUI
         this.idPedido = idPedido;
@@ -159,7 +150,7 @@ public class RegistrarVisitaDialog extends JDialog {
             String fecha = txtFecha.getText();
             String hora = txtHora.getText();
             
-            // Validación simple de formato
+            // verifica simple de formato
             if (!fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 JOptionPane.showMessageDialog(this, "Formato de fecha incorrecto. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -169,7 +160,7 @@ public class RegistrarVisitaDialog extends JDialog {
                 return;
             }
 
-            // Validar que la fecha y hora sean válidas antes de continuar
+            // revisa que la fecha y hora sean válidas antes de continuar
             if (fecha == null || fecha.isEmpty() || !fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 JOptionPane.showMessageDialog(this, "La fecha es inválida o está vacía. Use el formato YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -180,9 +171,15 @@ public class RegistrarVisitaDialog extends JDialog {
                 return;
             }
 
-            // Obtener el resultado y las observaciones antes de crear el DTO
+            // obtiene el resultado y las observaciones antes de crear el DTO
             String resultado = (String) cmbResultado.getSelectedItem();
             String observaciones = txtObservaciones.getText();
+
+            // Validar observaciones
+            if (observaciones == null || observaciones.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "El campo de observaciones no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             try {
                 LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
