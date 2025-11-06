@@ -110,26 +110,25 @@ public class RegistrarPedidoDonacion extends JDialog {
 
                     if (bienes == null || bienes.isEmpty()) {
                         JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donación.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-                        return; // Detiene la ejecución si no hay bienes
+                        return; // detiene si no hay bienes
                     }
 
                     if (!donanteComboBox.isEnabled()) {
                         idDonanteSeleccionado = donanteId; 
                     } else {
                         DonanteDTO donanteSeleccionado = (DonanteDTO) donanteComboBox.getSelectedItem();
-                        // Asumiendo que DonanteDTO.getId() es el DNI o identificador correcto
                         idDonanteSeleccionado = donanteSeleccionado.getId(); 
                     }
 
-                    // 1. Parseo de Fecha
+                    // parseo de Fecha
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate fechaParsed = LocalDate.parse(fechaStr, formatter);
                     LocalDateTime fechaCompleta = fechaParsed.atStartOfDay();
 
-                    // 2. Formateo de vuelta a String para el DTO
+                    // formateo de vuelta a String para el DTO
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
 
-                    // 3. Creación y Registro
+                    // creacion y Registro
                     PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, "", idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
@@ -150,7 +149,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
 
-        // Cargar donantes en el combo box
+        // carga donantes en el combo box
         List<DonanteDTO> donantes = api.obtenerDonantes();
         for (DonanteDTO donante : donantes) {
             donanteComboBox.addItem(donante);

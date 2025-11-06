@@ -1,8 +1,10 @@
 package ar.edu.unrn.seminario.dto;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.sql.Timestamp;
 
 public class OrdenRetiroDTO {
     private int id;
@@ -38,6 +40,16 @@ public class OrdenRetiroDTO {
         this.id = id;
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
+        this.visitas = visitas;
+        this.donante = donante;
+        this.vehiculo = vehiculo;
+        this.voluntario = voluntario;
+    }
+
+    public OrdenRetiroDTO(int id, int estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
+        this.id = id;
+        this.estado = estado;
+        this.fechaCreacion = Timestamp.valueOf(fechaCreacion);
         this.visitas = visitas;
         this.donante = donante;
         this.vehiculo = vehiculo;
@@ -102,5 +114,18 @@ public class OrdenRetiroDTO {
 
     public String getDescripcion() {
         return "Donante: " + donante + ", Vehículo: " + vehiculo + ", Voluntario: " + voluntario;
+    }
+
+    public String getEstadoTexto() {
+        switch (this.estado) {
+            case 1:
+                return "Pendiente";
+            case 2:
+                return "En Ejecución";
+            case 3:
+                return "Completado";
+            default:
+                return "Desconocido";
+        }
     }
 }

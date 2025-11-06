@@ -64,7 +64,7 @@ public interface IApi {
 	
 	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException;
 
-	List<VisitaDTO> obtenerVisitasPorVoluntario(String voluntario);
+	List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
 
 	String obtenerNombreDonantePorId(int idPedido);
 }

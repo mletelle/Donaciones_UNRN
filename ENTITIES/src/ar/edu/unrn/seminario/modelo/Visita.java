@@ -3,7 +3,7 @@ package ar.edu.unrn.seminario.modelo;
 import java.util.ArrayList; 
 import java.util.Date;
 import java.util.List;
-
+import java.time.LocalDateTime;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -27,7 +27,7 @@ public class Visita {
         if (obs == null || obs.trim().isEmpty())  {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
+        if (bienes == null || bienes.isEmpty()) { // 
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
         this.fechaDeVisita = fecha;
@@ -42,7 +42,7 @@ public class Visita {
         if (obs == null || obs.trim().isEmpty()) {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
+        if (bienes == null || bienes.isEmpty()) { // 
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
         this.fechaDeVisita = fecha;
@@ -63,10 +63,10 @@ public class Visita {
         if (observacion == null || observacion.trim().isEmpty()) {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
-        if (bienes == null || bienes.isEmpty()) { // Esta regla se mantiene para este constructor
+        if (bienes == null || bienes.isEmpty()) { // 
             throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
         }
-        this.fechaDeVisita = new Date(); // Asume que la fecha es actual
+        this.fechaDeVisita = new Date(); // asume que la fecha es actual
         this.estado = ESTADO_PENDIENTE;
         this.observacion = observacion;
         this.bienesRetirados = new ArrayList<>(bienes);
@@ -79,9 +79,21 @@ public class Visita {
             throw new CampoVacioException("La observación no puede estar vacía");
         }
         this.fechaDeVisita = fecha;
-        this.estado = ESTADO_REALIZADA; // Se asume realizada ya que se está registrando un resultado
+        this.estado = ESTADO_REALIZADA; // 
         this.observacion = obs;
-        this.bienesRetirados = new ArrayList<>(); // Inicializa una LISTA VACÍA
+        this.bienesRetirados = new ArrayList<>(); // listavacia
+    }
+    public Visita(LocalDateTime fechaHora, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (fechaHora == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula");
+        }
+        if (obs == null || obs.trim().isEmpty()) {
+            throw new CampoVacioException("La observación no puede estar vacía");
+        }
+        this.fechaDeVisita = java.util.Date.from(fechaHora.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        this.estado = ESTADO_REALIZADA;
+        this.observacion = obs;
+        this.bienesRetirados = new ArrayList<>();
     }
 
 

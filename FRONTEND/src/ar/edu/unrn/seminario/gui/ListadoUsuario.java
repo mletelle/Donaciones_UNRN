@@ -48,7 +48,6 @@ public class ListadoUsuario extends JFrame {
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				// Habilitar botones
 				habilitarBotones(true);
 
 			}
@@ -114,7 +113,7 @@ public class ListadoUsuario extends JFrame {
 		pnlBotonesOperaciones.add(activarButton);
 		pnlBotonesOperaciones.add(cerrarButton);
 
-		// Deshabilitar botones que requieren tener una fila seleccionada
+		// desabilita botones que requieren tener una fila seleccionada
 		habilitarBotones(false);
 	}
 

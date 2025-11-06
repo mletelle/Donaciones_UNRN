@@ -1,9 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
@@ -26,16 +24,16 @@ public class PedidosDonacion {
 
 	// atributos
 	private int id;
-	private Date fecha;
+	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
 	private int tipoVehiculo;
 	private String observaciones;
 	private Donante donante; // asociacion inversa
 	private OrdenRetiro ordenRetiro; // 1 a 1
-	private int estadoPedido; // Nuevo campo para guardar el estado del pedido
+	private int estadoPedido; //  guardar el estado del pedido
 
 	// constructor con todos los parametros
-	public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
 		}
@@ -53,29 +51,27 @@ public class PedidosDonacion {
 		this.donante = d;
 		this.estadoPedido = ESTADO_PENDIENTE; // Inicializar en PENDIENTE
 	}
-	public PedidosDonacion(Date fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
 	public PedidosDonacion(String tipo, ArrayList<Bien> bienes, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
-		this(new Date(), bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, donante);
+		this(LocalDateTime.now(), bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, donante);
 	}
 	// constructor sin fecha (usa la actual)
 	public PedidosDonacion(ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
-		this(new Date(), bienes, tipoVehiculo, observaciones, d);
+		this(LocalDateTime.now(), bienes, tipoVehiculo, observaciones, d);
 	}
 
-	// constructor to accept LocalDateTime
+	// constructor para LocalDateTime
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
-		this(Date.from(fecha.atZone(ZoneId.systemDefault()).toInstant()), new ArrayList<>(bienes),
-			 tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION,
-			 observaciones, donante);
+		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
 	// getters
 	public int obtenerId() {
 		return id;
 	}
 
-	public Date obtenerFecha() {
+	public LocalDateTime obtenerFecha() {
 		return fecha;
 	}
 
@@ -100,7 +96,6 @@ public class PedidosDonacion {
 	}
 
 	public String obtenerUbicacion() {
-		// Assuming ubicacion is derived from donante or another attribute
 		return this.donante != null ? this.donante.obtenerUbicacion() : "Ubicación no disponible";
 	}
 
@@ -112,9 +107,7 @@ public class PedidosDonacion {
 		return this.donante;
 	}
 
-	/**
-	 * Devuelve el estado del pedido como String (para la GUI)
-	 */
+	// devuelve el estado del pedido como String (para la GUI)
 	public String obtenerEstado() {
 		switch (this.estadoPedido) {
 			case ESTADO_PENDIENTE:
@@ -128,9 +121,7 @@ public class PedidosDonacion {
 		}
 	}
 
-	/**
-	 * Devuelve el estado del pedido como int
-	 */
+	// devuelve el estado del pedido como int
 	public int obtenerEstadoInt() {
 		return this.estadoPedido;
 	}
@@ -145,11 +136,9 @@ public class PedidosDonacion {
 	}
 
 	public void actualizarEstado(int nuevoEstado) {
-		// En un caso real, aquí irían validaciones de transición de estado.
 		if (nuevoEstado >= ESTADO_PENDIENTE && nuevoEstado <= ESTADO_COMPLETADO) {
 			this.estadoPedido = nuevoEstado;
 		} else {
-			// Manejo de error simple para el modelo
 			System.err.println("Advertencia: Intento de establecer un estado de pedido inválido: " + nuevoEstado);
 		}
 	}

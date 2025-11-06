@@ -47,7 +47,6 @@ public class Vehiculo {
 		this.capacidad = capacidad;
 	}
 	
-	// Método para obtener la descripción del vehículo
     public String getDescripcion() {
         return "Tipo: " + tipoVeh + ", Patente: " + patente + ", Estado: " + estado + ", Capacidad: " + capacidad;
     }
