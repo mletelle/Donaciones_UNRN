@@ -6,11 +6,12 @@ import java.awt.*;
 import java.util.List;
 
 import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.api.IApi;
 
 public class ListadoVisitasDialog extends JDialog {
 
-    public ListadoVisitasDialog(IApi api, String voluntario) {
+    public ListadoVisitasDialog(IApi api, VoluntarioDTO voluntario) {
         setTitle("Historial de Visitas");
         setSize(600, 400);
         setModal(true);
@@ -19,14 +20,12 @@ public class ListadoVisitasDialog extends JDialog {
         String[] columnNames = {"Fecha", "Observaciones"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
 
-        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario);
-        // Check if the list of visits is empty
+        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); // Pasar el VoluntarioDTO completo
         if (visitas == null || visitas.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No hay visitas registradas para este voluntario.", "Información", JOptionPane.INFORMATION_MESSAGE);
-            dispose(); // Cierra el diálogo explícitamente
+            dispose(); // 
             return;
         }
-        // Validate that each VisitaDTO has a non-null fecha
         for (VisitaDTO visita : visitas) {
             if (visita.getFechaDeVisita() == null) {
                 JOptionPane.showMessageDialog(this, "Una de las visitas tiene una fecha nula. Verifique los datos.", "Error", JOptionPane.ERROR_MESSAGE);

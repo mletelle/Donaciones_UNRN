@@ -29,21 +29,10 @@ public class ListadoOrdenesRetiro extends JFrame {
         tablaOrdenes = new JTable();
         tablaOrdenes.setModel(new DefaultTableModel(
             new Object[][] {},
-            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} // Eliminado "ID"
+            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} 
         ));
 
-        tablaOrdenes.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int selectedRow = tablaOrdenes.getSelectedRow();
-                    if (selectedRow != -1) {
-                        int idOrden = (int) tablaOrdenes.getValueAt(selectedRow, 0);
-                        new GestionarOrdenRetiro(api, idOrden).setVisible(true);
-                    }
-                }
-            }
-        });
+
 
         JScrollPane scrollPane = new JScrollPane(tablaOrdenes);
         add(scrollPane, BorderLayout.CENTER);
@@ -59,7 +48,7 @@ public class ListadoOrdenesRetiro extends JFrame {
             String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehículo Desconocido";
             String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
 
-            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); // Eliminado orden.getId()
+            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 
         }
     }
 }

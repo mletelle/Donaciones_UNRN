@@ -32,7 +32,7 @@ public class AgregarBienDialog extends JDialog {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Categoría
+        // Categoria
         gbc.gridx = 0;
         gbc.gridy = 0;
         formPanel.add(new JLabel("Categoría:"), gbc);

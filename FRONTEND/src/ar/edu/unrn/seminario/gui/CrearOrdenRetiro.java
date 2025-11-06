@@ -28,7 +28,6 @@ public class CrearOrdenRetiro extends JDialog {
 
         setLayout(new BorderLayout());
 
-        // Table setup
         pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante ID", "Tipo Vehículo" }) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
@@ -43,7 +42,6 @@ public class CrearOrdenRetiro extends JDialog {
 
         cargarPedidosPendientes();
 
-        // Assignment panel setup
         JPanel panelAsignacion = new JPanel(new FlowLayout());
         panelAsignacion.add(new JLabel("Voluntario:"));
 
@@ -63,7 +61,6 @@ public class CrearOrdenRetiro extends JDialog {
 
         add(panelAsignacion, BorderLayout.SOUTH);
 
-        // Button actions
         btnAsignarCrearOrden.addActionListener(e -> asignarYCrearOrden());
         btnCancelar.addActionListener(e -> dispose());
 
