@@ -28,7 +28,7 @@ public class CrearOrdenRetiro extends JDialog {
 
         setLayout(new BorderLayout());
 
-        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante ID", "Tipo Vehículo" }) {
+        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante ID", "Tipo Vehiculo" }) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0) {
@@ -49,8 +49,8 @@ public class CrearOrdenRetiro extends JDialog {
         cargarVoluntarios();
         panelAsignacion.add(voluntarioComboBox);
 
-        panelAsignacion.add(new JLabel("Vehículo:"));
-        tipoVehiculoComboBox = new JComboBox<>(new String[] { "Auto", "Camioneta", "Camión" });
+        panelAsignacion.add(new JLabel("Vehiculo:"));
+        tipoVehiculoComboBox = new JComboBox<>(new String[] { "Auto", "Camioneta", "Camion" });
         panelAsignacion.add(tipoVehiculoComboBox);
 
         JButton btnAsignarCrearOrden = new JButton("Asignar y Crear");
@@ -119,7 +119,7 @@ public class CrearOrdenRetiro extends JDialog {
 
         try {
             api.crearOrdenRetiro(idsPedidosSeleccionados, voluntarioSeleccionado.getId(), tipoVehiculoSeleccionado);
-            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "exito", JOptionPane.INFORMATION_MESSAGE);
             cargarPedidosPendientes();
             dispose();
         } catch (Exception e) {

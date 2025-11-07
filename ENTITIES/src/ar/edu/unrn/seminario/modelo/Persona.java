@@ -14,13 +14,13 @@ public abstract class Persona {
     // crea una nueva persona con los datos basicos
     public Persona(String nombre, String apellido, int dni, Ubicacion ubicacion) throws CampoVacioException, ObjetoNuloException {
         if (nombre == null || nombre.isEmpty()) {
-            throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+            throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
         }
         if (apellido == null || apellido.isEmpty()) {
-            throw new CampoVacioException("El campo 'apellido' no puede estar vacío.");
+            throw new CampoVacioException("El campo 'apellido' no puede estar vacio.");
         }
         if (dni <= 0) {
-            throw new CampoVacioException("El campo 'dni' debe ser un número positivo.");
+            throw new CampoVacioException("El campo 'dni' debe ser un numero positivo.");
         }
         if (ubicacion == null) {
             throw new ObjetoNuloException("El campo 'ubicacion' no puede ser nulo.");
@@ -34,13 +34,13 @@ public abstract class Persona {
 
     public Persona(String nombre, String apellido, int dni) throws CampoVacioException {
         if (nombre == null || nombre.isEmpty()) {
-            throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+            throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
         }
         if (apellido == null || apellido.isEmpty()) {
-            throw new CampoVacioException("El campo 'apellido' no puede estar vacío.");
+            throw new CampoVacioException("El campo 'apellido' no puede estar vacio.");
         }
         if (dni <= 0) {
-            throw new CampoVacioException("El campo 'dni' debe ser un número positivo.");
+            throw new CampoVacioException("El campo 'dni' debe ser un numero positivo.");
         }
 
         this.nombre = nombre;
@@ -63,6 +63,10 @@ public abstract class Persona {
 
     public String obtenerUbicacion() {
         return ubicacion.toString();
+    }
+    
+    public Ubicacion obtenerUbicacionEntidad() {
+        return this.ubicacion;
     }
 
     public void cambiarUbicacion(Ubicacion nueva) {

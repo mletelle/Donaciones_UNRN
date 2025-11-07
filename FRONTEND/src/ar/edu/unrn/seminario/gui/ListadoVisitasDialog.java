@@ -20,9 +20,9 @@ public class ListadoVisitasDialog extends JDialog {
         String[] columnNames = {"Fecha", "Observaciones"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
 
-        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); // Pasar el VoluntarioDTO completo
+        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); // pasar el VoluntarioDTO completo
         if (visitas == null || visitas.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay visitas registradas para este voluntario.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No hay visitas registradas para este voluntario.", "Informacion", JOptionPane.INFORMATION_MESSAGE);
             dispose(); // 
             return;
         }

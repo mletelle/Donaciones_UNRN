@@ -32,7 +32,7 @@ public class Bien {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
         }
         if (categoria < CATEGORIA_BAJA || categoria > CATEGORIA_ALTA) {
-            throw new CampoVacioException("La categoría es inválida.");
+            throw new CampoVacioException("La categoria es invalida.");
         }
         this.tipo = tipo;
         this.cantidad = cantidad;
@@ -41,12 +41,12 @@ public class Bien {
     public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
         this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
         if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo no puede estar vacío.");
+            throw new CampoVacioException("El tipo no puede estar vacio.");
         }
     }
     public Bien(String tipo) throws CampoVacioException {
         if (tipo == null || tipo.trim().isEmpty()) {
-            throw new CampoVacioException("El tipo no puede ser nulo o vacío.");
+            throw new CampoVacioException("El tipo no puede ser nulo o vacio.");
         }
         this.tipo = TIPO_ALIMENTO; 
         this.cantidad = 1; 

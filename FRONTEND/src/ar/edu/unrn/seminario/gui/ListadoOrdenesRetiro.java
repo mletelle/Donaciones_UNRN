@@ -16,7 +16,7 @@ public class ListadoOrdenesRetiro extends JFrame {
 
     public ListadoOrdenesRetiro(IApi api) {
         this.api = api;
-        setTitle("Listado de Órdenes de Retiro");
+        setTitle("Listado de ordenes de Retiro");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -29,7 +29,7 @@ public class ListadoOrdenesRetiro extends JFrame {
         tablaOrdenes = new JTable();
         tablaOrdenes.setModel(new DefaultTableModel(
             new Object[][] {},
-            new String[] {"Estado", "Fecha Creación", "Vehículo", "Voluntario"} 
+            new String[] {"Estado", "Fecha Creacion", "Vehiculo", "Voluntario"} 
         ));
 
 
@@ -44,8 +44,8 @@ public class ListadoOrdenesRetiro extends JFrame {
 
         List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesDeRetiro("PENDIENTE");
         for (OrdenRetiroDTO orden : ordenes) {
-            String estadoTexto = orden.getEstado() == 1 ? "Pendiente" : orden.getEstado() == 2 ? "En Ejecución" : "Completado";
-            String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehículo Desconocido";
+            String estadoTexto = orden.getEstado(); // ahora getEstado() devuelve String directamente
+            String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehiculo Desconocido";
             String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
 
             model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 

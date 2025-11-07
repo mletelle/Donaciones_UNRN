@@ -9,44 +9,42 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Visita {
-    // estados de la visita 
-    private static final int ESTADO_PENDIENTE = 1;
-    private static final int ESTADO_REALIZADA = 2;
-    private static final int ESTADO_CANCELADA = 3;
-
     private Date fechaDeVisita;
-    private int estado;
+    private ResultadoVisita resultado;
     private String observacion;
     private ArrayList<Bien> bienesRetirados;
 
     // constructor principal con todos los parametros
-    public Visita(Date fecha, String obs, List<Bien> bienes) throws CampoVacioException, ObjetoNuloException {
+    public Visita(Date fecha, ResultadoVisita resultado, String obs, List<Bien> bienes) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
         }
         if (obs == null || obs.trim().isEmpty())  {
-            throw new CampoVacioException("La observación no puede estar vacía");
+            throw new CampoVacioException("La observacion no puede estar vacia");
         }
         if (bienes == null || bienes.isEmpty()) { // 
-            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
+            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacia");
         }
         this.fechaDeVisita = fecha;
-        this.estado = ESTADO_PENDIENTE;
+        this.resultado = resultado;
         this.observacion = obs;
         this.bienesRetirados = new ArrayList<>(bienes);
     }
+    
+    // constructor con todos los parametros (compatibilidad con codigo anterior que usaba int)
     public Visita(Date fecha, int estado, String obs, List<Bien> bienes) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
         }
         if (obs == null || obs.trim().isEmpty()) {
-            throw new CampoVacioException("La observación no puede estar vacía");
+            throw new CampoVacioException("La observacion no puede estar vacia");
         }
         if (bienes == null || bienes.isEmpty()) { // 
-            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
+            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacia");
         }
         this.fechaDeVisita = fecha;
-        this.estado = estado;
+        //  int a enum para compatibilidad
+        this.resultado = (estado == 2) ? ResultadoVisita.RECOLECCION_EXITOSA : ResultadoVisita.CANCELADO;
         this.observacion = obs;
         this.bienesRetirados = new ArrayList<>(bienes);
     }
@@ -58,40 +56,64 @@ public class Visita {
     // constructor con fecha, observacion y bienes
     public Visita(String fecha, String observacion, List<Bien> bienes) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null || fecha.trim().isEmpty()) {
-            throw new CampoVacioException("La fecha no puede ser nula o vacía");
+            throw new CampoVacioException("La fecha no puede ser nula o vacia");
         }
         if (observacion == null || observacion.trim().isEmpty()) {
-            throw new CampoVacioException("La observación no puede estar vacía");
+            throw new CampoVacioException("La observacion no puede estar vacia");
         }
         if (bienes == null || bienes.isEmpty()) { // 
-            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacía");
+            throw new ObjetoNuloException("La lista de bienes no puede ser nula o vacia");
         }
         this.fechaDeVisita = new Date(); // asume que la fecha es actual
-        this.estado = ESTADO_PENDIENTE;
+        this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
         this.observacion = observacion;
         this.bienesRetirados = new ArrayList<>(bienes);
+    }
+    public Visita(Date fecha, ResultadoVisita resultado, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (fecha == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula");
+        }
+        if (obs == null || obs.trim().isEmpty())  {
+            throw new CampoVacioException("La observacion no puede estar vacia");
+        }
+        this.fechaDeVisita = fecha;
+        this.resultado = resultado;
+        this.observacion = obs;
+        this.bienesRetirados = new ArrayList<>(); // lista vacia
     }
     public Visita(Date fecha, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
         }
         if (obs == null || obs.trim().isEmpty())  {
-            throw new CampoVacioException("La observación no puede estar vacía");
+            throw new CampoVacioException("La observacion no puede estar vacia");
         }
         this.fechaDeVisita = fecha;
-        this.estado = ESTADO_REALIZADA; // 
+        this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
         this.observacion = obs;
-        this.bienesRetirados = new ArrayList<>(); // listavacia
+        this.bienesRetirados = new ArrayList<>(); // lista vacia
+    }
+    public Visita(LocalDateTime fechaHora, ResultadoVisita resultado, String obs) throws CampoVacioException, ObjetoNuloException {
+        if (fechaHora == null) {
+            throw new ObjetoNuloException("La fecha no puede ser nula");
+        }
+        if (obs == null || obs.trim().isEmpty()) {
+            throw new CampoVacioException("La observacion no puede estar vacia");
+        }
+        this.fechaDeVisita = java.util.Date.from(fechaHora.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        this.resultado = resultado;
+        this.observacion = obs;
+        this.bienesRetirados = new ArrayList<>();
     }
     public Visita(LocalDateTime fechaHora, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fechaHora == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
         }
         if (obs == null || obs.trim().isEmpty()) {
-            throw new CampoVacioException("La observación no puede estar vacía");
+            throw new CampoVacioException("La observacion no puede estar vacia");
         }
         this.fechaDeVisita = java.util.Date.from(fechaHora.atZone(java.time.ZoneId.systemDefault()).toInstant());
-        this.estado = ESTADO_REALIZADA;
+        this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
         this.observacion = obs;
         this.bienesRetirados = new ArrayList<>();
     }
@@ -104,16 +126,7 @@ public class Visita {
     }
     // metodo para describir el estado de la visita, uso interno
     private String describirEstado() {
-        switch (estado) {
-            case ESTADO_PENDIENTE:
-                return "PENDIENTE";
-            case ESTADO_REALIZADA:
-                return "REALIZADA";
-            case ESTADO_CANCELADA:
-                return "CANCELADA";
-            default:
-                return "";
-        }
+        return this.resultado.toString();
     }
 
     // helper formateador de fecha: dia/mes/anioo hora:minuto
@@ -129,19 +142,24 @@ public class Visita {
     public String obtenerObservacion() {
         return observacion;
     }
+    
+    public ResultadoVisita obtenerResultado() {
+        return resultado;
+    }
+    
 	public void realizar() {
-		this.estado=2;
+		this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
 	}
 	public void cancelar() {
-		this.estado=3;
+		this.resultado = ResultadoVisita.CANCELADO;
 	}
 	public boolean equals (Visita obj2) {
-		return this.fechaDeVisita==obj2.fechaDeVisita && this.estado==obj2.estado;
+		return this.fechaDeVisita==obj2.fechaDeVisita && this.resultado==obj2.resultado;
 	}
 	public List<Bien> obtenerBienes() {
 		return new ArrayList<>(bienesRetirados);
 	}
-	// Added method to retrieve associated vehicle
+	// obtener el vehiculo 
 	public Vehiculo obtenerVehiculo() {
 		return bienesRetirados.isEmpty() ? null : bienesRetirados.get(0).obtenerVehiculo();
 	}

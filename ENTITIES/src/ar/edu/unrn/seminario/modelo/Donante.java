@@ -13,7 +13,7 @@ public class Donante extends Persona {
     public Donante(String nom, String ape, int dni, Ubicacion ubi) throws CampoVacioException, ObjetoNuloException {
         super(nom, ape, dni, ubi);
         if (ubi == null) {
-            throw new ObjetoNuloException("La ubicación no puede ser nula.");
+            throw new ObjetoNuloException("La ubicacion no puede ser nula.");
         }
         this.pedidos = new ArrayList<>();
     }
@@ -27,7 +27,7 @@ public class Donante extends Persona {
             throw new ObjetoNuloException("La fecha no puede ser nula.");
         }
         if (bienes == null || bienes.isEmpty()) {
-            throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+            throw new CampoVacioException("La lista de bienes no puede estar vacia.");
         }
         for (Bien bien : bienes) {
             if (bien.obtenerCantidad() <= 0) {
@@ -35,7 +35,7 @@ public class Donante extends Persona {
             }
         }
         if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo de vehículo no puede estar vacío.");
+            throw new CampoVacioException("El tipo de vehiculo no puede estar vacio.");
         }
         PedidosDonacion p = new PedidosDonacion(fecha, bienes, tipo, obs, this);
         pedidos.add(p);
@@ -44,10 +44,10 @@ public class Donante extends Persona {
 
     public PedidosDonacion crearPedido(ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
         if (bienes == null || bienes.isEmpty()) {
-            throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+            throw new CampoVacioException("La lista de bienes no puede estar vacia.");
         }
         if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo de vehículo no puede estar vacío.");
+            throw new CampoVacioException("El tipo de vehiculo no puede estar vacio.");
         }
         PedidosDonacion p = new PedidosDonacion(tipo, bienes, obs, this);
         pedidos.add(p);
@@ -64,6 +64,10 @@ public class Donante extends Persona {
 
     public String getDireccion() {
         return this.obtenerUbicacion();
+    }
+
+    public Ubicacion getUbicacionEntidad() {
+        return this.obtenerUbicacionEntidad();
     }
 
 }

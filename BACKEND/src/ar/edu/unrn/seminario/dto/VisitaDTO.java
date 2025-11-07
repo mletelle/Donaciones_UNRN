@@ -8,7 +8,7 @@ public class VisitaDTO {
     private String fechaDeVisita;
     private String observacion;
     private List<String> bienesRetirados;
-    private boolean estado;
+    private String resultado;
     private LocalDateTime fechaHora;
     private String donante;
 
@@ -18,17 +18,17 @@ public class VisitaDTO {
         this.bienesRetirados = bienesRetirados;
     }
 
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, boolean estado) {
+    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, String resultado) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
         this.bienesRetirados = bienesRetirados;
-        this.estado = estado;
+        this.resultado = resultado;
     }
 
     public VisitaDTO(LocalDateTime fechaHora, String resultado, String observacion, String donante) {
         this.fechaHora = fechaHora;
         this.observacion = observacion;
-        this.estado = "Recolección Exitosa".equals(resultado);
+        this.resultado = resultado;
         this.donante = donante;
     }
 
@@ -45,8 +45,12 @@ public class VisitaDTO {
         return bienesRetirados;
     }
 
-    public boolean getEstado() {
-        return estado;
+    public String getResultado() {
+        return resultado;
+    }
+
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
     }
 
     public LocalDateTime getFechaHora() {
@@ -59,9 +63,5 @@ public class VisitaDTO {
 
     public String getDonante() {
         return donante;
-    }
-
-    public String getResultado() {
-        return estado ? "Recolección Exitosa" : "Cancelado"; // segun logica de negocio
     }
 }
