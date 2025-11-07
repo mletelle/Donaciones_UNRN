@@ -45,6 +45,16 @@ public class PedidoDonacionDTO {
         this.estado = estado;       
     }
 
+    //  completo para listados con nombre de donante
+    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, String observaciones, int donanteId, String nombreDonante) {
+        this.id = id;
+        this.fecha = fecha;
+        this.tipoVehiculo = tipoVehiculo;
+        this.observaciones = observaciones;
+        this.donanteId = donanteId;
+        this.donante = nombreDonante;
+    }
+
     public int getId() {
         return id;
     }

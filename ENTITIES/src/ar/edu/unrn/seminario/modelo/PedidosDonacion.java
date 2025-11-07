@@ -6,6 +6,7 @@ import java.util.List;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
@@ -122,7 +123,11 @@ public class PedidosDonacion {
 	}
 
 	// metodos para cambiar el estado
-	public void marcarEnEjecucion() {
+	public void marcarEnEjecucion() throws ReglaNegocioException {
+		// validar transicion de estado
+		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
+			throw new ReglaNegocioException("No se puede cambiar a 'En Ejecucion' un pedido que ya esta Completado");
+		}
 		this.estadoPedido = EstadoPedido.EN_EJECUCION;
 		// notificar al padre para que actualice su estado automaticamente
 		//asi no queda pendiente la ventana anterior
@@ -131,7 +136,12 @@ public class PedidosDonacion {
 		}
 	}
 
-	public void marcarCompletado() {
+	public void marcarCompletado() throws ReglaNegocioException {
+		// no hay restriccion para marcar como completado (puede ir desde PENDIENTE o EN_EJECUCION)
+		// pero validamos que no este ya completado (aunque es redundante, por consistencia)
+		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
+			throw new ReglaNegocioException("El pedido ya esta Completado");
+		}
 		this.estadoPedido = EstadoPedido.COMPLETADO;
 		// notifica al padre para que actualice
 		if (this.ordenRetiro != null) {

@@ -251,12 +251,16 @@ public class MemoryApi implements IApi {
 					bienes.add(bien.toString()); // nomanejamos logica de bienes por ahora
 				}
 
+				// obtener nombre completo del donante
+				String nombreDonante = pedido.obtenerDonante().obtenerNombre() + " " + pedido.obtenerDonante().obtenerApellido();
+
 				pendientes.add(new PedidoDonacionDTO(
 					pedido.obtenerId(),
 					formattedDate, // usar la fecha formateada como string
 					pedido.describirTipoVehiculo(),
 					pedido.obtenerObservaciones(),
-					pedido.obtenerDonante().obtenerDni()
+					pedido.obtenerDonante().obtenerDni(),
+					nombreDonante // nombre completo del donante
 				));
 			}
 		}
@@ -342,6 +346,9 @@ public class MemoryApi implements IApi {
 		// entidad Visita
 		LocalDateTime fechaVisita = visitaDTO.getFechaHora();
 		Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
+
+		// establecer la relacion entre la visita y el pedido
+		visita.setPedidoRelacionado(pedido);
 
 		// sumar la visita a la orden
 		orden.agregarVisita(visita);
@@ -483,21 +490,36 @@ public class MemoryApi implements IApi {
     }
 
 	@Override
-	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) {
-		// el ID se pasa bien
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
+		
+		// normalizar el nombre del voluntario para la comparacion
+		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		
+		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
 		for (OrdenRetiro orden : this.ordenes) {
-			int idOrden = orden.getId(); // revisar el ID
-			ordenesAsignadas.add(new OrdenRetiroDTO(
-				idOrden,
-				orden.obtenerEstadoOrden().toString(), // Enum a String
-				orden.getFechaCreacion(),
-				null, // visita no incluidas aqui
-				orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
-				orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
-				orden.getVoluntario() != null ? orden.getVoluntario().getNombre() : "Sin Voluntario"
-			));
+			Voluntario voluntarioAsignado = orden.getVoluntario();
+			
+			// validar que la orden tenga un voluntario asignado
+			if (voluntarioAsignado != null) {
+				String nombreAsignado = voluntarioAsignado.getNombre().trim();
+				
+				// comparar nombres (case-insensitive y sin espacios)
+				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+					int idOrden = orden.getId();
+					ordenesAsignadas.add(new OrdenRetiroDTO(
+						idOrden,
+						orden.obtenerEstadoOrden().toString(), // Enum a String
+						orden.getFechaCreacion(),
+						null, // visita no incluidas aqui
+						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
+						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
+						nombreAsignado
+					));
+				}
+			}
 		}
+		
 		return ordenesAsignadas;
 	}
 
@@ -544,8 +566,29 @@ public class MemoryApi implements IApi {
 		List<VisitaDTO> visitas = new ArrayList<>();
 		for (OrdenRetiro orden : this.ordenes) {
 			if (orden.getVoluntario() != null && orden.getVoluntario().getNombre().equals(voluntario.getNombre())) {
+				
 				for (Visita visita : orden.obtenerVisitas()) {
-					visitas.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
+					// obtener el donante desde el pedido relacionado con la visita
+					String nombreDonante = "Sin datos";
+					if (visita.getPedidoRelacionado() != null && visita.getPedidoRelacionado().getDonante() != null) {
+						Donante donante = visita.getPedidoRelacionado().getDonante();
+						nombreDonante = donante.getNombre() + " " + donante.obtenerApellido();
+						
+						// DEBUG
+						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+					} else {
+						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
+					}
+					
+					// crear DTO con todos los datos relevantes
+					VisitaDTO visitaDTO = new VisitaDTO(
+						visita.obtenerFechaFormateada(),
+						visita.obtenerObservacion(),
+						convertirBienesAStrings(visita.obtenerBienes()),
+						visita.obtenerResultado().toString(), // Enum a String
+						nombreDonante // nombre completo del donante especifico de esta visita
+					);
+					visitas.add(visitaDTO);
 				}
 			}
 		}

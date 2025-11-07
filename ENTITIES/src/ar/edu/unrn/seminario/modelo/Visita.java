@@ -13,6 +13,7 @@ public class Visita {
     private ResultadoVisita resultado;
     private String observacion;
     private ArrayList<Bien> bienesRetirados;
+    private PedidosDonacion pedidoRelacionado; // referencia al pedido de esta visita
 
     // constructor principal con todos los parametros
     public Visita(Date fecha, ResultadoVisita resultado, String obs, List<Bien> bienes) throws CampoVacioException, ObjetoNuloException {
@@ -162,5 +163,15 @@ public class Visita {
 	// obtener el vehiculo 
 	public Vehiculo obtenerVehiculo() {
 		return bienesRetirados.isEmpty() ? null : bienesRetirados.get(0).obtenerVehiculo();
+	}
+	
+	// establecer el pedido relacionado con esta visita
+	public void setPedidoRelacionado(PedidosDonacion pedido) {
+		this.pedidoRelacionado = pedido;
+	}
+	
+	// obtener el pedido relacionado con esta visita
+	public PedidosDonacion getPedidoRelacionado() {
+		return this.pedidoRelacionado;
 	}
 }

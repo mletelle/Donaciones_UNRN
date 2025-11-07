@@ -28,7 +28,7 @@ public class CrearOrdenRetiro extends JDialog {
 
         setLayout(new BorderLayout());
 
-        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante ID", "Tipo Vehiculo" }) {
+        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante", "Tipo Vehiculo" }) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0) {
@@ -72,7 +72,7 @@ public class CrearOrdenRetiro extends JDialog {
         pedidosTableModel.setRowCount(0);
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
         for (PedidoDonacionDTO pedido : pedidos) {
-            pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonanteId(), pedido.getTipoVehiculo() });
+            pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonante(), pedido.getTipoVehiculo() });
         }
     }
 

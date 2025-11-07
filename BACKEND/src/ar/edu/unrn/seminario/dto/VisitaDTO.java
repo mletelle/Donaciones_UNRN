@@ -32,6 +32,15 @@ public class VisitaDTO {
         this.donante = donante;
     }
 
+    //  completo con todos los datos para el historial
+    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, String resultado, String donante) {
+        this.fechaDeVisita = fechaDeVisita;
+        this.observacion = observacion;
+        this.bienesRetirados = bienesRetirados;
+        this.resultado = resultado;
+        this.donante = donante;
+    }
+
     // Getters
     public String getFechaDeVisita() {
         return fechaDeVisita;

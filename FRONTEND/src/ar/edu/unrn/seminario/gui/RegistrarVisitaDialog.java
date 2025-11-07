@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class RegistrarVisitaDialog extends JDialog {
 
@@ -204,6 +205,9 @@ public class RegistrarVisitaDialog extends JDialog {
                 dispose();
             } catch (DateTimeParseException ex) {
                 JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato valido.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (ReglaNegocioException ex) {
+                // captura especifica de violaciones de reglas de negocio
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Operacion no permitida", JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al registrar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
