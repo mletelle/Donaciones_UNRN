@@ -16,7 +16,7 @@ public class OrdenRetiro {
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
     private EstadoOrden estado;
     private Ubicacion destino;
-    private ArrayList<Voluntario> voluntarios;
+    private ArrayList<Usuario> voluntarios; // ahora es Usuario, antes voluntario
     private List<PedidosDonacion> pedidos;
     private ArrayList<Visita> visitas;
     private int id;
@@ -33,7 +33,7 @@ public class OrdenRetiro {
         this.estado = EstadoOrden.PENDIENTE;
         this.destino = dest;
         this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Voluntario>();
+        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
         this.visitas = new ArrayList<Visita>();
         // asignar esta orden a cada pedido
         for (PedidosDonacion pedido : this.pedidos) {
@@ -43,7 +43,7 @@ public class OrdenRetiro {
 
     // metodos
     // asignacion de voluntario
-    public void asignarVoluntario(Voluntario voluntario) {
+    public void asignarVoluntario(Usuario voluntario) { // ahora recibe Usuario
         if (this.voluntarios == null) {
             this.voluntarios = new ArrayList<>();
         }
@@ -103,7 +103,7 @@ public class OrdenRetiro {
 	public boolean estaCompletada() {
 		return estado == EstadoOrden.COMPLETADO;
 	}
-    public Voluntario obtenerPrimerVoluntario() {
+    public Usuario obtenerPrimerVoluntario() { // ahora devuelve Usuario
       if (voluntarios.isEmpty()) {
           return null; // no hay voluntarios disponibles
       }
@@ -158,7 +158,7 @@ public class OrdenRetiro {
         }
     }
 
-    public Donante obtenerDonante() {
+    public Usuario obtenerDonante() { // ahora devuelve Usuario
         return (!this.pedidos.isEmpty() && this.pedidos.get(0) != null) ? this.pedidos.get(0).obtenerDonante() : null;
     }
     
@@ -183,11 +183,11 @@ public class OrdenRetiro {
         this.vehiculo = vehiculo;
     }
 
-    public Voluntario obtenerVoluntarioPrincipal() {
+    public Usuario obtenerVoluntarioPrincipal() { // ahora devuelve Usuario
         return voluntarios.isEmpty() ? null : voluntarios.get(0);
     }
 
-    public Voluntario getVoluntario() {
+    public Usuario getVoluntario() { //  ahora devuelve Usuario
         return obtenerVoluntarioPrincipal();
     }
 
@@ -200,7 +200,7 @@ public class OrdenRetiro {
         return obtenerFechaCreacion();
     }
 
-    public Donante getDonante() {
+    public Usuario getDonante() { // ahora devuelve Usuario
         return obtenerDonante();
     }
 
