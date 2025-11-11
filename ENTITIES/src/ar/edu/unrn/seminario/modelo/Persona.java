@@ -10,6 +10,7 @@ public abstract class Persona {
     private String apellido;
     private int dni;
     private Ubicacion ubicacion;
+    private Usuario usuario;
 
     // crea una nueva persona con los datos basicos
     public Persona(String nombre, String apellido, int dni, Ubicacion ubicacion) throws CampoVacioException, ObjetoNuloException {
@@ -47,7 +48,10 @@ public abstract class Persona {
         this.apellido = apellido;
         this.dni = dni;
     }
-
+    // setter 
+    public void asignarUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
     // getters
     public String obtenerNombre() {
         return nombre;

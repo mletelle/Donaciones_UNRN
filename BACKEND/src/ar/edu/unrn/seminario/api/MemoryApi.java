@@ -41,8 +41,8 @@ public class MemoryApi implements IApi {
 
 	public MemoryApi() throws CampoVacioException {
 		this.roles.add(new Rol(1, "ADMIN"));
-		this.roles.add(new Rol(2, "ESTUDIANTE"));
-		this.roles.add(new Rol(3, "INVITADO"));
+		this.roles.add(new Rol(2, "VOLUNTARIO"));
+		this.roles.add(new Rol(3, "DONANTE"));
 		
 		// inicio en orden
 		inicializarUsuarios();
@@ -55,8 +55,8 @@ public class MemoryApi implements IApi {
 	private void inicializarUsuarios() {
 		try {
 			registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1);
-			registrarUsuario("ml", "4", "ml@unrn.edu.ar", "Mauro", 2);
-			registrarUsuario("ra", "1234", "ra@unrn.edu.ar", "Ramiro", 3);
+			registrarUsuario("Mauro", "4", "ml@unrn.edu.ar", "Mauro", 2);
+			registrarUsuario("Ramiro", "1234", "ra@unrn.edu.ar", "Ramiro", 3);
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			e.printStackTrace();
 		}
