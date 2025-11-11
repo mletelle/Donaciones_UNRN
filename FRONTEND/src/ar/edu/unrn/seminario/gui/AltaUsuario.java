@@ -23,7 +23,6 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class AltaUsuario extends JFrame {
 
-
 	private JPanel contentPane;
 	private JTextField usuarioTextField;
 	private JTextField contrasenaTextField;
@@ -39,6 +38,7 @@ public class AltaUsuario extends JFrame {
 	private JLabel direccionLabel;
 	private JTextField direccionTextField;
 
+	// Atributos
 	private List<RolDTO> roles = new ArrayList<>();
 
 	public AltaUsuario(IApi api) {
@@ -122,7 +122,7 @@ public class AltaUsuario extends JFrame {
 			rolComboBox.addItem(rol.getNombre());
 		}
 
-		// campo Direccion (solo para Donante
+		// campo Direccion (solo para Donante)
 		direccionLabel = new JLabel("Direccion:");
 		direccionLabel.setBounds(43, 245, 93, 16);
 		direccionLabel.setVisible(false);
@@ -148,6 +148,8 @@ public class AltaUsuario extends JFrame {
 		});
 
 		JButton aceptarButton = new JButton("Aceptar");
+		
+		// Accion del boton "Aceptar"
 		aceptarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -184,19 +186,24 @@ public class AltaUsuario extends JFrame {
 				}
 			}
 		});
+		
 		aceptarButton.setBounds(218, 290, 97, 25);
 		contentPane.add(aceptarButton);
 
 		JButton cancelarButton = new JButton("Cancelar");
+		
+		// Accion del boton "cancelar"
 		cancelarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 				dispose();
 			}
 		});
+		
 		cancelarButton.setBounds(323, 290, 97, 25);
 		contentPane.add(cancelarButton);
 
 	}
+	
 }
 

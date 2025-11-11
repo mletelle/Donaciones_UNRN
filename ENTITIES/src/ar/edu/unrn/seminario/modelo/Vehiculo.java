@@ -1,6 +1,8 @@
 package ar.edu.unrn.seminario.modelo;
 
 public class Vehiculo {
+	
+	// Atributos
 	private String patente;
 	private String estado;
 	private String tipoVeh;
@@ -12,42 +14,52 @@ public class Vehiculo {
 		this.setCapacidad(capacidad);
 		
 	}
-	
-	public void mantenimiento() {
-		// Sin implementacion
+		
+	/// Getters 
+	public String getPatente() {
+		return patente;
 	}
+
+	public String getEstado() {
+		return estado;
+	}
+	
+	public String getTipoVeh() {
+		return tipoVeh;
+	}
+	
+	public int getCapacidad() {
+		return capacidad;
+	}
+	
+	public String getDescripcion() {
+        return "Tipo: " + tipoVeh + ", Patente: " + patente + ", Estado: " + estado + ", Capacidad: " + capacidad;
+    }
+    
+	// Setters
 	public void cambiarEstado(String nuevoEstado) {
 		estado = nuevoEstado;
 	}
 
-	
-	/// Getters - setters
-	public String getPatente() {
-		return patente;
-	}
 	public void setPatente(String patente) {
 		this.patente = patente;
 	}
-	public String getEstado() {
-		return estado;
-	}
+
 	public void setEstado(String estado) {
 		this.estado = estado;
 	}
-	public String getTipoVeh() {
-		return tipoVeh;
-	}
+
 	public void setTipoVeh(String tipoVeh) {
 		this.tipoVeh = tipoVeh;
 	}
-	public int getCapacidad() {
-		return capacidad;
-	}
+	
 	public void setCapacidad(int capacidad) {
 		this.capacidad = capacidad;
 	}
 	
-    public String getDescripcion() {
-        return "Tipo: " + tipoVeh + ", Patente: " + patente + ", Estado: " + estado + ", Capacidad: " + capacidad;
-    }
+    // Metodos
+ 	public void mantenimiento() {
+ 		// Sin implementacion
+ 	}
+ 	
 }

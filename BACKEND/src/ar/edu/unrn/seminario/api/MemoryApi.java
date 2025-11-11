@@ -28,12 +28,14 @@ import ar.edu.unrn.seminario.modelo.ResultadoVisita;
 
 public class MemoryApi implements IApi {
 
+	// Atributos
 	private ArrayList<Rol> roles = new ArrayList<>();
 	private ArrayList<Usuario> usuarios = new ArrayList<>();
 	private List<PedidosDonacion> pedidos = new ArrayList<>();
 	private List<OrdenRetiro> ordenes = new ArrayList<>();
 	private ArrayList<Vehiculo> vehiculosDisponibles = new ArrayList<>(); // lista para autos fijos
 
+	// Constructores
 	public MemoryApi() throws CampoVacioException {
 		this.roles.add(new Rol(1, "ADMIN"));
 		this.roles.add(new Rol(2, "VOLUNTARIO"));
@@ -45,6 +47,7 @@ public class MemoryApi implements IApi {
 		inicializarPedidos(); // crea pedidos, sin asignar ordenes
 	}
 
+	// Metodos
 	private void inicializarUsuarios() {
 		try {
 			// ADMIN (sin direccinn)
@@ -96,7 +99,6 @@ public class MemoryApi implements IApi {
 			LocalDateTime fecha3 = LocalDateTime.now().minusDays(2); 
 			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), "Auto", "Pedido 3: Cajas pequeñas", donante1));
 			
-			
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			e.printStackTrace();
 		}
@@ -108,12 +110,11 @@ public class MemoryApi implements IApi {
 	    this.vehiculosDisponibles.add(new Vehiculo("AD 456 EF", "Disponible", "Camioneta", 1500)); // Camioneta
 	    this.vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camion", 4000)); // Camion
 	}
+	
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
-
 		Rol role = this.buscarRol(rol);
 		Usuario usuario = new Usuario(username, password, nombre, email, role, apellido, dni, direccion);
 		this.usuarios.add(usuario);
-
 	}
 
 	public List<UsuarioDTO> obtenerUsuarios() {
@@ -157,7 +158,6 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public void guardarRol(Integer codigo, String descripcion, boolean estado) throws CampoVacioException {
-		// TODO Auto-generated method stub
 		Rol rol = new Rol(codigo, descripcion);
 		this.roles.add(rol);
 	}
@@ -219,6 +219,7 @@ public class MemoryApi implements IApi {
 	    this.pedidos.add(pedido);
 	}
 
+	// Getters
 	@Override
 	public List<DonanteDTO> obtenerDonantes() {
 		List<DonanteDTO> donanteDTOs = new ArrayList<>();
@@ -261,7 +262,6 @@ public class MemoryApi implements IApi {
 		return pendientes; // devuelve lista
 	}
 
-
 	@Override
 	public List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado) {
 		List<OrdenRetiroDTO> ordenesFiltradas = new ArrayList<>();
@@ -279,6 +279,113 @@ public class MemoryApi implements IApi {
 	}
 	return ordenesFiltradas;
 	}
+	
+	@Override
+	public List<VoluntarioDTO> obtenerVoluntarios() {
+		List<VoluntarioDTO> voluntariosDTO = new ArrayList<>();
+		// filtra usuarios ACTIVOS con rol VOLUNTARIO ( 2)
+		for (Usuario usuario : this.usuarios) {
+			if (usuario.getRol().getCodigo() == 2 && usuario.isActivo()) {
+				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido()));
+			}
+		}
+		return voluntariosDTO;
+	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
+		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
+		
+		// normalizar el nombre del voluntario para la comparacion
+		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		
+		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
+		for (OrdenRetiro orden : this.ordenes) {
+			Usuario voluntarioAsignado = orden.getVoluntario(); // MODIFICADO: ahora es Usuario
+			
+			// validar que la orden tenga un voluntario asignado
+			if (voluntarioAsignado != null) {
+				String nombreAsignado = voluntarioAsignado.obtenerNombre().trim(); // MODIFICADO: usar obtenerNombre()
+				
+				// comparar nombres (case-insensitive y sin espacios)
+				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+					int idOrden = orden.getId();
+					ordenesAsignadas.add(new OrdenRetiroDTO(
+						idOrden,
+						orden.obtenerEstadoOrden().toString(), // Enum a String
+						orden.getFechaCreacion(),
+						null, // visita no incluidas aqui
+						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
+						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
+						nombreAsignado
+					));
+				}
+			}
+		}
+		
+		return ordenesAsignadas;
+	}
+	
+	@Override
+	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
+		List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
+		
+		OrdenRetiro orden = buscarOrdenPorId(idOrden);
+		if (orden == null) {
+			return pedidosDTO; // vacia si no existe la orden
+		}
+		
+		for (PedidosDonacion pedido : orden.obtenerPedidos()) {
+			PedidoDonacionDTO dto = this.convertirPedidoADTO(pedido);
+			if (dto != null) {
+				pedidosDTO.add(dto);
+			}
+		}
+		
+		return pedidosDTO;
+	}
+	
+	@Override
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) {
+		List<VisitaDTO> visitas = new ArrayList<>();
+		for (OrdenRetiro orden : this.ordenes) {
+			if (orden.getVoluntario() != null && orden.getVoluntario().obtenerNombre().equals(voluntario.getNombre())) { // MODIFICADO: usar obtenerNombre()
+				
+				for (Visita visita : orden.obtenerVisitas()) {
+					// obtener el donante desde el pedido relacionado con la visita
+					String nombreDonante = "Sin datos";
+					if (visita.getPedidoRelacionado() != null && visita.getPedidoRelacionado().getDonante() != null) {
+						Usuario donante = visita.getPedidoRelacionado().getDonante(); // MODIFICADO: ahora es Usuario
+						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
+						
+						// DEBUG
+						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+					} else {
+						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
+					}
+					
+					// crear DTO con todos los datos relevantes
+					VisitaDTO visitaDTO = new VisitaDTO(
+						visita.obtenerFechaFormateada(),
+						visita.obtenerObservacion(), visita.obtenerResultado().toString(), // Enum a String
+						nombreDonante // nombre completo del donante especifico de esta visita
+					);
+					visitas.add(visitaDTO);
+				}
+			}
+		}
+		return visitas;
+	}
+
+	@Override
+	public String obtenerNombreDonantePorId(int idPedido) {
+        for (PedidosDonacion pedido : this.pedidos) {
+            if (pedido.getId() == idPedido && pedido.getDonante() != null) {
+                return pedido.getDonante().getNombre();
+            }
+        }
+        return "Donante Desconocido";
+    }
 
 	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
@@ -367,19 +474,6 @@ public class MemoryApi implements IApi {
 		return null;
 	}
 
-
-	@Override
-	public List<VoluntarioDTO> obtenerVoluntarios() {
-		List<VoluntarioDTO> voluntariosDTO = new ArrayList<>();
-		// filtra usuarios ACTIVOS con rol VOLUNTARIO ( 2)
-		for (Usuario usuario : this.usuarios) {
-			if (usuario.getRol().getCodigo() == 2 && usuario.isActivo()) {
-				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido()));
-			}
-		}
-		return voluntariosDTO;
-	}
-
 	@Override
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException {
 		// busca usuario voluntario por DNI
@@ -432,59 +526,6 @@ public class MemoryApi implements IApi {
         }
         return bienesStr;
     }
-
-	@Override
-	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
-		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
-		
-		// normalizar el nombre del voluntario para la comparacion
-		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
-		
-		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
-		for (OrdenRetiro orden : this.ordenes) {
-			Usuario voluntarioAsignado = orden.getVoluntario(); // MODIFICADO: ahora es Usuario
-			
-			// validar que la orden tenga un voluntario asignado
-			if (voluntarioAsignado != null) {
-				String nombreAsignado = voluntarioAsignado.obtenerNombre().trim(); // MODIFICADO: usar obtenerNombre()
-				
-				// comparar nombres (case-insensitive y sin espacios)
-				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
-					int idOrden = orden.getId();
-					ordenesAsignadas.add(new OrdenRetiroDTO(
-						idOrden,
-						orden.obtenerEstadoOrden().toString(), // Enum a String
-						orden.getFechaCreacion(),
-						null, // visita no incluidas aqui
-						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
-						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
-						nombreAsignado
-					));
-				}
-			}
-		}
-		
-		return ordenesAsignadas;
-	}
-
-	@Override
-	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
-		List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
-		
-		OrdenRetiro orden = buscarOrdenPorId(idOrden);
-		if (orden == null) {
-			return pedidosDTO; // vacia si no existe la orden
-		}
-		
-		for (PedidosDonacion pedido : orden.obtenerPedidos()) {
-			PedidoDonacionDTO dto = this.convertirPedidoADTO(pedido);
-			if (dto != null) {
-				pedidosDTO.add(dto);
-			}
-		}
-		
-		return pedidosDTO;
-	}
 	
 	private PedidoDonacionDTO convertirPedidoADTO(PedidosDonacion pedido) {
 	    if (pedido == null) {
@@ -503,48 +544,5 @@ public class MemoryApi implements IApi {
 	        pedido.obtenerEstado()
 	    );
 	}
-	
-
-	@Override
-	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) {
-		List<VisitaDTO> visitas = new ArrayList<>();
-		for (OrdenRetiro orden : this.ordenes) {
-			if (orden.getVoluntario() != null && orden.getVoluntario().obtenerNombre().equals(voluntario.getNombre())) { // MODIFICADO: usar obtenerNombre()
-				
-				for (Visita visita : orden.obtenerVisitas()) {
-					// obtener el donante desde el pedido relacionado con la visita
-					String nombreDonante = "Sin datos";
-					if (visita.getPedidoRelacionado() != null && visita.getPedidoRelacionado().getDonante() != null) {
-						Usuario donante = visita.getPedidoRelacionado().getDonante(); // MODIFICADO: ahora es Usuario
-						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
-						
-						// DEBUG
-						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
-					} else {
-						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
-					}
-					
-					// crear DTO con todos los datos relevantes
-					VisitaDTO visitaDTO = new VisitaDTO(
-						visita.obtenerFechaFormateada(),
-						visita.obtenerObservacion(), visita.obtenerResultado().toString(), // Enum a String
-						nombreDonante // nombre completo del donante especifico de esta visita
-					);
-					visitas.add(visitaDTO);
-				}
-			}
-		}
-		return visitas;
-	}
-
-	@Override
-	public String obtenerNombreDonantePorId(int idPedido) {
-        for (PedidosDonacion pedido : this.pedidos) {
-            if (pedido.getId() == idPedido && pedido.getDonante() != null) {
-                return pedido.getDonante().getNombre();
-            }
-        }
-        return "Donante Desconocido";
-    }
-	
+		
 }

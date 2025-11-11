@@ -19,7 +19,8 @@ public class GestionarOrdenVoluntario extends JFrame {
     private ListadoOrdenesAsignadasVoluntario ventanaPadre; // referencia a la ventana padre
 
     public GestionarOrdenVoluntario(IApi api, int idOrden) {
-        this.api = api;
+       
+    	this.api = api;
         this.idOrden = idOrden;
 
         setTitle("Gestionar Orden de Retiro");
@@ -42,6 +43,8 @@ public class GestionarOrdenVoluntario extends JFrame {
         panelPrincipal.add(scrollPane, BorderLayout.CENTER);
 
         JButton btnRegistrarVisita = new JButton("Registrar Visita");
+        
+        // Accion del boton "Registrar Visita"
         btnRegistrarVisita.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -58,6 +61,7 @@ public class GestionarOrdenVoluntario extends JFrame {
                 }
             }
         });
+        
         panelPrincipal.add(btnRegistrarVisita, BorderLayout.SOUTH);
 
         add(panelPrincipal);
@@ -70,6 +74,8 @@ public class GestionarOrdenVoluntario extends JFrame {
         this.ventanaPadre = ventanaPadre;
     }
 
+    // Metodos
+    // metodo para cargar pedidos
     private void cargarPedidos() {
         // limpiar la tabla antes de cargar
         modeloTabla.setRowCount(0);
@@ -80,7 +86,7 @@ public class GestionarOrdenVoluntario extends JFrame {
         }
     }
     
-    //  para recargar los datos desde el dialogo hijo
+    //  metodo para recargar los datos desde el dialogo hijo
     public void recargarDatos() {
         cargarPedidos();
         tablaPedidos.repaint();
@@ -91,4 +97,5 @@ public class GestionarOrdenVoluntario extends JFrame {
             ventanaPadre.refrescarTabla();
         }
     }
+    
 }

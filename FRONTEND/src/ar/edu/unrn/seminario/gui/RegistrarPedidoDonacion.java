@@ -86,6 +86,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         fechaTextField.setText(fechaActual.format(formatter));
 
+        // Accion del boton "Agregar bien"
         btnAgregarBien.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AgregarBienDialog dialog = new AgregarBienDialog(RegistrarPedidoDonacion.this);
@@ -101,6 +102,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
 
+        // Accion del boton "Cargar pedido de donacion"
         btnAceptar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -143,6 +145,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
 
+        // Accion del boton cancelar
         btnCancelar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dispose();
@@ -198,6 +201,8 @@ public class RegistrarPedidoDonacion extends JDialog {
         pack();
     }
 
+    // Metodos
+    // metodo para registrar un pedido de donacion
     public RegistrarPedidoDonacion(IApi api, int donanteId) {
         this(api); //
         this.donanteId = donanteId;
@@ -215,4 +220,5 @@ public class RegistrarPedidoDonacion extends JDialog {
             donanteComboBox.setEnabled(true);
         }
     }
+    
 }

@@ -7,8 +7,16 @@ import ar.edu.unrn.seminario.accesos.RolDAOJDBC;
 import ar.edu.unrn.seminario.accesos.RolDao;
 import ar.edu.unrn.seminario.accesos.UsuarioDAOJDBC;
 import ar.edu.unrn.seminario.accesos.UsuarioDao;
+import ar.edu.unrn.seminario.dto.DonanteDTO;
+import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
+import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.RolDTO;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
+import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 import ar.edu.unrn.seminario.modelo.Rol;
 import ar.edu.unrn.seminario.modelo.Usuario;
 
@@ -103,6 +111,81 @@ public class PersistenceApi implements IApi {
 	public void desactivarUsuario(String username) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol,
+			String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<DonanteDTO> obtenerDonantes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerPedidosPendientes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO)
+			throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<VoluntarioDTO> obtenerVoluntarios() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
+			throws ReglaNegocioException, ObjetoNuloException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String obtenerNombreDonantePorId(int idPedido) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
