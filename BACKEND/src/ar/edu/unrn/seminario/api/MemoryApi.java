@@ -27,6 +27,7 @@ import ar.edu.unrn.seminario.modelo.Visita;
 import ar.edu.unrn.seminario.modelo.Voluntario;
 import ar.edu.unrn.seminario.modelo.Ubicacion;
 import ar.edu.unrn.seminario.modelo.Vehiculo;
+import ar.edu.unrn.seminario.modelo.ResultadoVisita;
 
 public class MemoryApi implements IApi {
 
@@ -75,7 +76,7 @@ public class MemoryApi implements IApi {
 			Donante donante2 = this.donantes.get(1); // Maria Gomez
 
 			Vehiculo vehiculoCamioneta = new Vehiculo("TEMP-CAMIONETA", "Disponible", "Camioneta", 1000);
-			Vehiculo vehiculoCamion = new Vehiculo("TEMP-CAMION", "Disponible", "Camión", 5000);
+			Vehiculo vehiculoCamion = new Vehiculo("TEMP-CAMION", "Disponible", "Camion", 5000);
 			Vehiculo vehiculoAuto = new Vehiculo("TEMP-AUTO", "Disponible", "Auto", 500);
 
 			// PEDIDO 1 (Donante Juan Perez)
@@ -89,7 +90,7 @@ public class MemoryApi implements IApi {
 				bienes2.add(new Bien(2, 5, 1, vehiculoCamion)); 
 				bienes2.add(new Bien(3, 1, 3, vehiculoCamion));
 				LocalDateTime fecha2 = LocalDateTime.now().minusDays(1); 
-				this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camión", "Pedido 2: Mueble grande", donante2));
+				this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camion", "Pedido 2: Mueble grande", donante2));
 			}
 
 			// PEDIDO 3 (Donante Juan Perez)
@@ -121,7 +122,7 @@ public class MemoryApi implements IApi {
 	    // autos fijos 
 	    this.vehiculosDisponibles.add(new Vehiculo("AE 123 CD", "Disponible", "Auto", 500)); // Auto
 	    this.vehiculosDisponibles.add(new Vehiculo("AD 456 EF", "Disponible", "Camioneta", 1500)); // Camioneta
-	    this.vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camión", 4000)); // Camión
+	    this.vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camion", 4000)); // Camion
 	}
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol) throws CampoVacioException, ObjetoNuloException {
 
@@ -247,47 +248,25 @@ public class MemoryApi implements IApi {
 
 				List<String> bienes = new ArrayList<>();
 				for (Bien bien : pedido.obtenerBienes()) {
-					bienes.add(bien.toString()); // 
+					bienes.add(bien.toString()); // nomanejamos logica de bienes por ahora
 				}
+
+				// obtener nombre completo del donante
+				String nombreDonante = pedido.obtenerDonante().obtenerNombre() + " " + pedido.obtenerDonante().obtenerApellido();
 
 				pendientes.add(new PedidoDonacionDTO(
 					pedido.obtenerId(),
 					formattedDate, // usar la fecha formateada como string
 					pedido.describirTipoVehiculo(),
 					pedido.obtenerObservaciones(),
-					pedido.obtenerDonante().obtenerDni()
+					pedido.obtenerDonante().obtenerDni(),
+					nombreDonante // nombre completo del donante
 				));
 			}
 		}
 		return pendientes; // devuelve lista
 	}
 
-	@Override
-	public void generarOrdenRetiro(int idPedidoDonacion) throws ObjetoNuloException, ReglaNegocioException {
-		PedidosDonacion pedido = buscarPedidoPorId(idPedidoDonacion);
-		if (pedido == null) {
-			throw new ObjetoNuloException("El pedido de donación no existe.");
-		}
-		if (pedido.obtenerOrden() != null) {
-			throw new ReglaNegocioException("El pedido ya tiene una orden de retiro asignada.");
-		}
-		if (pedido.obtenerDonante() == null) {
-			throw new ObjetoNuloException("El pedido de donación no tiene un donante asignado.");
-		}
-
-		OrdenRetiro orden = new OrdenRetiro(pedido, pedido.obtenerUbicacion());
-		pedido.asignarOrden(orden);
-		this.ordenes.add(orden);
-
-		List<VisitaDTO> visitasDTO = new ArrayList<>();
-		for (Visita visita : orden.obtenerVisitas()) {
-			visitasDTO.add(new VisitaDTO(
-				visita.obtenerFechaFormateada(),
-				visita.obtenerObservacion(),
-				convertirBienesAStrings(visita.obtenerBienes())
-			));
-		}
-	}
 
 	@Override
 	public List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado) {
@@ -296,51 +275,58 @@ public class MemoryApi implements IApi {
 			if (orden.describirEstado().equalsIgnoreCase(estado)) {
 				List<VisitaDTO> visitasDTO = new ArrayList<>();
 				for (Visita visita : orden.obtenerVisitas()) {
-					visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
-				}
-				String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
-				String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehículo Desconocido";
-				String voluntario = orden.obtenerVoluntarioPrincipal() != null ? orden.obtenerVoluntarioPrincipal().obtenerNombre() : "Voluntario Desconocido";
-				ordenesFiltradas.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), visitasDTO, donante, vehiculo, voluntario));
+				visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion()));
 			}
+			String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
+			String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehiculo Desconocido";
+			String voluntario = orden.obtenerVoluntarioPrincipal() != null ? orden.obtenerVoluntarioPrincipal().obtenerNombre() : "Voluntario Desconocido";
+			ordenesFiltradas.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstadoOrden().toString(), orden.obtenerFechaCreacion(), visitasDTO, donante, vehiculo, voluntario));
 		}
-		return ordenesFiltradas;
+	}
+	return ordenesFiltradas;
 	}
 
 	@Override
-	public OrdenRetiroDTO obtenerOrdenDeRetiroDetalle(int idOrden) {
-		for (OrdenRetiro orden : ordenes) {
-			if (orden.obtenerId() == idOrden) {
-				// ajustado
-				return new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstado(), orden.obtenerFechaCreacion(), new ArrayList<>(), orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante", orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehículo", orden.getVoluntario() != null ? orden.getVoluntario().getNombre() : "Sin Voluntario");
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException {
+	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
 		if (orden == null) {
 			throw new ObjetoNuloException("Orden de retiro no encontrada.");
 		}
 
-		if (visitaDTO.getFechaHora() != null) {
-			LocalDateTime fechaVisita = visitaDTO.getFechaHora();
-			orden.registrarVisita(fechaVisita, visitaDTO.getObservacion());
-		} else {
+		PedidosDonacion pedido = orden.obtenerPedidoPorId(idPedido);
+		if (pedido == null) {
+			throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
+		}
+
+		if (visitaDTO.getFechaHora() == null) {
 			throw new CampoVacioException("La fecha de la visita no puede ser nula.");
 		}
-	}
-
-
-	@Override
-	public void actualizarEstadoOrdenRetiro(int idOrdenRetiro, int nuevoEstado) throws ReglaNegocioException {
-		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
-		if (orden == null) {
-			throw new ReglaNegocioException("La orden de retiro no existe.");
+		if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
+			throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacio.");
 		}
-		orden.actualizarEstado(nuevoEstado);
+
+		//  String del DTO al Enum
+		ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
+
+		// entidad Visita
+		LocalDateTime fechaVisita = visitaDTO.getFechaHora();
+		Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
+
+		// establecer la relacion entre la visita y el pedido
+		visita.setPedidoRelacionado(pedido);
+
+		// sumar la visita a la orden
+		orden.agregarVisita(visita);
+
+		// actualiza el estado del pedido segun el resultado de visita
+		if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+			pedido.marcarCompletado();
+		} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+			pedido.marcarEnEjecucion();
+		}
+
+		// llamada a marcarCompletado() o marcarEnEjecucion() 
+		// automatic notifica a la orden para que actualice su estado
 	}
 
 	private Rol buscarRol(Integer codigo) {
@@ -386,15 +372,6 @@ public class MemoryApi implements IApi {
 		return null;
 	}
 
-	private List<Bien> convertirBienes(List<String> bienesStr) throws CampoVacioException {
-		List<Bien> bienes = new ArrayList<>();
-        if (bienesStr != null) {
-		    for (String nombreBien : bienesStr) {
-			    bienes.add(new Bien(nombreBien.trim()));
-		    }
-        }
-		return bienes;
-	}
 
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() {
@@ -424,22 +401,30 @@ public class MemoryApi implements IApi {
 			pedidosAAsignar.add(pedido);
 		}
 
-		OrdenRetiro nuevaOrden = new OrdenRetiro(voluntario, tipoVehiculo);
+		// logica de ubicaciones heredada de sistema anterior
+		Ubicacion destino = null;
+		if (!pedidosAAsignar.isEmpty() && pedidosAAsignar.get(0).obtenerDonante() != null) {
+			destino = pedidosAAsignar.get(0).obtenerDonante().getUbicacionEntidad();
+		}
 
-		//  un tutu disponible del tipo requerido en la lista fija
+		// orden con la lista de pedidos
+		OrdenRetiro nuevaOrden = new OrdenRetiro(pedidosAAsignar, destino);
+
+		// asignar el voluntario
+		nuevaOrden.asignarVoluntario(voluntario);
+
+		// busca auto del tipo de la lista fija
 		Vehiculo vehiculoAsignado = null;
 		for (Vehiculo v : vehiculosDisponibles) {
 			if (v.getTipoVeh().equalsIgnoreCase(tipoVehiculo) && v.getEstado().equals("Disponible")) {
 				vehiculoAsignado = v;
-				break; //  el primer autito disponible encontrado
+				break; // el primer vehiculo disponible encontrado
 			}
 		}
 
 		nuevaOrden.asignarVehiculo(vehiculoAsignado);
 
-		for (PedidosDonacion pedido : pedidosAAsignar) {
-			pedido.asignarOrden(nuevaOrden);
-		}
+		// agrega la orden a la lista
 		this.ordenes.add(nuevaOrden);
 	}
 
@@ -461,21 +446,36 @@ public class MemoryApi implements IApi {
     }
 
 	@Override
-	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) {
-		// Confirmar que el ID se transmite correctamente
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
+		
+		// normalizar el nombre del voluntario para la comparacion
+		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		
+		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
 		for (OrdenRetiro orden : this.ordenes) {
-			int idOrden = orden.getId(); // Verificar el ID
-			ordenesAsignadas.add(new OrdenRetiroDTO(
-				idOrden,
-				orden.getEstado(),
-				orden.getFechaCreacion(),
-				null, // Visitas no incluidas
-				orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
-				orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehículo",
-				orden.getVoluntario() != null ? orden.getVoluntario().getNombre() : "Sin Voluntario"
-			));
+			Voluntario voluntarioAsignado = orden.getVoluntario();
+			
+			// validar que la orden tenga un voluntario asignado
+			if (voluntarioAsignado != null) {
+				String nombreAsignado = voluntarioAsignado.getNombre().trim();
+				
+				// comparar nombres (case-insensitive y sin espacios)
+				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+					int idOrden = orden.getId();
+					ordenesAsignadas.add(new OrdenRetiroDTO(
+						idOrden,
+						orden.obtenerEstadoOrden().toString(), // Enum a String
+						orden.getFechaCreacion(),
+						null, // visita no incluidas aqui
+						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
+						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
+						nombreAsignado
+					));
+				}
+			}
 		}
+		
 		return ordenesAsignadas;
 	}
 
@@ -483,17 +483,15 @@ public class MemoryApi implements IApi {
 	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) {
 		List<PedidoDonacionDTO> pedidosDTO = new ArrayList<>();
 		
-		for (PedidosDonacion pedido : this.pedidos) { 
-			
-			OrdenRetiro orden = pedido.obtenerOrden(); 
-			
-			if (orden != null && orden.obtenerId() == idOrden) { 
-				
-				PedidoDonacionDTO dto = this.convertirPedidoADTO(pedido);
-				
-				if (dto != null) {
-					pedidosDTO.add(dto); 
-				}
+		OrdenRetiro orden = buscarOrdenPorId(idOrden);
+		if (orden == null) {
+			return pedidosDTO; // vacia si no existe la orden
+		}
+		
+		for (PedidosDonacion pedido : orden.obtenerPedidos()) {
+			PedidoDonacionDTO dto = this.convertirPedidoADTO(pedido);
+			if (dto != null) {
+				pedidosDTO.add(dto);
 			}
 		}
 		
@@ -519,41 +517,32 @@ public class MemoryApi implements IApi {
 	}
 	
 
-//	 mapea el estado de String  a int 
-	private int mapearEstadoPedidoAInt(String estado) throws ReglaNegocioException {
-        switch (estado.toUpperCase()) {
-            case "PENDIENTE":
-                return 1; // PENDIENTE
-            case "EN_EJECUCION":
-                return 2; // EN_EJECUCION
-            case "COMPLETADO":
-                return 3; // COMPLETADO
-            default:
-                throw new ReglaNegocioException("Estado de pedido inválido: " + estado);
-        }
-    }
-
-
-	public void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException {
-	    PedidosDonacion pedido = buscarPedidoPorId(idPedido);
-	    if (pedido == null) {
-	        throw new ReglaNegocioException("El pedido de donación con ID " + idPedido + " no existe.");
-	    }
-
-	    int nuevoEstadoInt = mapearEstadoPedidoAInt(nuevoEstado);
-	    
-	    pedido.actualizarEstado(nuevoEstadoInt); 
-	    
-	    System.out.println("Éxito: Estado del Pedido " + idPedido + " actualizado a " + nuevoEstado);
-	}
-
 	@Override
 	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) {
 		List<VisitaDTO> visitas = new ArrayList<>();
 		for (OrdenRetiro orden : this.ordenes) {
 			if (orden.getVoluntario() != null && orden.getVoluntario().getNombre().equals(voluntario.getNombre())) {
+				
 				for (Visita visita : orden.obtenerVisitas()) {
-					visitas.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
+					// obtener el donante desde el pedido relacionado con la visita
+					String nombreDonante = "Sin datos";
+					if (visita.getPedidoRelacionado() != null && visita.getPedidoRelacionado().getDonante() != null) {
+						Donante donante = visita.getPedidoRelacionado().getDonante();
+						nombreDonante = donante.getNombre() + " " + donante.obtenerApellido();
+						
+						// DEBUG
+						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+					} else {
+						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
+					}
+					
+					// crear DTO con todos los datos relevantes
+					VisitaDTO visitaDTO = new VisitaDTO(
+						visita.obtenerFechaFormateada(),
+						visita.obtenerObservacion(), visita.obtenerResultado().toString(), // Enum a String
+						nombreDonante // nombre completo del donante especifico de esta visita
+					);
+					visitas.add(visitaDTO);
 				}
 			}
 		}

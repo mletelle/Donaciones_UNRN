@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class RegistrarVisitaDialog extends JDialog {
 
@@ -16,10 +17,11 @@ public class RegistrarVisitaDialog extends JDialog {
     private JTextField txtHora;
     private JComboBox<String> cmbResultado;
     private JTextArea txtObservaciones;
-    private JTextField txtIdPedido; // Convertido a campo de clase
+    private JTextField txtIdPedido; // convertido a campo de clase
     private IApi api;
     private int idOrden;
     private int idPedido;
+    private GestionarOrdenVoluntario ventanaPadre; // referencia a la ventana padre
 
     public RegistrarVisitaDialog(IApi api, int idOrden) {
         this.api = api;
@@ -81,7 +83,7 @@ public class RegistrarVisitaDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        cmbResultado = new JComboBox<>(new String[]{"Recolección Exitosa", "Donante Ausente", "Recolección Parcial", "Cancelado"});
+        cmbResultado = new JComboBox<>(new String[]{"Recoleccion Exitosa", "Donante Ausente", "Recoleccion Parcial", "Cancelado"});
         panelCampos.add(cmbResultado, gbc);
 
         // pedido id
@@ -144,6 +146,12 @@ public class RegistrarVisitaDialog extends JDialog {
         this.idPedido = idPedido;
         this.txtIdPedido.setText(String.valueOf(this.idPedido)); 
     }
+    
+    // recibe la ventana padre para notificarla cuando se guarde
+    public RegistrarVisitaDialog(IApi api, int idOrden, int idPedido, GestionarOrdenVoluntario ventanaPadre) {
+        this(api, idOrden, idPedido);
+        this.ventanaPadre = ventanaPadre;
+    }
 
     private void guardarVisita() {
         try {
@@ -160,14 +168,14 @@ public class RegistrarVisitaDialog extends JDialog {
                 return;
             }
 
-            // revisa que la fecha y hora sean válidas antes de continuar
+            // revisa que la fecha y hora sean validas antes de continuar
             if (fecha == null || fecha.isEmpty() || !fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "La fecha es inválida o está vacía. Use el formato YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "La fecha es invalida o esta vacia. Use el formato YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             if (hora == null || hora.isEmpty() || !hora.matches("\\d{2}:\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "La hora es inválida o está vacía. Use el formato HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "La hora es invalida o esta vacia. Use el formato HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -177,7 +185,7 @@ public class RegistrarVisitaDialog extends JDialog {
 
             // Validar observaciones
             if (observaciones == null || observaciones.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "El campo de observaciones no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "El campo de observaciones no puede estar vacio.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -185,12 +193,21 @@ public class RegistrarVisitaDialog extends JDialog {
                 LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
                 String nombreDonante = api.obtenerNombreDonantePorId(idPedido);
                 VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
-                api.registrarVisita(idOrden, visita);
+                api.registrarVisita(idOrden, idPedido, visita);
 
-                JOptionPane.showMessageDialog(this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Visita registrada con exito.", "exito", JOptionPane.INFORMATION_MESSAGE);
+                
+                // notificar a la ventana padre para que recargue los datos
+                if (ventanaPadre != null) {
+                    ventanaPadre.recargarDatos();
+                }
+                
                 dispose();
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato válido.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato valido.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (ReglaNegocioException ex) {
+                // captura especifica de violaciones de reglas de negocio
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Operacion no permitida", JOptionPane.WARNING_MESSAGE);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al registrar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

@@ -13,16 +13,16 @@ public class Usuario {
 
 	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol) throws CampoVacioException, ObjetoNuloException {
 		if (usuario == null || usuario.isEmpty()) {
-			throw new CampoVacioException("El campo 'usuario' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
 		}
 		if (contrasena == null || contrasena.isEmpty()) {
-			throw new CampoVacioException("El campo 'contraseña' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'contraseña' no puede estar vacio.");
 		}
 		if (nombre == null || nombre.isEmpty()) {
-			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
 		}
 		if (email == null || email.isEmpty()) {
-			throw new CampoVacioException("El campo 'email' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'email' no puede estar vacio.");
 		}
 		if (rol == null) {
 			throw new ObjetoNuloException("El campo 'rol' no puede ser nulo.");

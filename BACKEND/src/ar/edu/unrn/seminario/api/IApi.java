@@ -46,23 +46,15 @@ public interface IApi {
 
 	List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
 
-	void generarOrdenRetiro(int idPedidoDonacion) throws ObjetoNuloException, ReglaNegocioException;
-
 	List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
 
-	OrdenRetiroDTO obtenerOrdenDeRetiroDetalle(int idOrden);
-
-	void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException;
-
-	void actualizarEstadoOrdenRetiro(int idOrdenRetiro, int nuevoEstado) throws ReglaNegocioException;
+	void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
 
 	List<VoluntarioDTO> obtenerVoluntarios();
 
 	void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
 
 	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
-	
-	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException;
 
 	List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
 

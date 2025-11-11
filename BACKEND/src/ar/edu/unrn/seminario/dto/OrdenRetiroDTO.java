@@ -8,48 +8,18 @@ import java.sql.Timestamp;
 
 public class OrdenRetiroDTO {
     private int id;
-    private int estado;
+    private String estado; // cambiado de int a String
     private Date fechaCreacion;
     private List<VisitaDTO> visitas;
     private String donante;
     private String vehiculo;
     private String voluntario;
 
-    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = new ArrayList<>();
-    }
 
-    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas) {
+    public OrdenRetiroDTO(int id, String estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
         this.id = id;
         this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-    }
-
-    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas, boolean convertToDTO) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-    }
-
-    public OrdenRetiroDTO(int id, int estado, Date fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-        this.donante = donante;
-        this.vehiculo = vehiculo;
-        this.voluntario = voluntario;
-    }
-
-    public OrdenRetiroDTO(int id, int estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = Timestamp.valueOf(fechaCreacion);
+        this.fechaCreacion = Timestamp.valueOf(fechaCreacion); //revisar
         this.visitas = visitas;
         this.donante = donante;
         this.vehiculo = vehiculo;
@@ -64,11 +34,11 @@ public class OrdenRetiroDTO {
         this.id = id;
     }
 
-    public int getEstado() {
+    public String getEstado() {
         return estado;
     }
 
-    public void setEstado(int estado) {
+    public void setEstado(String estado) {
         this.estado = estado;
     }
 
@@ -113,19 +83,8 @@ public class OrdenRetiroDTO {
     }
 
     public String getDescripcion() {
-        return "Donante: " + donante + ", Vehículo: " + vehiculo + ", Voluntario: " + voluntario;
+        return "Donante: " + donante + ", Vehiculo: " + vehiculo + ", Voluntario: " + voluntario;
     }
 
-    public String getEstadoTexto() {
-        switch (this.estado) {
-            case 1:
-                return "Pendiente";
-            case 2:
-                return "En Ejecución";
-            case 3:
-                return "Completado";
-            default:
-                return "Desconocido";
-        }
-    }
+    // el metod getEstadoTexto() eliminado, ahora getEstado() devuelve String directamente
 }

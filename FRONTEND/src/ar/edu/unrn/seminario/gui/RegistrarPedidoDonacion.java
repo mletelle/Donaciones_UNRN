@@ -42,7 +42,7 @@ public class RegistrarPedidoDonacion extends JDialog {
     private int donanteId; 
 
     public RegistrarPedidoDonacion(IApi api) {
-        setTitle("Registrar Pedido de Donación");
+        setTitle("Registrar Pedido de Donacion");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 450, 350);
         contentPane = new JPanel();
@@ -57,11 +57,11 @@ public class RegistrarPedidoDonacion extends JDialog {
         contentPane.add(fechaTextField, BorderLayout.NORTH);
         fechaTextField.setColumns(10);
 
-        JLabel lblTipoVehiculo = new JLabel("Tipo de Vehículo:");
+        JLabel lblTipoVehiculo = new JLabel("Tipo de Vehiculo:");
         contentPane.add(lblTipoVehiculo, BorderLayout.NORTH);
 
         tipoVehiculoComboBox = new JComboBox<>();
-        tipoVehiculoComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Auto", "Camioneta", "Camión"}));
+        tipoVehiculoComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Auto", "Camioneta", "Camion"}));
         contentPane.add(tipoVehiculoComboBox, BorderLayout.NORTH);
 
 
@@ -74,7 +74,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         JButton btnAgregarBien = new JButton("Agregar Bien");
         contentPane.add(btnAgregarBien, BorderLayout.NORTH);
 
-        JButton btnAceptar = new JButton("Cargar Pedido de Donación");
+        JButton btnAceptar = new JButton("Cargar Pedido de Donacion");
         contentPane.add(btnAceptar, BorderLayout.SOUTH);
 
         JButton btnCancelar = new JButton("Cancelar");
@@ -96,7 +96,7 @@ public class RegistrarPedidoDonacion extends JDialog {
                     if (bienesTable.getModel() instanceof BienTableModel) {
                         ((BienTableModel) bienesTable.getModel()).fireTableDataChanged();
                     }
-                    JOptionPane.showMessageDialog(RegistrarPedidoDonacion.this, "Bien agregado con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(RegistrarPedidoDonacion.this, "Bien agregado con exito.", "exito", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
@@ -109,7 +109,7 @@ public class RegistrarPedidoDonacion extends JDialog {
                     int idDonanteSeleccionado;
 
                     if (bienes == null || bienes.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donación.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donacion.", "Error de Validacion", JOptionPane.ERROR_MESSAGE);
                         return; // detiene si no hay bienes
                     }
 
@@ -132,13 +132,13 @@ public class RegistrarPedidoDonacion extends JDialog {
                     PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, "", idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
-                    JOptionPane.showMessageDialog(null, "Pedido registrado con éxito.");
+                    JOptionPane.showMessageDialog(null, "Pedido registrado con exito.");
                     dispose();
                     
                 } catch (java.time.format.DateTimeParseException ex) {
-                    JOptionPane.showMessageDialog(null, "Formato de fecha inválido. Use dd/MM/yyyy.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Formato de fecha invalido. Use dd/MM/yyyy.", "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar el pedido: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Ocurrio un error al registrar el pedido: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -179,7 +179,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         JPanel panelFormulario = new JPanel(new GridLayout(4, 2, 10, 10));
         panelFormulario.add(new JLabel("Fecha:"));
         panelFormulario.add(fechaTextField);
-        panelFormulario.add(new JLabel("Tipo de Vehículo:"));
+        panelFormulario.add(new JLabel("Tipo de Vehiculo:"));
         panelFormulario.add(tipoVehiculoComboBox);
         panelFormulario.add(new JLabel("Donante:"));
         panelFormulario.add(donanteComboBox);
