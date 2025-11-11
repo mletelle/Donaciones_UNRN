@@ -14,7 +14,7 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public interface IApi {
 
-	void registrarUsuario(String username, String password, String email, String nombre, Integer rol) throws CampoVacioException, ObjetoNuloException;
+	void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException;
 
 	UsuarioDTO obtenerUsuario(String username);
 

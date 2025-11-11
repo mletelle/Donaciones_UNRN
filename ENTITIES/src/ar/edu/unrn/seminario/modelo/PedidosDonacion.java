@@ -24,12 +24,12 @@ public class PedidosDonacion {
 	private ArrayList<Bien> bienes;
 	private int tipoVehiculo;
 	private String observaciones;
-	private Donante donante; // asociacion inversa
+	private Usuario donante; //  ahora es Usuario, antes donante
 	private OrdenRetiro ordenRetiro; // 1 a 1
 	private EstadoPedido estadoPedido; //  guardar el estado del pedido
 
 	// constructor con todos los parametros
-	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
 		}
@@ -47,12 +47,12 @@ public class PedidosDonacion {
 		this.donante = d;
 		this.estadoPedido = EstadoPedido.PENDIENTE; // inicializar en PENDIENTE
 	}
-	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
 
 	// constructor para LocalDateTime
-	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
 	// getters
@@ -69,7 +69,7 @@ public class PedidosDonacion {
 	}
 
 
-	public Donante obtenerDonante() {
+	public Usuario obtenerDonante() {
 		return donante;
 	}
 
@@ -82,14 +82,14 @@ public class PedidosDonacion {
 	}
 
 	public String obtenerUbicacion() {
-		return this.donante != null ? this.donante.obtenerUbicacion() : "Ubicacion no disponible";
+		return this.donante != null ? this.donante.obtenerDireccion() : "Ubicacion no disponible";
 	}
 
 	public int getId() {
 		return this.id;
 	}
 
-	public Donante getDonante() {
+	public Usuario getDonante() {
 		return this.donante;
 	}
 
@@ -104,7 +104,7 @@ public class PedidosDonacion {
 	}
 
 	public String obtenerDireccion() {
-		return donante != null ? donante.obtenerUbicacion() : "Direccion no disponible";
+		return donante != null ? donante.obtenerDireccion() : "Direccion no disponible";
 	}
 
 	// relacion con la orden
