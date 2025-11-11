@@ -42,18 +42,6 @@ public class Donante extends Persona {
         return p;
     }
 
-    public PedidosDonacion crearPedido(ArrayList<Bien> bienes, String tipo, String obs) throws CampoVacioException, ObjetoNuloException {
-        if (bienes == null || bienes.isEmpty()) {
-            throw new CampoVacioException("La lista de bienes no puede estar vacia.");
-        }
-        if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo de vehiculo no puede estar vacio.");
-        }
-        PedidosDonacion p = new PedidosDonacion(tipo, bienes, obs, this);
-        pedidos.add(p);
-        return p;
-    }
-
     public void notificar(String mensaje) {
         System.out.println("Donante " + this + ": " + mensaje);
     }

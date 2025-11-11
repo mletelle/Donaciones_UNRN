@@ -50,13 +50,6 @@ public class PedidosDonacion {
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
-	public PedidosDonacion(String tipo, ArrayList<Bien> bienes, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
-		this(LocalDateTime.now(), bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, donante);
-	}
-	// constructor sin fecha (usa la actual)
-	public PedidosDonacion(ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Donante d) throws CampoVacioException, ObjetoNuloException {
-		this(LocalDateTime.now(), bienes, tipoVehiculo, observaciones, d);
-	}
 
 	// constructor para LocalDateTime
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Donante donante) throws CampoVacioException, ObjetoNuloException {
@@ -75,9 +68,6 @@ public class PedidosDonacion {
 		return bienes;
 	}
 
-	public int obtenerTipoVehiculo() {
-		return tipoVehiculo;
-	}
 
 	public Donante obtenerDonante() {
 		return donante;
@@ -175,15 +165,4 @@ public class PedidosDonacion {
 		(this.donante.equals(obj.donante));
 	}	
 
-	public static int getVehiculoAuto() {
-		return VEHICULO_AUTO;
-	}
-
-	public static int getVehiculoCamioneta() {
-		return VEHICULO_CAMIONETA;
-	}
-
-	public static int getVehiculoCamion() {
-		return VEHICULO_CAMION;
-	}
 }

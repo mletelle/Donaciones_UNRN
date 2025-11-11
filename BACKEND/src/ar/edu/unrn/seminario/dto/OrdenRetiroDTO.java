@@ -15,41 +15,11 @@ public class OrdenRetiroDTO {
     private String vehiculo;
     private String voluntario;
 
-    public OrdenRetiroDTO(int id, String estado, Date fechaCreacion) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = new ArrayList<>();
-    }
-
-    public OrdenRetiroDTO(int id, String estado, Date fechaCreacion, List<VisitaDTO> visitas) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-    }
-
-    public OrdenRetiroDTO(int id, String estado, Date fechaCreacion, List<VisitaDTO> visitas, boolean convertToDTO) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-    }
-
-    public OrdenRetiroDTO(int id, String estado, Date fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
-        this.id = id;
-        this.estado = estado;
-        this.fechaCreacion = fechaCreacion;
-        this.visitas = visitas;
-        this.donante = donante;
-        this.vehiculo = vehiculo;
-        this.voluntario = voluntario;
-    }
 
     public OrdenRetiroDTO(int id, String estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
         this.id = id;
         this.estado = estado;
-        this.fechaCreacion = Timestamp.valueOf(fechaCreacion);
+        this.fechaCreacion = Timestamp.valueOf(fechaCreacion); //revisar
         this.visitas = visitas;
         this.donante = donante;
         this.vehiculo = vehiculo;

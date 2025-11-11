@@ -1,18 +1,15 @@
 package ar.edu.unrn.seminario.modelo;
 
-public class Administrador implements IRol {
+public class Administrador {
 
-    @Override
     public boolean isDonante() {
         return false;
     }
 
-    @Override
     public boolean isAdministrador() {
         return true;
     }
 
-    @Override
     public boolean isVoluntario() {
         return false;
     }

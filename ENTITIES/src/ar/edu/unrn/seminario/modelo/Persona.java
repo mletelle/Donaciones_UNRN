@@ -69,9 +69,6 @@ public abstract class Persona {
         return this.ubicacion;
     }
 
-    public void cambiarUbicacion(Ubicacion nueva) {
-        this.ubicacion = nueva;
-    }
 
     // abstracta, cada subclase debe implementarla
     public abstract void notificar(String mensaje);

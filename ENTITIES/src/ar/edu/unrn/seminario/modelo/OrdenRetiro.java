@@ -41,43 +41,6 @@ public class OrdenRetiro {
         }
     }
 
-    // constructor con compatibilidad con codigo actual (un solo pedido)
-    public OrdenRetiro(PedidosDonacion pedido, Ubicacion dest) throws ObjetoNuloException {
-        if (pedido == null) {
-            throw new ObjetoNuloException("El pedido de donacion no puede ser nulo.");
-        }
-        this.id = ++secuencia;
-        this.estado = EstadoOrden.PENDIENTE;
-        this.destino = dest;
-        this.pedidos = new ArrayList<>();
-        this.pedidos.add(pedido);
-        this.voluntarios = new ArrayList<Voluntario>();
-        this.visitas = new ArrayList<Visita>();
-        pedido.asignarOrden(this);
-    }
-
-    public OrdenRetiro(PedidosDonacion pedido, String dest) throws ObjetoNuloException {
-        if (pedido == null || dest == null || dest.isEmpty()) {
-            throw new ObjetoNuloException("El pedido de donacion o el destino no puede ser nulo o vacio.");
-        }
-        this.estado = EstadoOrden.PENDIENTE;
-        this.destino = new Ubicacion(dest, "", "", 0.0, 0.0); // valores por defecto
-        this.pedidos = new ArrayList<>();
-        this.pedidos.add(pedido);
-        this.voluntarios = new ArrayList<>();
-        this.visitas = new ArrayList<>();
-        pedido.asignarOrden(this);
-    }
-    public OrdenRetiro(Voluntario voluntario, String tipoVehiculo) {
-        this.id = ++secuencia; // inicializar el ID
-        this.estado = EstadoOrden.PENDIENTE;
-        this.voluntarios = new ArrayList<>();
-        this.visitas = new ArrayList<>();
-        this.pedidos = new ArrayList<>();
-        this.voluntarios.add(voluntario);
-        this.destino = null; // por defecto
-    }
-
     // metodos
     // asignacion de voluntario
     public void asignarVoluntario(Voluntario voluntario) {
@@ -122,15 +85,16 @@ public class OrdenRetiro {
     }
   
     // getters
-    public int obtenerEstado() {
-        // retornar un valor numerico para compatibilidad temporal
+    /*corregido a pedido de los profesores
+     * public int obtenerEstado() {
+        // retornar un valor numerico 
         switch (this.estado) {
             case PENDIENTE: return 1;
             case EN_EJECUCION: return 2;
             case COMPLETADO: return 3;
             default: return 1;
         }
-    }
+    }*/
     
     public EstadoOrden obtenerEstadoOrden() {
         return this.estado;
@@ -231,9 +195,6 @@ public class OrdenRetiro {
         return obtenerId();
     }
 
-    public int getEstado() {
-        return obtenerEstado();
-    }
 
     public LocalDateTime getFechaCreacion() {
         return obtenerFechaCreacion();
@@ -245,9 +206,5 @@ public class OrdenRetiro {
 
     public Vehiculo getVehiculo() {
         return obtenerVehiculo();
-    }
-
-    public PedidosDonacion obtenerPedidoOrigen() {
-        return (!this.pedidos.isEmpty()) ? this.pedidos.get(0) : null;
     }
 }

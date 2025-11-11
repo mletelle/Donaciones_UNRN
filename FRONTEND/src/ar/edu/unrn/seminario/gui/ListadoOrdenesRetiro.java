@@ -16,7 +16,7 @@ public class ListadoOrdenesRetiro extends JFrame {
 
     public ListadoOrdenesRetiro(IApi api) {
         this.api = api;
-        setTitle("Listado de ordenes de Retiro");
+        setTitle("Listado de Ordenes de Retiro Pendientes");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);

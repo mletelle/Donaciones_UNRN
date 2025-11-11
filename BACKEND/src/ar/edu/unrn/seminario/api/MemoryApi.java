@@ -267,32 +267,6 @@ public class MemoryApi implements IApi {
 		return pendientes; // devuelve lista
 	}
 
-	@Override
-	public void generarOrdenRetiro(int idPedidoDonacion) throws ObjetoNuloException, ReglaNegocioException {
-		PedidosDonacion pedido = buscarPedidoPorId(idPedidoDonacion);
-		if (pedido == null) {
-			throw new ObjetoNuloException("El pedido de donacion no existe.");
-		}
-		if (pedido.obtenerOrden() != null) {
-			throw new ReglaNegocioException("El pedido ya tiene una orden de retiro asignada.");
-		}
-		if (pedido.obtenerDonante() == null) {
-			throw new ObjetoNuloException("El pedido de donacion no tiene un donante asignado.");
-		}
-
-		OrdenRetiro orden = new OrdenRetiro(pedido, pedido.obtenerUbicacion());
-		pedido.asignarOrden(orden);
-		this.ordenes.add(orden);
-
-		List<VisitaDTO> visitasDTO = new ArrayList<>();
-		for (Visita visita : orden.obtenerVisitas()) {
-			visitasDTO.add(new VisitaDTO(
-				visita.obtenerFechaFormateada(),
-				visita.obtenerObservacion(),
-				convertirBienesAStrings(visita.obtenerBienes())
-			));
-		}
-	}
 
 	@Override
 	public List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado) {
@@ -301,7 +275,7 @@ public class MemoryApi implements IApi {
 			if (orden.describirEstado().equalsIgnoreCase(estado)) {
 				List<VisitaDTO> visitasDTO = new ArrayList<>();
 				for (Visita visita : orden.obtenerVisitas()) {
-				visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion(), convertirBienesAStrings(visita.obtenerBienes())));
+				visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion()));
 			}
 			String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
 			String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehiculo Desconocido";
@@ -310,15 +284,6 @@ public class MemoryApi implements IApi {
 		}
 	}
 	return ordenesFiltradas;
-}	@Override
-	public OrdenRetiroDTO obtenerOrdenDeRetiroDetalle(int idOrden) {
-		for (OrdenRetiro orden : ordenes) {
-			if (orden.obtenerId() == idOrden) {
-				// ajustado
-				return new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstadoOrden().toString(), orden.obtenerFechaCreacion(), new ArrayList<>(), orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante", orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo", orden.getVoluntario() != null ? orden.getVoluntario().getNombre() : "Sin Voluntario");
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -407,15 +372,6 @@ public class MemoryApi implements IApi {
 		return null;
 	}
 
-	private List<Bien> convertirBienes(List<String> bienesStr) throws CampoVacioException {
-		List<Bien> bienes = new ArrayList<>();
-        if (bienesStr != null) {
-		    for (String nombreBien : bienesStr) {
-			    bienes.add(new Bien(nombreBien.trim()));
-		    }
-        }
-		return bienes;
-	}
 
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() {
@@ -583,9 +539,7 @@ public class MemoryApi implements IApi {
 					// crear DTO con todos los datos relevantes
 					VisitaDTO visitaDTO = new VisitaDTO(
 						visita.obtenerFechaFormateada(),
-						visita.obtenerObservacion(),
-						convertirBienesAStrings(visita.obtenerBienes()),
-						visita.obtenerResultado().toString(), // Enum a String
+						visita.obtenerObservacion(), visita.obtenerResultado().toString(), // Enum a String
 						nombreDonante // nombre completo del donante especifico de esta visita
 					);
 					visitas.add(visitaDTO);

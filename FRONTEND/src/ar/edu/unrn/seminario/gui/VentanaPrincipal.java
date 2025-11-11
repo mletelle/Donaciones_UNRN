@@ -118,7 +118,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(mntmRegistrarPedido);
-		listadoOrdenesMenuItem = new JMenuItem("Listado ordenes de Retiro");
+		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro Pendientes");
 		listadoOrdenesMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ListadoOrdenesRetiro listadoOrdenes = new ListadoOrdenesRetiro(api);
@@ -163,16 +163,6 @@ public class VentanaPrincipal extends JFrame {
 		});
 		voluntarioMenu.add(gestionarOrdenesMenuItem);
         
-		/*JMenuItem registrarVisitaMenuItem = new JMenuItem("Registrar Visita");
-        registrarVisitaMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                RegistrarVisitaDialog registrarVisitaDialog = new RegistrarVisitaDialog(api, 0); // ID de orden hardcodeado
-                registrarVisitaDialog.setLocationRelativeTo(null);
-                registrarVisitaDialog.setVisible(true);
-            }
-        });
-        voluntarioMenu.add(registrarVisitaMenuItem);*/
         
         JMenuItem listadoVisitasMenuItem = new JMenuItem("Historial de Visitas");
         listadoVisitasMenuItem.addActionListener(new ActionListener() {

@@ -66,10 +66,6 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
         cargarOrdenesAsignadas();
     }
 
-    public ListadoOrdenesAsignadasVoluntario(IApi api) {
-        this(api, new VoluntarioDTO("Carlos", "Perez", "carlos.perez@example.com")); // VoluntarioDTO de prueba
-    }
-
     private void cargarOrdenesAsignadas() {
         modeloTabla.setRowCount(0); // Limpiar la tabla
         List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getNombre());

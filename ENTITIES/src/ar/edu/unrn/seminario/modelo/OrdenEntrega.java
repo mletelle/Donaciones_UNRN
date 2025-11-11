@@ -109,13 +109,7 @@ public class OrdenEntrega {
         }
     }
 
-     private double VolumenTotal() {
-        double sumaVolumen = 0.0;
-        for(Bien bien : bienes) {
-            sumaVolumen += bien.calcularVolumen();
-        }
-        return sumaVolumen;
-    }
+
     public void quitarBien(Bien item) {
     	bienes.remove(item);
      }

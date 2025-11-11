@@ -13,13 +13,6 @@ public class PedidoDonacionDTO {
     private String direccion;
     private String estado;
 
-    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, String observaciones, int donanteId) {
-        this.id = id;
-        this.fecha = fecha;
-        this.tipoVehiculo = tipoVehiculo;
-        this.observaciones = observaciones;
-        this.donanteId = donanteId;
-    }
 
     public PedidoDonacionDTO(String fecha, List<BienDTO> bienes, String tipoVehiculo, String observaciones, int donanteId) {
         this.fecha = fecha;
@@ -27,15 +20,6 @@ public class PedidoDonacionDTO {
         this.tipoVehiculo = tipoVehiculo;
         this.observaciones = observaciones;
         this.donanteId = donanteId;
-    }
-
-    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, String observaciones, int donanteId, List<BienDTO> bienes) {
-        this.id = id;
-        this.fecha = fecha;
-        this.tipoVehiculo = tipoVehiculo;
-        this.observaciones = observaciones;
-        this.donanteId = donanteId;
-        this.bienes = bienes;
     }
 
     public PedidoDonacionDTO(int id, String donante, String direccion, String estado) {
@@ -112,26 +96,5 @@ public class PedidoDonacionDTO {
 
     public String getEstado() {
         return estado;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        PedidoDonacionDTO that = (PedidoDonacionDTO) obj;
-        return id == that.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Integer.hashCode(id);
-    }
-
-    @Override
-    public String toString() {
-        return "PedidoDonacionDTO{" +
-                "id=" + id +
-                ", fecha='" + fecha + '\'' +
-                '}';
     }
 }

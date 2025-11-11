@@ -12,17 +12,9 @@ public class VisitaDTO {
     private LocalDateTime fechaHora;
     private String donante;
 
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados) {
+    public VisitaDTO(String fechaDeVisita, String observacion) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
-        this.bienesRetirados = bienesRetirados;
-    }
-
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, String resultado) {
-        this.fechaDeVisita = fechaDeVisita;
-        this.observacion = observacion;
-        this.bienesRetirados = bienesRetirados;
-        this.resultado = resultado;
     }
 
     public VisitaDTO(LocalDateTime fechaHora, String resultado, String observacion, String donante) {
@@ -33,10 +25,9 @@ public class VisitaDTO {
     }
 
     //  completo con todos los datos para el historial
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, String resultado, String donante) {
+    public VisitaDTO(String fechaDeVisita, String observacion, String resultado, String donante) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
-        this.bienesRetirados = bienesRetirados;
         this.resultado = resultado;
         this.donante = donante;
     }

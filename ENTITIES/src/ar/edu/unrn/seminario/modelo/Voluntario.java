@@ -10,31 +10,9 @@ public class Voluntario extends Persona {
         super(nombre, apellido, dni, ubicacion);
     }
 
-    public Voluntario(String nombre, String apellido, int dni) throws CampoVacioException {
-        super(nombre, apellido, dni);
-    }
-
-    public Voluntario(String nombre, String apellido, String ubicacion) throws CampoVacioException, ObjetoNuloException {
-        super(nombre, apellido, 0, new Ubicacion(ubicacion, "", "", 0.0, 0.0));
-    }
-
     // comprueba si el voluntario esta libre
     public boolean disponible() {
         return ordenActual == null || ordenActual.estaCompletada();
-    }
-
-    // intenta aceptar la orden si esta disponible
-    public boolean aceptarOrden(OrdenRetiro orden) {
-        if (!disponible()) {
-            return false; // no se puede aceptar la orden
-        }
-        // orden recibida como la actual
-        this.ordenActual = orden;
-        // quien recibe la orden es el voluntario
-        orden.asignarVoluntario(this);
-        // notificar al voluntario
-        notificar("Se le asigno " + orden);
-        return true;
     }
 
     @Override
