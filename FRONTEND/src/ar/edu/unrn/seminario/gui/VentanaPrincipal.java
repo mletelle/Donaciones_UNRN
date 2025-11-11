@@ -118,7 +118,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(mntmRegistrarPedido);
-		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro Pendientes");
+		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro Pendientes"); // revisar, habria que levantar todas y despues filtrar con combobox
 		listadoOrdenesMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ListadoOrdenesRetiro listadoOrdenes = new ListadoOrdenesRetiro(api);
