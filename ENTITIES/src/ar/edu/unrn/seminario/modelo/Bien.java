@@ -32,7 +32,7 @@ public class Bien {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
         }
         if (categoria < CATEGORIA_BAJA || categoria > CATEGORIA_ALTA) {
-            throw new CampoVacioException("La categoría es inválida.");
+            throw new CampoVacioException("La categoria es invalida.");
         }
         this.tipo = tipo;
         this.cantidad = cantidad;
@@ -41,17 +41,10 @@ public class Bien {
     public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
         this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
         if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo no puede estar vacío.");
+            throw new CampoVacioException("El tipo no puede estar vacio.");
         }
     }
-    public Bien(String tipo) throws CampoVacioException {
-        if (tipo == null || tipo.trim().isEmpty()) {
-            throw new CampoVacioException("El tipo no puede ser nulo o vacío.");
-        }
-        this.tipo = TIPO_ALIMENTO; 
-        this.cantidad = 1; 
-        this.categoria = CATEGORIA_MEDIA;
-    }
+
     public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
         this(tipo, cantidad, categoria);
         this.vehiculo = vehiculo;
@@ -92,18 +85,7 @@ public class Bien {
 	public void setPerecedero(boolean perecedero) {
 		this.perecedero = perecedero;
 	}
-    
-    //calcular volumen: depende del tipo de bien
-    //se utilizaria para saber el tipo de vehiculo necesario
-    //para transportar los bienes
-    // no se usa en el main pero se deja por si se necesita
-    public double calcularVolumen() {
-        if (tipo == TIPO_MOBILIARIO)// mobiliario ocupa medio metro cubico por unidad
-            return cantidad * 0.5; 
-        if (tipo == TIPO_ALIMENTO)
-            return cantidad * 0.1; // alimentos ocupan 0.1 metro cubico por unidad
-        return cantidad * 0.05; // ropa e higiene ocupan 0.05 metro cubico por unidad
-    }
+   
   
     //metodos de ayuda para el toString
     private String describirTipo() {
@@ -133,13 +115,7 @@ public class Bien {
                 return "";
         }
     }
-    public void aceptarItem() {
-     System.out.println("Item aceptado");
-    }
 
-    public void rechazarItem() {
-     System.out.println("Item rechazado");
-    }
     public Vehiculo obtenerVehiculo() {
         return vehiculo;
     }

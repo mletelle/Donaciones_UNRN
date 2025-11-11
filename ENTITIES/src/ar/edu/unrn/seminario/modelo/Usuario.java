@@ -1,5 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
+import java.util.ArrayList;
+
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
@@ -10,22 +12,41 @@ public class Usuario {
 	private String email;
 	private Rol rol;
 	private boolean activo;
+	
+	//  absorbidos de Persona
+	private String apellido;
+	private int dni;
+	private String direccion; // SIMPLIFICADO: solo String en lugar de objeto Ubicacion
+	
+	//  para roles específicos
+	private ArrayList<PedidosDonacion> pedidos; // Para Donante
+	private ArrayList<OrdenRetiro> ordenesAsignadas; // Para Voluntario
 
-	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol) throws CampoVacioException, ObjetoNuloException {
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
 		if (usuario == null || usuario.isEmpty()) {
-			throw new CampoVacioException("El campo 'usuario' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
 		}
 		if (contrasena == null || contrasena.isEmpty()) {
-			throw new CampoVacioException("El campo 'contraseña' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'contraseña' no puede estar vacio.");
 		}
 		if (nombre == null || nombre.isEmpty()) {
-			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
 		}
 		if (email == null || email.isEmpty()) {
-			throw new CampoVacioException("El campo 'email' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'email' no puede estar vacio.");
 		}
 		if (rol == null) {
 			throw new ObjetoNuloException("El campo 'rol' no puede ser nulo.");
+		}
+		if (apellido == null || apellido.isEmpty()) {
+			throw new CampoVacioException("El campo 'apellido' no puede estar vacio.");
+		}
+		if (dni <= 0) {
+			throw new CampoVacioException("El campo 'dni' debe ser un numero positivo.");
+		}
+		//  solo requerida para DONANTES
+		if ((direccion == null || direccion.isEmpty()) && rol.getCodigo() == 3) {
+			throw new CampoVacioException("El campo 'direccion' no puede estar vacio para Donantes.");
 		}
 
 		this.usuario = usuario;
@@ -33,6 +54,14 @@ public class Usuario {
 		this.nombre = nombre;
 		this.email = email;
 		this.rol = rol;
+		this.apellido = apellido;
+		this.dni = dni;
+		this.direccion = direccion;
+		this.activo = true; // ACTIVO POR DEFECTO
+		
+		//  listas según el rol
+		this.pedidos = new ArrayList<>();
+		this.ordenesAsignadas = new ArrayList<>();
 	}
 
 	public String getUsuario() {
@@ -75,6 +104,55 @@ public class Usuario {
 		this.rol = rol;
 	}
 
+	public String getApellido() {
+		return apellido;
+	}
+
+	public void setApellido(String apellido) {
+		this.apellido = apellido;
+	}
+
+	public int getDni() {
+		return dni;
+	}
+
+	public void setDni(int dni) {
+		this.dni = dni;
+	}
+
+	public String getDireccion() {
+		return direccion;
+	}
+
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
+	}
+
+	public ArrayList<PedidosDonacion> getPedidos() {
+		return pedidos;
+	}
+
+	public ArrayList<OrdenRetiro> getOrdenesAsignadas() {
+		return ordenesAsignadas;
+	}
+
+	// Métodos con nomenclatura obtener (estilo del dominio)
+	public String obtenerApellido() {
+		return apellido;
+	}
+
+	public int obtenerDni() {
+		return dni;
+	}
+
+	public String obtenerDireccion() {
+		return direccion;
+	}
+
+	public String obtenerNombre() {
+		return nombre;
+	}
+
 	public boolean isActivo() {
 		return activo;
 	}
@@ -97,6 +175,7 @@ public class Usuario {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + dni; // DNI como clave principal
 		result = prime * result + ((usuario == null) ? 0 : usuario.hashCode());
 		return result;
 	}
@@ -110,12 +189,13 @@ public class Usuario {
 		if (getClass() != obj.getClass())
 			return false;
 		Usuario other = (Usuario) obj;
-		if (usuario == null) {
-			if (other.usuario != null)
-				return false;
-		} else if (!usuario.equals(other.usuario))
-			return false;
-		return true;
+		// Unicidad por DNI
+		return this.dni == other.dni;
+	}
+
+	@Override
+	public String toString() {
+		return nombre + " " + apellido + " (DNI " + dni + ")";
 	}
 
 }

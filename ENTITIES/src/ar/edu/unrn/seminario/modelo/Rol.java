@@ -16,7 +16,7 @@ public class Rol {
 			throw new CampoVacioException("El campo 'codigo' no puede ser nulo.");
 		}
 		if (nombre == null || nombre.isEmpty()) {
-			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
 		}
 
 		this.codigo = codigo;

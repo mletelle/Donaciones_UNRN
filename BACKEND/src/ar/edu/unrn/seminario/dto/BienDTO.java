@@ -25,16 +25,6 @@ public class BienDTO {
     private LocalDate fechaVencimiento;
     private int peso;
 
-    public BienDTO(int id, int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento, int peso) {
-        this.id = id;
-        this.tipo = tipo;
-        this.cantidad = cantidad;
-        this.categoria = categoria;
-        this.descripcion = descripcion;
-        this.fechaVencimiento = fechaVencimiento;
-        this.peso = peso;
-    }
-
     public BienDTO(int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento) {
         this.tipo = tipo;
         this.cantidad = cantidad;

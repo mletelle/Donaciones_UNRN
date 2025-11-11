@@ -14,7 +14,7 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public interface IApi {
 
-	void registrarUsuario(String username, String password, String email, String nombre, Integer rol) throws CampoVacioException, ObjetoNuloException;
+	void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException;
 
 	UsuarioDTO obtenerUsuario(String username);
 
@@ -46,23 +46,15 @@ public interface IApi {
 
 	List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
 
-	void generarOrdenRetiro(int idPedidoDonacion) throws ObjetoNuloException, ReglaNegocioException;
-
 	List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
 
-	OrdenRetiroDTO obtenerOrdenDeRetiroDetalle(int idOrden);
-
-	void registrarVisita(int idOrdenRetiro, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException;
-
-	void actualizarEstadoOrdenRetiro(int idOrdenRetiro, int nuevoEstado) throws ReglaNegocioException;
+	void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
 
 	List<VoluntarioDTO> obtenerVoluntarios();
 
 	void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
 
 	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
-	
-	void actualizarEstadoDelPedido(int idPedido, String nuevoEstado) throws ReglaNegocioException;
 
 	List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
 

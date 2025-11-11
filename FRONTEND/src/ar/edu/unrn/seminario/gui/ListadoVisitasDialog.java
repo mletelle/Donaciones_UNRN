@@ -13,16 +13,16 @@ public class ListadoVisitasDialog extends JDialog {
 
     public ListadoVisitasDialog(IApi api, VoluntarioDTO voluntario) {
         setTitle("Historial de Visitas");
-        setSize(600, 400);
+        setSize(900, 400);
         setModal(true);
         setLocationRelativeTo(null);
 
-        String[] columnNames = {"Fecha", "Observaciones"};
+        String[] columnNames = {"Fecha", "Donante", "Resultado", "Bienes Retirados", "Observaciones"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
 
-        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); // Pasar el VoluntarioDTO completo
+        List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); // pasar el VoluntarioDTO completo
         if (visitas == null || visitas.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay visitas registradas para este voluntario.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No hay visitas registradas para este voluntario.", "Informacion", JOptionPane.INFORMATION_MESSAGE);
             dispose(); // 
             return;
         }
@@ -33,8 +33,19 @@ public class ListadoVisitasDialog extends JDialog {
             }
         }
         for (VisitaDTO visita : visitas) {
+            // formatear la lista de bienes como texto
+            String bienesTexto = "";
+            if (visita.getBienesRetirados() != null && !visita.getBienesRetirados().isEmpty()) {
+                bienesTexto = String.join(", ", visita.getBienesRetirados());
+            } else {
+                bienesTexto = "-";
+            }
+            
             tableModel.addRow(new Object[]{
                 visita.getFechaDeVisita(),
+                visita.getDonante() != null ? visita.getDonante() : "Sin datos",
+                visita.getResultado() != null ? visita.getResultado() : "Sin resultado",
+                bienesTexto,
                 visita.getObservacion()
             });
         }
