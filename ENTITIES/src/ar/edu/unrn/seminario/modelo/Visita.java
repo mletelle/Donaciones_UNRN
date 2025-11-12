@@ -9,12 +9,15 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Visita {
-    private Date fechaDeVisita;
+   
+	// Atributos
+	private Date fechaDeVisita;
     private ResultadoVisita resultado;
     private String observacion;
     private ArrayList<Bien> bienesRetirados;
     private PedidosDonacion pedidoRelacionado; // referencia al pedido de esta visita
     
+    // Constructores
     public Visita(LocalDateTime fechaHora, ResultadoVisita resultado, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fechaHora == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
@@ -27,6 +30,7 @@ public class Visita {
         this.observacion = obs;
         this.bienesRetirados = new ArrayList<>();
     }
+    
     public Visita(LocalDateTime fechaHora, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fechaHora == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
@@ -38,15 +42,6 @@ public class Visita {
         this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
         this.observacion = obs;
         this.bienesRetirados = new ArrayList<>();
-    }
-
-    @Override
-    public String toString() {
-        return "Visita " + fechaDeVisita + ", " + describirEstado();
-    }
-    // metodo para describir el estado de la visita, uso interno
-    private String describirEstado() {
-        return this.resultado.toString();
     }
 
     // helper formateador de fecha: dia/mes/anioo hora:minuto
@@ -67,30 +62,46 @@ public class Visita {
         return resultado;
     }
     
+    public List<Bien> obtenerBienes() {
+		return new ArrayList<>(bienesRetirados);
+	}
+    
+    // obtener el vehiculo 
+ 	public Vehiculo obtenerVehiculo() {
+ 		return bienesRetirados.isEmpty() ? null : bienesRetirados.get(0).obtenerVehiculo();
+ 	}
+ 	
+ 	// obtener el pedido relacionado con esta visita
+ 	public PedidosDonacion getPedidoRelacionado() {
+ 		return this.pedidoRelacionado;
+ 	}
+    
+    // Metodos
 	public void realizar() {
 		this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
 	}
+	
 	public void cancelar() {
 		this.resultado = ResultadoVisita.CANCELADO;
 	}
-	public boolean equals (Visita obj2) {
-		return this.fechaDeVisita==obj2.fechaDeVisita && this.resultado==obj2.resultado;
-	}
-	public List<Bien> obtenerBienes() {
-		return new ArrayList<>(bienesRetirados);
-	}
-	// obtener el vehiculo 
-	public Vehiculo obtenerVehiculo() {
-		return bienesRetirados.isEmpty() ? null : bienesRetirados.get(0).obtenerVehiculo();
-	}
 	
+	// Setters
 	// establecer el pedido relacionado con esta visita
 	public void setPedidoRelacionado(PedidosDonacion pedido) {
 		this.pedidoRelacionado = pedido;
 	}
 	
-	// obtener el pedido relacionado con esta visita
-	public PedidosDonacion getPedidoRelacionado() {
-		return this.pedidoRelacionado;
+	@Override
+    public String toString() {
+        return "Visita " + fechaDeVisita + ", " + describirEstado();
+    }
+    // metodo para describir el estado de la visita, uso interno
+    private String describirEstado() {
+        return this.resultado.toString();
+    }
+    
+    public boolean equals (Visita obj2) {
+		return this.fechaDeVisita==obj2.fechaDeVisita && this.resultado==obj2.resultado;
 	}
+    
 }

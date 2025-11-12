@@ -19,6 +19,7 @@ import javax.swing.border.EmptyBorder;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.api.MemoryApi;
+import ar.edu.unrn.seminario.api.PersistenceApi;
 import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
@@ -38,11 +39,13 @@ public class VentanaPrincipal extends JFrame {
 	private JMenuItem listadoPedidosMenuItem; 
 	private JComboBox<VoluntarioDTO> voluntarioSelectorComboBox;
 
+	// revisar, habria que agregar un boton de cerrrar a cada listado o ventana que no tnga boton de cerrar
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					IApi api = new MemoryApi();
+					//IApi api = new MemoryApi();
+					IApi api = new PersistenceApi();
 					VentanaPrincipal frame = new VentanaPrincipal(api);
 					frame.setLocationRelativeTo(null);
 					frame.setVisible(true);
@@ -254,6 +257,7 @@ public class VentanaPrincipal extends JFrame {
 		});
 	}
 
+	// Metodos
 	public void actualizarUIporRol() {
 	    // segun el rol
 	    usuarioMenu.setVisible("ADMINISTRADOR".equals(rolActual));
@@ -275,4 +279,5 @@ public class VentanaPrincipal extends JFrame {
 	    listadoPedidosMenuItem.setVisible(!"DONANTE".equals(rolActual));
 	    voluntarioSelectorComboBox.setVisible("VOLUNTARIO".equals(rolActual)); // actualizar visibilidad del selector
 	}
+	
 }

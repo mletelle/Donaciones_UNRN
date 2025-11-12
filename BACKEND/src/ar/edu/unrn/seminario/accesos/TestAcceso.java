@@ -1,21 +1,28 @@
 package ar.edu.unrn.seminario.accesos;
 
+import java.sql.Connection;
 import java.util.List;
 
 import ar.edu.unrn.seminario.modelo.Rol;
-import ar.edu.unrn.seminario.modelo.Usuario;
 
 public class TestAcceso {
 
 	public static void main(String[] args) {
-		RolDao rolDao = new RolDAOJDBC();
-		List<Rol> roles = rolDao.findAll();
+		try {
+			Connection conn = ConnectionManager.getConnection();
+			RolDao rolDao = new RolDAOJDBC();
+			List<Rol> roles = rolDao.findAll(conn);
 
-		for (Rol rol : roles) {
-			System.out.println(rol);
+			for (Rol rol : roles) {
+				System.out.println(rol);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.disconnect();
 		}
 
-		UsuarioDao usuarioDao = new UsuarioDAOJDBC();
+//		UsuarioDao usuarioDao = new UsuarioDAOJDBC();
 //		Usuario usuario = new Usuario("ldifabio", "1234", "Lucas", "ldifabio@unrn.edu.ar", new Rol(1, ""));
 //		usuarioDao.create(usuario);
 		

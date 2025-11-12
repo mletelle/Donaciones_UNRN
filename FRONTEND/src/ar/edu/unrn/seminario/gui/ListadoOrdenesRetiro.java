@@ -32,12 +32,12 @@ public class ListadoOrdenesRetiro extends JFrame {
             new String[] {"Estado", "Fecha Creacion", "Vehiculo", "Voluntario"} 
         ));
 
-
-
         JScrollPane scrollPane = new JScrollPane(tablaOrdenes);
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    // Metodos
+    // metodo para cargar datos
     private void cargarDatos() {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
@@ -51,4 +51,5 @@ public class ListadoOrdenesRetiro extends JFrame {
             model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 
         }
     }
+    
 }

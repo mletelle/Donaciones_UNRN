@@ -5,13 +5,14 @@ import java.util.Date;
 
 public class OrdenEntrega {
 
-    // variables y catalogos
+    // variables 
     private static int secuencia = 0;//para el id
+    
+    // Constantes estado
     private static final int ESTADO_PENDIENTE = 1;
     private static final int ESTADO_EN_EJECUCION = 2;
     private static final int ESTADO_COMPLETADO = 3;
     private static final int ESTADO_CANCELADO = 4;
-    
 
     // atributos
     private int id;
@@ -23,14 +24,11 @@ public class OrdenEntrega {
     private PedidosDonacion pedidoOrigen;
     private ArrayList<Bien> bienes;
     
-    
     private Vehiculo v;
     private Date fechaEjecucion = new Date();
     private Date fechaProgramada = new Date();
-    
-    
 
-    // constructor con todos los parametros
+    // constructores
     public OrdenEntrega(PedidosDonacion pedido, Ubicacion destino) {
         this.id = ++secuencia;
         this.estado = ESTADO_PENDIENTE;
@@ -40,6 +38,25 @@ public class OrdenEntrega {
     	ArrayList<Bien> bienes = new ArrayList<Bien>();
         /// pedido.asignarOrden(this);
     }
+    
+    // Getters
+    public Usuario obtenerVoluntario() { 
+    	return this.voluntario;
+    }
+    
+    public int obtenerEstado() {
+        return estado;
+    }
+
+    public ArrayList<Visita> obtenerVisitas() {
+      return visitas;
+    }
+    
+	public boolean estaCompletada() {
+		return estado == ESTADO_COMPLETADO;
+	}
+    
+    // Setters
     private void asignarRecursos(Usuario v, Vehiculo vehiculo) { 
     	this.v = vehiculo;
     	asignarVoluntario(v);
@@ -60,63 +77,51 @@ public class OrdenEntrega {
     public void iniciar() {
         estado = ESTADO_EN_EJECUCION;
     }
-
+    
     public void marcarEntregada() {
         estado = ESTADO_COMPLETADO;
     }
+    
     public void cancelar(String motivo) {
         estado = ESTADO_CANCELADO;
         System.out.println("Motivo de cancelacion: "+motivo);
     }
-    public Usuario obtenerVoluntario() { 
-    	return this.voluntario;
-    }
-
+    
+    // metodo para agregar visita
     public void agregarVisita(Visita v) {
         visitas.add(v);
     }
-  
-    // getters
-    public int obtenerEstado() {
-        return estado;
-    }
 
-    public ArrayList<Visita> obtenerVisitas() {
-      return visitas;
-    }
-	public boolean estaCompletada() {
-		return estado == ESTADO_COMPLETADO;
-	}
-
-    @Override
-    public String toString() {
-        return "Orden#" + id + " -> " + destino + ": " + describirEstado();
-    }
-  
-    // metodo de ayuda para el toString
-    private String describirEstado() {
-        switch (estado) {
-            case ESTADO_PENDIENTE:
-                return "PENDIENTE";
-            case ESTADO_EN_EJECUCION:
-                return "EN_EJECUCION";
-            case ESTADO_COMPLETADO:
-                return "COMPLETADO";
-            case ESTADO_CANCELADO:
-                return "CANCELADO";
-            default:
-                return "";
-        }
-    }
-
-
+    // metodo para quitar un bien
     public void quitarBien(Bien item) {
     	bienes.remove(item);
      }
+    
+    // metodo para agregar un bien
      private void agregarItem(Bien item) {
     	 bienes.add(item);
      }
      
+     @Override
+     public String toString() {
+         return "Orden#" + id + " -> " + destino + ": " + describirEstado();
+     }
+   
+     // metodo de ayuda para el toString
+     private String describirEstado() {
+         switch (estado) {
+             case ESTADO_PENDIENTE:
+                 return "PENDIENTE";
+             case ESTADO_EN_EJECUCION:
+                 return "EN_EJECUCION";
+             case ESTADO_COMPLETADO:
+                 return "COMPLETADO";
+             case ESTADO_CANCELADO:
+                 return "CANCELADO";
+             default:
+                 return "";
+         }
+     }
      
     // metodo para imprimir el detalle de la orden
     public String imprimirDetalle(int nroVivienda) {//no es tostring porque recibe nroVivienda
@@ -144,4 +149,5 @@ public class OrdenEntrega {
 	public boolean equals(OrdenEntrega obj) {
         return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidoOrigen.equals(obj.pedidoOrigen));
     }
+	
 }

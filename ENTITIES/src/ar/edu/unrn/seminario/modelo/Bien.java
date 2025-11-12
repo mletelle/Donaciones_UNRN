@@ -6,7 +6,7 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Bien {
 
-    // constantes 
+    // constantes tipo
 	private static final int TIPO_ALIMENTO = 1;
 	private static final int TIPO_ROPA = 2;
 	private static final int TIPO_MOBILIARIO = 3;
@@ -26,7 +26,7 @@ public class Bien {
     private String estado;
     private Vehiculo vehiculo;
     
-    //constructores con todos los parametros
+    //constructores 
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
         if (cantidad <= 0) {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
@@ -38,6 +38,7 @@ public class Bien {
         this.cantidad = cantidad;
         this.categoria = categoria;
     }
+    
     public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
         this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
         if (tipo == null || tipo.isEmpty()) {
@@ -49,7 +50,8 @@ public class Bien {
         this(tipo, cantidad, categoria);
         this.vehiculo = vehiculo;
     }
-    //getters - setters
+    
+    // Getters 
     public int obtenerTipo() {
         return tipo;
     }
@@ -61,31 +63,47 @@ public class Bien {
     public int obtenerCategoria() {
         return categoria;
     }
+    
     public Date getFecVec() {
 		return fecVec;
 	}
-	public void setFecVec(Date fecVec) {
-		this.fecVec = fecVec;
-	}
+    
 	public Date getFechaIngreso() {
 		return fechaIngreso;
 	}
-	public void setFechaIngreso(Date fechaIngreso) {
-		this.fechaIngreso = fechaIngreso;
-	}
+	
 	public String getEstado() {
 		return estado;
 	}
-	public void setEstado(String estado) {
-		this.estado = estado;
-	}
+	
     public boolean isPerecedero() {
 		return perecedero;
 	}
+    
+    public Vehiculo obtenerVehiculo() {
+        return vehiculo;
+    }
+    
+	// Setters
+	public void setFecVec(Date fecVec) {
+		this.fecVec = fecVec;
+	}
+
+	public void setFechaIngreso(Date fechaIngreso) {
+		this.fechaIngreso = fechaIngreso;
+	}
+	
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
 	public void setPerecedero(boolean perecedero) {
 		this.perecedero = perecedero;
 	}
-   
+	
+    public void asignarVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
+    }
   
     //metodos de ayuda para el toString
     private String describirTipo() {
@@ -114,14 +132,6 @@ public class Bien {
             default:
                 return "";
         }
-    }
-
-    public Vehiculo obtenerVehiculo() {
-        return vehiculo;
-    }
-    
-    public void asignarVehiculo(Vehiculo vehiculo) {
-        this.vehiculo = vehiculo;
     }
     
     @Override

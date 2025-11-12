@@ -91,6 +91,7 @@ public class AgregarBienDialog extends JDialog {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // Accion del comboBox de categoria
         categoriaComboBox.addActionListener(event -> {
             String categoria = (String) categoriaComboBox.getSelectedItem();
             if ("Alimentos".equals(categoria)) {
@@ -101,13 +102,14 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // accion del boton "Aceptar"
         aceptarButton.addActionListener(event -> {
             try {
                 String categoria = (String) categoriaComboBox.getSelectedItem();
                 int cantidad = Integer.parseInt(cantidadTextField.getText());
                 String estado = (String) estadoComboBox.getSelectedItem();
 
-                int categoriaId = mapCategoriaToId(categoria);
+                int categoriaId = mapearCategoriaAId(categoria);
                 int estadoId = "Nuevo".equals(estado) ? BienDTO.TIPO_NUEVO : BienDTO.TIPO_USADO;
 
                 LocalDate fechaVencimiento = null;
@@ -133,10 +135,11 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // Accion del boton cancelar
         cancelarButton.addActionListener(event -> dispose());
     }
 
-    private int mapCategoriaToId(String categoria) {
+    private int mapearCategoriaAId(String categoria) {
         switch (categoria) {
             case "Ropa": return BienDTO.CATEGORIA_ROPA;
             case "Muebles": return BienDTO.CATEGORIA_MUEBLES;
@@ -150,7 +153,8 @@ public class AgregarBienDialog extends JDialog {
             default: return BienDTO.CATEGORIA_OTROS;
         }
     }
-
+    
+    // Getters
     public BienDTO getBien() {
         return bien;
     }

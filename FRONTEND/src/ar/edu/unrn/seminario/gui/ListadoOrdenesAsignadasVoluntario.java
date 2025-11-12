@@ -36,6 +36,8 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
         panelPrincipal.add(scrollPane, BorderLayout.CENTER);
 
         JButton btnGestionar = new JButton("Gestionar Orden Retiro");
+        
+        // Accion del boton "Gestionar Orden Retiro"
         btnGestionar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -60,12 +62,15 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
                 }
             }
         });
+        
         panelPrincipal.add(btnGestionar, BorderLayout.SOUTH);
 
         add(panelPrincipal);
         cargarOrdenesAsignadas();
     }
 
+    // Metodos
+    // metodo para cargar ordenes
     private void cargarOrdenesAsignadas() {
         modeloTabla.setRowCount(0); // Limpiar la tabla
         List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getNombre());
@@ -74,10 +79,11 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
         }
     }
     
-    //  para refrescar la tabla desde otras ventanas
+    //  metodo para refrescar la tabla desde otras ventanas
     public void refrescarTabla() {
         cargarOrdenesAsignadas();
         tablaOrdenes.repaint();
         tablaOrdenes.revalidate();
     }
+    
 }
