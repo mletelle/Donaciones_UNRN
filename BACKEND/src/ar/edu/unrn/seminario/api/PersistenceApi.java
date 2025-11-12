@@ -72,33 +72,34 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			Rol rol = rolDao.find(codigoRol, conn); 
+			Rol rol = rolDao.find(codigoRol, conn); // levantar el rol desde la base de datos
 			if (rol == null) {
 				throw new ObjetoNuloException("Rol no encontrado");
 			}
 			
-			Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion); 
-			usuarioDao.create(usuario, conn); 
+			Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion); // nuevo constructor
+			usuarioDao.create(usuario, conn); // crear el usuario
 			
 			conn.commit();
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores SQL
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
-				e2.printStackTrace(); 
+				e2.printStackTrace(); // log error
 			}
 			throw new RuntimeException("Error registrando usuario: " + e.getMessage(), e); 
-		} catch (Exception e) { 
+		} catch (Exception e) { // captura otros errores
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
+			// Lanza la excepción original (CampoVacio, ObjetoNulo)
 			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
 				throw e;
 			}
-			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
-		} finally { 
+			throw e;
+		} finally { // asegura restaurar auto-commit y desconectar
 			if (conn != null) {
 				try {
 					conn.setAutoCommit(true);
@@ -111,17 +112,17 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<UsuarioDTO> obtenerUsuarios() { 
+	public List<UsuarioDTO> obtenerUsuarios() { // listado completo
 		Connection conn = null;
 		List<UsuarioDTO> dtos = new ArrayList<>();
-		try { 
+		try { // obtener todos los usuarios
 			conn = ConnectionManager.getConnection();
 			List<Usuario> usuarios = usuarioDao.findAll(conn);
 			for (Usuario u : usuarios) {
 				dtos.add(new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
 						u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()));
 			}
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -130,7 +131,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public UsuarioDTO obtenerUsuario(String username) { 
+	public UsuarioDTO obtenerUsuario(String username) { // obtener por username
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -139,7 +140,7 @@ public class PersistenceApi implements IApi {
 				return new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
 						u.getRol().getNombre(), u.isActivo(), u.obtenerEstado());
 			}
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -153,17 +154,17 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<RolDTO> obtenerRoles() { 
+	public List<RolDTO> obtenerRoles() { // listado completo
 		Connection conn = null;
 		List<RolDTO> rolesDTO = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<Rol> roles = rolDao.findAll(conn); 
+			List<Rol> roles = rolDao.findAll(conn); // obtener todos los roles
 			for (Rol rol : roles) {
 				rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo()));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); 
+			e.printStackTrace(); // captura errores SQL
 		} finally {
 			ConnectionManager.disconnect();
 		}
@@ -171,7 +172,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<RolDTO> obtenerRolesActivos() { 
+	public List<RolDTO> obtenerRolesActivos() { // listado de roles activos
 		Connection conn = null;
 		List<RolDTO> rolesDTO = new ArrayList<>();
 		try {
@@ -179,7 +180,7 @@ public class PersistenceApi implements IApi {
 			List<Rol> roles = rolDao.findAll(conn);
 			for (Rol rol : roles) {
 				if (rol.isActivo()) {
-					rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo())); 
+					rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo())); // solo activos
 				}
 			}
 		} catch (SQLException e) {
@@ -196,7 +197,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public RolDTO obtenerRolPorCodigo(Integer codigo) { 
+	public RolDTO obtenerRolPorCodigo(Integer codigo) { // obtener rol por codigo
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -223,22 +224,22 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void activarUsuario(String username) { 
+	public void activarUsuario(String username) { // activar solo un usuario
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			Usuario usuario = usuarioDao.find(username, conn); 
-			if (usuario != null) { 
+			Usuario usuario = usuarioDao.find(username, conn); // buscar usuario
+			if (usuario != null) { // si existe, activarlo
 				usuario.activar();
 				usuarioDao.update(usuario, conn);
 			}
 			
 			conn.commit();
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores SQL
 			try {
-				if (conn != null) conn.rollback(); 
+				if (conn != null) conn.rollback(); // rollback si hay error
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
@@ -256,7 +257,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void desactivarUsuario(String username) { 
+	public void desactivarUsuario(String username) { // desactivar solo un usuario
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -271,7 +272,7 @@ public class PersistenceApi implements IApi {
 			conn.commit();
 		} catch (SQLException e) {
 			try {
-				if (conn != null) conn.rollback(); 
+				if (conn != null) conn.rollback(); // rollback si hay error
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
@@ -279,7 +280,7 @@ public class PersistenceApi implements IApi {
 		} finally {
 			if (conn != null) {
 				try {
-					conn.setAutoCommit(true); 
+					conn.setAutoCommit(true); // restaurar auto-commit
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -289,12 +290,13 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException { 
+	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException { // registrar nuevo pedido
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 
+			// encontrar donante por DNI
 			Usuario donante = null;
 			List<Usuario> donantes = usuarioDao.findByRol(3, conn); // 3 = Rol Donante
 			for (Usuario u : donantes) {
@@ -304,10 +306,11 @@ public class PersistenceApi implements IApi {
 				}
 			}
 			
-			if (donante == null) { 
+			if (donante == null) { // no se encontro donante
 				throw new ObjetoNuloException("Donante no encontrado con DNI: " + pedidoDTO.getDonanteId());
 			}
 			
+			// convertir BienDTO a Bien
 			List<Bien> bienes = new ArrayList<>();
 			if (pedidoDTO.getBienes() == null || pedidoDTO.getBienes().isEmpty()) {
 				throw new CampoVacioException("El pedido debe tener al menos un bien.");
@@ -318,37 +321,42 @@ public class PersistenceApi implements IApi {
 				bienes.add(bien);
 			}
 			
+			// Parsear fecha
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 			LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
 
+			// crear PedidoDonacion
 			PedidosDonacion pedido = new PedidosDonacion(
 					fechaLocalDateTime,
-					new ArrayList<>(bienes), 
+					new ArrayList<>(bienes), // Asegurarse que sea ArrayList
 					pedidoDTO.getTipoVehiculo(),
 					pedidoDTO.getObservaciones(),
 					donante);
 			
+			// persistir pedido (y obtener ID)
 			int idPedido = pedidoDao.create(pedido, conn);
 			
-			bienDao.createBatch(bienes, idPedido, conn); 
+			bienDao.createBatch(bienes, idPedido, conn); // persistir bienes
 			
 			conn.commit();
 		} catch (SQLException e) {
 			try {
-				if (conn != null) conn.rollback(); 
+				if (conn != null) conn.rollback(); // rollback si hay error
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
 			throw new RuntimeException("Error SQL registrando pedido: " + e.getMessage(), e);
-		} catch (Exception e) { 
+		} catch (Exception e) { // captura otros errores
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
+			// Lanza la excepción original (CampoVacio, ObjetoNulo)
 			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
 				throw e;
 			}
+			// Lanza cualquier otra excepción inesperada
 			throw new RuntimeException("Error inesperado registrando pedido: " + e.getMessage(), e);
 		} finally {
 			if (conn != null) {
@@ -363,7 +371,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<DonanteDTO> obtenerDonantes() { 
+	public List<DonanteDTO> obtenerDonantes() { // listado de donantes
 		Connection conn = null;
 		List<DonanteDTO> dtos = new ArrayList<>();
 		try {
@@ -372,7 +380,7 @@ public class PersistenceApi implements IApi {
 			for (Usuario d : donantes) {
 				dtos.add(new DonanteDTO(d.getDni(), d.getNombre(), d.getApellido())); // DNI, Nombre, Apellido
 			}
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores de SQL
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -381,7 +389,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<PedidoDonacionDTO> obtenerPedidosPendientes() { 
+	public List<PedidoDonacionDTO> obtenerPedidosPendientes() { // pedidos con estado PENDIENTE
 		Connection conn = null;
 		List<PedidoDonacionDTO> dtos = new ArrayList<>();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -390,6 +398,7 @@ public class PersistenceApi implements IApi {
 			List<PedidosDonacion> pedidos = pedidoDao.findAllPendientes(conn); 
 			
 			for (PedidosDonacion p : pedidos) {
+				// Mapeo de Pedido (con ID correcto) a PedidoDonacionDTO
 				String nombreDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido();
 				
 				PedidoDonacionDTO dto = new PedidoDonacionDTO(
@@ -411,13 +420,14 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) { 
+	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) { // pedidos asociados a una orden
 		Connection conn = null;
 		List<PedidoDonacionDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); 
+			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos por orden
 			for (PedidosDonacion p : pedidos) {
+				// Mapeo de Pedido (con ID correcto) a PedidoDonacionDTO
 				String nombreDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido();
 				PedidoDonacionDTO dto = new PedidoDonacionDTO(
 						p.getId(), // ID Correcto de la BD
@@ -442,7 +452,7 @@ public class PersistenceApi implements IApi {
 		try {
 			conn = ConnectionManager.getConnection();
 			List<OrdenRetiro> ordenes = ordenDao.findByEstado(estado, conn);
-			for (OrdenRetiro o : ordenes) { 
+			for (OrdenRetiro o : ordenes) { // para cada orden de retiro, recorrer y mapear a DTO
 				String nombreVoluntario = "";
 				if (o.obtenerVoluntarioPrincipal() != null) {
 					Usuario vol = o.obtenerVoluntarioPrincipal();
@@ -479,40 +489,45 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) 
+	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) // registrar visita y actualizar estados
 			throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
+			// cargar OrdenRetiro y PedidoDonacion
 			OrdenRetiro orden = ordenDao.findById(idOrdenRetiro, conn);
 			PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
 			
-			if (orden == null) { 
+			if (orden == null) { // si no se encuentra orden o pedido, lanzar excepcion
 				throw new ObjetoNuloException("Orden no encontrada");
 			}
 			if (pedido == null) {
 				throw new ObjetoNuloException("Pedido no encontrado");
 			}
 			
+			// cargar datos de visita desde DTO
 			ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
 			Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
 			
+			// persistir visita
 			visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 			
+			// actualizar estado pedido segun resultado visita
 			if (resultado == ResultadoVisita.RECOLECCION_EXITOSA) {
 				pedido.marcarCompletado();
 			} else {
-				pedido.marcarEnEjecucion(); 
+				pedido.marcarEnEjecucion(); // Donante Ausente o Recoleccion Parcial
 			}
 			pedidoDao.update(pedido, conn);
 			
+			// actualizar estado orden automaticamente
 			orden.actualizarEstadoAutomatico();
 			ordenDao.update(orden, conn);
 			
 			conn.commit();
-		} catch (SQLException e) { 
+		} catch (SQLException e) { // captura errores SQL
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
@@ -525,10 +540,8 @@ public class PersistenceApi implements IApi {
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			if (e instanceof ReglaNegocioException || e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
-				throw e;
-			}
-			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
+			// Lanza la excepción original (ReglaNegocio, etc.)
+			throw e;
 		} finally {
 			if (conn != null) {
 				try {
@@ -542,7 +555,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<VoluntarioDTO> obtenerVoluntarios() { 
+	public List<VoluntarioDTO> obtenerVoluntarios() { // listado de voluntarios
 		Connection conn = null;
 		List<VoluntarioDTO> dtos = new ArrayList<>();
 		try {
@@ -559,7 +572,7 @@ public class PersistenceApi implements IApi {
 		return dtos;
 	}
 
-	// **** MÉTODO CORREGIDO ****
+	// **** MÉTODO CORREGIDO: Usa setId para actualizar el objeto OrdenRetiro ****
 	@Override
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
 			throws ReglaNegocioException, ObjetoNuloException {
@@ -568,7 +581,7 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			List<PedidosDonacion> pedidos = new ArrayList<>(); 
+			List<PedidosDonacion> pedidos = new ArrayList<>(); // cargar pedidos por ids
 			for (Integer idPedido : idsPedidos) {
 				PedidosDonacion p = pedidoDao.findById(idPedido, conn);
 				if (p != null) {
@@ -585,7 +598,7 @@ public class PersistenceApi implements IApi {
 				throw new ObjetoNuloException("No se seleccionaron pedidos válidos.");
 			}
 			
-			Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn); 
+			Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn); // buscar vehiculo disponible
 			if (vehiculo == null) {
 				throw new ReglaNegocioException("No hay vehiculos disponibles del tipo: " + tipoVehiculo);
 			}
@@ -603,29 +616,32 @@ public class PersistenceApi implements IApi {
 				throw new ObjetoNuloException("Voluntario no encontrado (DNI: " + idVoluntario + ")");
 			}
 			
+			// Usar la dirección del primer pedido como destino
 			Ubicacion destino = pedidos.get(0).getDonante().getUbicacionEntidad(); 
 			if (destino == null) {
+				// Fallback si getUbicacionEntidad() no está implementado
 				destino = new Ubicacion(pedidos.get(0).getDonante().obtenerDireccion(), "N/A", "N/A", 0.0, 0.0);
 			}
 
-			OrdenRetiro orden = new OrdenRetiro(pedidos, destino); 
+			OrdenRetiro orden = new OrdenRetiro(pedidos, destino); // crear nueva orden
 			orden.asignarVehiculo(vehiculo);
 			orden.asignarVoluntario(voluntario);
 			
+			// Crear la orden y obtener su ID de la base de datos
 			int idOrden = ordenDao.create(orden, conn);
 			
-			// **** CORRECCIÓN: Asignar el ID de la BD al objeto en memoria ****
-			// (Asegúrate de tener 'public void setId(int id) { this.id = id; }' en OrdenRetiro.java)
+			//ASIGNAR EL ID DE LA BD AL OBJETO EN MEMORIA
 			orden.setId(idOrden); 
 			
-			for (PedidosDonacion pedido : pedidos) { 
-				pedido.asignarOrden(orden); 
+			
+			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido
+				pedido.asignarOrden(orden); // Asigna la orden (que ahora tiene el ID de BD correcto)
 				try {
 					pedido.marcarEnEjecucion();
 				} catch (ReglaNegocioException e) {
 					// Ignorar
 				}
-				pedidoDao.update(pedido, conn); // Actualiza el pedido con el id_orden_retiro
+				pedidoDao.update(pedido, conn); // Actualiza el pedido en la BD con el id_orden_retiro correcto
 			}
 			
 			conn.commit();
@@ -665,6 +681,7 @@ public class PersistenceApi implements IApi {
 		try {
 			conn = ConnectionManager.getConnection();
 			
+			// 1. Encontrar el username del voluntario basado en su nombre
 			String usernameVoluntario = null;
 			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
 			for (Usuario v : voluntarios) {
@@ -679,6 +696,7 @@ public class PersistenceApi implements IApi {
 				return dtos; 
 			}
 
+			// 2. Buscar órdenes por el username del voluntario
 			List<OrdenRetiro> ordenes = ordenDao.findByVoluntario(usernameVoluntario, conn);
 			
 			for (OrdenRetiro o : ordenes) {
@@ -713,12 +731,13 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntarioDTO) { 
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntarioDTO) { // visitas realizadas por un voluntario
 		Connection conn = null;
 		List<VisitaDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
 			
+			// Encontrar voluntario por DNI (que se usa como ID en el DTO)
 			Usuario voluntario = null;
 			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
 			for(Usuario u : voluntarios) {
@@ -730,7 +749,7 @@ public class PersistenceApi implements IApi {
 			
 			if (voluntario == null) {
 				System.out.println("No se encontró voluntario (DTO_ID): " + voluntarioDTO.getId());
-				return dtos; 
+				return dtos; // Voluntario no encontrado
 			}
 			
 			List<Visita> visitas = visitaDao.findByVoluntario(voluntario, conn);
@@ -757,7 +776,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public String obtenerNombreDonantePorId(int idPedido) { 
+	public String obtenerNombreDonantePorId(int idPedido) { // obtener nombre completo del donante por id de pedido
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
