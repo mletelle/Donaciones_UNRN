@@ -92,15 +92,9 @@ public class PersistenceApi implements IApi {
 				e2.printStackTrace();
 			}
 			throw e;
-		} finally { // asegura restaurar auto-commit y desconectar
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+		} finally { // Asegura desconectar la conexión específica
+			// La restauración de auto-commit se remueve o simplifica ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -118,7 +112,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -136,7 +130,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return null;
 	}
@@ -159,7 +153,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace(); // captura errores SQL
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return rolesDTO;
 	}
@@ -179,7 +173,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return rolesDTO;
 	}
@@ -201,7 +195,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return null;
 	}
@@ -238,14 +232,8 @@ public class PersistenceApi implements IApi {
 			}
 			e.printStackTrace();
 		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -271,14 +259,8 @@ public class PersistenceApi implements IApi {
 			}
 			e.printStackTrace();
 		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true); // restaurar auto-commit
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -339,14 +321,8 @@ public class PersistenceApi implements IApi {
 			}
 			throw e;
 		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -363,7 +339,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores de SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -388,7 +364,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -413,7 +389,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -456,7 +432,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -515,14 +491,8 @@ public class PersistenceApi implements IApi {
 			}
 			throw e;
 		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -539,7 +509,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -617,14 +587,8 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			}
 			throw e;
 		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
+			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
+			ConnectionManager.disconnect(conn);
 		}
 	}
 
@@ -666,7 +630,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -703,7 +667,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return dtos;
 	}
@@ -721,7 +685,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			ConnectionManager.disconnect(conn);
 		}
 		return "";
 	}
