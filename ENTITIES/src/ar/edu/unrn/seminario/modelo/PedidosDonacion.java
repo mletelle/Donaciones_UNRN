@@ -29,7 +29,7 @@ public class PedidosDonacion {
 	private EstadoPedido estadoPedido; //  guardar el estado del pedido
 
 	// Constructores
-	// con todos los atributos
+	// Constructor para NUEVOS pedidos (usa secuencia)
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
@@ -53,10 +53,23 @@ public class PedidosDonacion {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
 
-	// constructor para LocalDateTime
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
+
+	public PedidosDonacion(int id, LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante, EstadoPedido estado) throws ObjetoNuloException {
+		if (donante == null) {
+			throw new ObjetoNuloException("El donante no puede ser nulo.");
+		}
+		this.id = id; 
+		this.fecha = fecha;
+		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
+		this.observaciones = observaciones;
+		this.donante = donante;
+		this.estadoPedido = estado;
+		this.bienes = new ArrayList<>();
+	}
+	
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
 	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante) throws ObjetoNuloException {
 		if (fecha == null) {
@@ -65,6 +78,7 @@ public class PedidosDonacion {
 		if (donante == null) {
 			throw new ObjetoNuloException("El donante no puede ser nulo.");
 		}
+		this.id = ++secuencia; // Usa secuencia para nuevos pedidos
 		this.fecha = fecha;
 		this.bienes = new ArrayList<>();
 		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
@@ -106,6 +120,12 @@ public class PedidosDonacion {
 	public int getId() {
 		return this.id;
 	}
+
+	// *** NUEVO SETID (para que el DAO actualice el ID después de un INSERT) ***
+	public void setId(int id) {
+		this.id = id;
+	}
+	// **************************************
 
 	public Usuario getDonante() {
 		return this.donante;
