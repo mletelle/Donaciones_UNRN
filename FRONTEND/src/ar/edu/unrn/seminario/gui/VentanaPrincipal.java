@@ -44,6 +44,7 @@ public class VentanaPrincipal extends JFrame {
 			public void run() {
 				try {
 					IApi api = new MemoryApi();
+					//IApi api = new PersistenceApi();
 					VentanaPrincipal frame = new VentanaPrincipal(api);
 					frame.setLocationRelativeTo(null);
 					frame.setVisible(true);
