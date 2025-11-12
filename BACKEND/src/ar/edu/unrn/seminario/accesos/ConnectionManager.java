@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class ConnectionManager {
 	// por alguna razon el driver no anda, logre hacerlo andar solo con credenciales
-	// private static String DRIVER = "com.mysql.jdbc.Driver";
+	// private static String DRIVER = "com.mysql.jdbc.Driver";.
 
 	// Railway MySQL 
 	// Host y Puerto de MYSQL_PUBLIC_URL 
