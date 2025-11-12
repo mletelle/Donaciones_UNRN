@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.modelo.EstadoPedido;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Usuario;
 
@@ -47,7 +49,9 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 
 			generatedKeys = statement.getGeneratedKeys(); // sirve para obtener las claves generadas automaticamente por la base de datos
 			if (generatedKeys.next()) {
-				return generatedKeys.getInt(1);
+				int generatedId = generatedKeys.getInt(1);
+				pedido.setId(generatedId); // *** CORRECCIÓN: Actualiza el ID del objeto en memoria ***
+				return generatedId;
 			} else {
 				throw new SQLException("No se pudo crear. Error.");
 			}
@@ -108,9 +112,10 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.createStatement();
+			// *** CORRECCIÓN: Busca por el String "Pendiente" del Enum ***
 			rs = statement.executeQuery(
 					"SELECT id, fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE'");
+					+ "FROM pedidos_donacion WHERE estado = 'Pendiente'"); 
 			
 			while (rs.next()) {
 				try {
@@ -162,23 +167,35 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			if (donante == null) {
 				throw new SQLException("Donante no encontrado: " + usuarioDonante);
 			}
-			
+
+			int id = rs.getInt("id"); // LEER EL ID
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();
 			String tipoVehiculo = rs.getString("tipo_vehiculo");
 			String observaciones = rs.getString("observaciones");
-			
-			PedidosDonacion pedido = new PedidosDonacion(fecha, tipoVehiculo, observaciones, donante);
-			
 			String estadoStr = rs.getString("estado");
-			if ("EN_EJECUCION".equals(estadoStr)) {
-				pedido.marcarEnEjecucion();
-			} else if ("COMPLETADO".equals(estadoStr)) {
-				pedido.marcarCompletado();
+			
+			// Convertir String del estado a Enum
+			EstadoPedido estado;
+			try {
+				// Busca el Enum por su descripción (toString)
+				if (estadoStr.equals(EstadoPedido.EN_EJECUCION.toString())) {
+					estado = EstadoPedido.EN_EJECUCION;
+				} else if (estadoStr.equals(EstadoPedido.COMPLETADO.toString())) {
+					estado = EstadoPedido.COMPLETADO;
+				} else {
+					estado = EstadoPedido.PENDIENTE;
+				}
+			} catch (Exception e) {
+				estado = EstadoPedido.PENDIENTE; // Default
 			}
+
+			// Usar el nuevo constructor que incluye el ID
+			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;
-		} catch (Exception e) {
-			throw new SQLException("Error al mapear PedidosDonacion: " + e.getMessage(), e);
+			
+		} catch (ObjetoNuloException e) {
+			throw new SQLException("Error al mapear PedidosDonacion (ObjetoNulo): " + e.getMessage(), e);
 		}
 	}
 
