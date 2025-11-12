@@ -51,14 +51,14 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			
 			int affectedRows = statement.executeUpdate();
 			if (affectedRows == 0) {
-				throw new SQLException("Creating orden failed, no rows affected.");
+				throw new SQLException("No se pudo crear la orden");
 			}
 			
 			generatedKeys = statement.getGeneratedKeys();
 			if (generatedKeys.next()) {
 				return generatedKeys.getInt(1);
 			} else {
-				throw new SQLException("Creating orden failed, no ID obtained.");
+				throw new SQLException("No se pudo obtener el ID de la orden");
 			}
 		} finally {
 			if (generatedKeys != null) generatedKeys.close();
@@ -95,7 +95,7 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			rs = statement.executeQuery();
 			
 			if (rs.next()) {
-				orden = mapResultSetToOrden(rs, conn);
+				orden = mapearResultadoOrden(rs, conn); 
 			}
 		} finally {
 			if (rs != null) rs.close();
@@ -118,10 +118,10 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			
 			while (rs.next()) {
 				try {
-					OrdenRetiro orden = mapResultSetToOrden(rs, conn);
+					OrdenRetiro orden = mapearResultadoOrden(rs, conn);
 					ordenes.add(orden);
 				} catch (Exception e) {
-					System.err.println("Error creating OrdenRetiro: " + e.getMessage());
+					System.err.println("Error al crear OrdenRetiro: " + e.getMessage());
 				}
 			}
 		} finally {
@@ -145,10 +145,10 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			
 			while (rs.next()) {
 				try {
-					OrdenRetiro orden = mapResultSetToOrden(rs, conn);
+					OrdenRetiro orden = mapearResultadoOrden(rs, conn);
 					ordenes.add(orden);
 				} catch (Exception e) {
-					System.err.println("Error creating OrdenRetiro: " + e.getMessage());
+					System.err.println("Error al crear OrdenRetiro: " + e.getMessage());
 				}
 			}
 		} finally {
@@ -158,18 +158,12 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 		return ordenes;
 	}
 	
-	private OrdenRetiro mapResultSetToOrden(ResultSet rs, Connection conn) throws SQLException {
+	private OrdenRetiro mapearResultadoOrden(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			int idOrden = rs.getInt("id");
-			
-			// Get pedidos for this orden
-			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn);
-			
-			// Create the orden with pedidos
-			OrdenRetiro orden = new OrdenRetiro(pedidos, null);
-			
-			// Get and assign voluntario
-			String usuarioVoluntario = rs.getString("usuario_voluntario");
+			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos para esta orden
+			OrdenRetiro orden = new OrdenRetiro(pedidos, null); // crea orden sin voluntario ni vehiculo
+			String usuarioVoluntario = rs.getString("usuario_voluntario"); // obtener y asignar voluntario
 			if (usuarioVoluntario != null) {
 				Usuario voluntario = usuarioDao.find(usuarioVoluntario, conn);
 				if (voluntario != null) {
@@ -177,21 +171,18 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 				}
 			}
 			
-			// Get and assign vehiculo
-			String patenteVehiculo = rs.getString("patente_vehiculo");
+			String patenteVehiculo = rs.getString("patente_vehiculo"); // obtener y asignar vehiculo
 			if (patenteVehiculo != null) {
 				Vehiculo vehiculo = vehiculoDao.findByPatente(patenteVehiculo, conn);
 				if (vehiculo != null) {
 					orden.asignarVehiculo(vehiculo);
 				}
 			}
-			
-			// Note: We don't load visitas here to avoid complexity
-			// They can be loaded separately by VisitaDao if needed
-			
+			// no asignamos visitas aqui para evitar complejidad
+			// se pueden cargar aparte con VisitaDao si es necesario
 			return orden;
 		} catch (Exception e) {
-			throw new SQLException("Error mapping ResultSet to OrdenRetiro", e);
+			throw new SQLException("Error al mapear OrdenRetiro", e);
 		}
 	}
 

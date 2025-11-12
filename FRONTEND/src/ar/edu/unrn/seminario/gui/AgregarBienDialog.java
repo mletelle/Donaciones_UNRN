@@ -109,7 +109,7 @@ public class AgregarBienDialog extends JDialog {
                 int cantidad = Integer.parseInt(cantidadTextField.getText());
                 String estado = (String) estadoComboBox.getSelectedItem();
 
-                int categoriaId = mapCategoriaToId(categoria);
+                int categoriaId = mapearCategoriaAId(categoria);
                 int estadoId = "Nuevo".equals(estado) ? BienDTO.TIPO_NUEVO : BienDTO.TIPO_USADO;
 
                 LocalDate fechaVencimiento = null;
@@ -139,7 +139,7 @@ public class AgregarBienDialog extends JDialog {
         cancelarButton.addActionListener(event -> dispose());
     }
 
-    private int mapCategoriaToId(String categoria) {
+    private int mapearCategoriaAId(String categoria) {
         switch (categoria) {
             case "Ropa": return BienDTO.CATEGORIA_ROPA;
             case "Muebles": return BienDTO.CATEGORIA_MUEBLES;

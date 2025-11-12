@@ -160,7 +160,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			Usuario donante = usuarioDao.find(usuarioDonante, conn);
 			
 			if (donante == null) {
-				throw new SQLException("Donante not found: " + usuarioDonante);
+				throw new SQLException("Donante no encontrado: " + usuarioDonante);
 			}
 			
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();

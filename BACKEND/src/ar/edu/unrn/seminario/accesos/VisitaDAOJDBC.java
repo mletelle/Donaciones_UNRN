@@ -25,7 +25,7 @@ public class VisitaDAOJDBC implements VisitaDao {
 			
 			statement.setInt(1, idOrden);
 			statement.setInt(2, idPedido);
-			statement.setTimestamp(3, new Timestamp(System.currentTimeMillis())); // fecha actual
+			statement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
 			statement.setString(4, visita.obtenerResultado().toString());
 			statement.setString(5, visita.obtenerObservacion());
 			
