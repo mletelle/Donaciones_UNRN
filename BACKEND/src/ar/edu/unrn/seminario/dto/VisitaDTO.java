@@ -5,30 +5,32 @@ import java.time.LocalDateTime;
 
 public class VisitaDTO {
 
+	// Atributos
     private String fechaDeVisita;
     private String observacion;
     private List<String> bienesRetirados;
-    private boolean estado;
+    private String resultado;
     private LocalDateTime fechaHora;
     private String donante;
 
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados) {
+    // Constructores
+    public VisitaDTO(String fechaDeVisita, String observacion) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
-        this.bienesRetirados = bienesRetirados;
-    }
-
-    public VisitaDTO(String fechaDeVisita, String observacion, List<String> bienesRetirados, boolean estado) {
-        this.fechaDeVisita = fechaDeVisita;
-        this.observacion = observacion;
-        this.bienesRetirados = bienesRetirados;
-        this.estado = estado;
     }
 
     public VisitaDTO(LocalDateTime fechaHora, String resultado, String observacion, String donante) {
         this.fechaHora = fechaHora;
         this.observacion = observacion;
-        this.estado = "Recolección Exitosa".equals(resultado);
+        this.resultado = resultado;
+        this.donante = donante;
+    }
+
+    // Constructor completo con todos los datos para el historial
+    public VisitaDTO(String fechaDeVisita, String observacion, String resultado, String donante) {
+        this.fechaDeVisita = fechaDeVisita;
+        this.observacion = observacion;
+        this.resultado = resultado;
         this.donante = donante;
     }
 
@@ -45,8 +47,8 @@ public class VisitaDTO {
         return bienesRetirados;
     }
 
-    public boolean getEstado() {
-        return estado;
+    public String getResultado() {
+        return resultado;
     }
 
     public LocalDateTime getFechaHora() {
@@ -60,8 +62,10 @@ public class VisitaDTO {
     public String getDonante() {
         return donante;
     }
-
-    public String getResultado() {
-        return estado ? "Recolección Exitosa" : "Cancelado"; // Adjust logic as needed
+    
+    // Setters
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
     }
+
 }

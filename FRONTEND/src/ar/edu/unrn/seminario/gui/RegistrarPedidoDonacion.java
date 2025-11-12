@@ -42,7 +42,7 @@ public class RegistrarPedidoDonacion extends JDialog {
     private int donanteId; 
 
     public RegistrarPedidoDonacion(IApi api) {
-        setTitle("Registrar Pedido de Donación");
+        setTitle("Registrar Pedido de Donacion");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 450, 350);
         contentPane = new JPanel();
@@ -57,11 +57,11 @@ public class RegistrarPedidoDonacion extends JDialog {
         contentPane.add(fechaTextField, BorderLayout.NORTH);
         fechaTextField.setColumns(10);
 
-        JLabel lblTipoVehiculo = new JLabel("Tipo de Vehículo:");
+        JLabel lblTipoVehiculo = new JLabel("Tipo de Vehiculo:");
         contentPane.add(lblTipoVehiculo, BorderLayout.NORTH);
 
         tipoVehiculoComboBox = new JComboBox<>();
-        tipoVehiculoComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Auto", "Camioneta", "Camión"}));
+        tipoVehiculoComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Auto", "Camioneta", "Camion"}));
         contentPane.add(tipoVehiculoComboBox, BorderLayout.NORTH);
 
 
@@ -74,7 +74,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         JButton btnAgregarBien = new JButton("Agregar Bien");
         contentPane.add(btnAgregarBien, BorderLayout.NORTH);
 
-        JButton btnAceptar = new JButton("Cargar Pedido de Donación");
+        JButton btnAceptar = new JButton("Cargar Pedido de Donacion");
         contentPane.add(btnAceptar, BorderLayout.SOUTH);
 
         JButton btnCancelar = new JButton("Cancelar");
@@ -86,6 +86,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         fechaTextField.setText(fechaActual.format(formatter));
 
+        // Accion del boton "Agregar bien"
         btnAgregarBien.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AgregarBienDialog dialog = new AgregarBienDialog(RegistrarPedidoDonacion.this);
@@ -96,11 +97,12 @@ public class RegistrarPedidoDonacion extends JDialog {
                     if (bienesTable.getModel() instanceof BienTableModel) {
                         ((BienTableModel) bienesTable.getModel()).fireTableDataChanged();
                     }
-                    JOptionPane.showMessageDialog(RegistrarPedidoDonacion.this, "Bien agregado con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(RegistrarPedidoDonacion.this, "Bien agregado con exito.", "exito", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
 
+        // Accion del boton "Cargar pedido de donacion"
         btnAceptar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -109,48 +111,48 @@ public class RegistrarPedidoDonacion extends JDialog {
                     int idDonanteSeleccionado;
 
                     if (bienes == null || bienes.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donación.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-                        return; // Detiene la ejecución si no hay bienes
+                        JOptionPane.showMessageDialog(null, "Debe agregar al menos un bien a la donacion.", "Error de Validacion", JOptionPane.ERROR_MESSAGE);
+                        return; // detiene si no hay bienes
                     }
 
                     if (!donanteComboBox.isEnabled()) {
                         idDonanteSeleccionado = donanteId; 
                     } else {
                         DonanteDTO donanteSeleccionado = (DonanteDTO) donanteComboBox.getSelectedItem();
-                        // Asumiendo que DonanteDTO.getId() es el DNI o identificador correcto
                         idDonanteSeleccionado = donanteSeleccionado.getId(); 
                     }
 
-                    // 1. Parseo de Fecha
+                    // parseo de Fecha
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate fechaParsed = LocalDate.parse(fechaStr, formatter);
                     LocalDateTime fechaCompleta = fechaParsed.atStartOfDay();
 
-                    // 2. Formateo de vuelta a String para el DTO
+                    // formateo de vuelta a String para el DTO
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
 
-                    // 3. Creación y Registro
+                    // creacion y Registro
                     PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, "", idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
-                    JOptionPane.showMessageDialog(null, "Pedido registrado con éxito.");
+                    JOptionPane.showMessageDialog(null, "Pedido registrado con exito.");
                     dispose();
                     
                 } catch (java.time.format.DateTimeParseException ex) {
-                    JOptionPane.showMessageDialog(null, "Formato de fecha inválido. Use dd/MM/yyyy.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Formato de fecha invalido. Use dd/MM/yyyy.", "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar el pedido: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Ocurrio un error al registrar el pedido: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
+        // Accion del boton cancelar
         btnCancelar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dispose();
             }
         });
 
-        // Cargar donantes en el combo box
+        // carga donantes en el combo box
         List<DonanteDTO> donantes = api.obtenerDonantes();
         for (DonanteDTO donante : donantes) {
             donanteComboBox.addItem(donante);
@@ -180,7 +182,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         JPanel panelFormulario = new JPanel(new GridLayout(4, 2, 10, 10));
         panelFormulario.add(new JLabel("Fecha:"));
         panelFormulario.add(fechaTextField);
-        panelFormulario.add(new JLabel("Tipo de Vehículo:"));
+        panelFormulario.add(new JLabel("Tipo de Vehiculo:"));
         panelFormulario.add(tipoVehiculoComboBox);
         panelFormulario.add(new JLabel("Donante:"));
         panelFormulario.add(donanteComboBox);
@@ -199,6 +201,8 @@ public class RegistrarPedidoDonacion extends JDialog {
         pack();
     }
 
+    // Metodos
+    // metodo para registrar un pedido de donacion
     public RegistrarPedidoDonacion(IApi api, int donanteId) {
         this(api); //
         this.donanteId = donanteId;
@@ -216,4 +220,5 @@ public class RegistrarPedidoDonacion extends JDialog {
             donanteComboBox.setEnabled(true);
         }
     }
+    
 }

@@ -48,7 +48,6 @@ public class ListadoUsuario extends JFrame {
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				// Habilitar botones
 				habilitarBotones(true);
 
 			}
@@ -65,6 +64,8 @@ public class ListadoUsuario extends JFrame {
 		scrollPane.setViewportView(table);
 
 		activarButton = new JButton("Activar");
+		
+		// accion del boton "Activar"
 		activarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int opcionSeleccionada = JOptionPane.showConfirmDialog(null,
@@ -77,12 +78,12 @@ public class ListadoUsuario extends JFrame {
 					actualizarTabla();
 
 				}
-
 			}
-
 		});
 
 		desactivarButton = new JButton("Desactivar");
+		
+		// Accion del boton "Desacivar"
 		desactivarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int reply = JOptionPane.showConfirmDialog(null,
@@ -99,13 +100,14 @@ public class ListadoUsuario extends JFrame {
 		});
 
 		JButton cerrarButton = new JButton("Cerrar");
+		
+		// Accion del boton "Cerrar"
 		cerrarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 				dispose();
 			}
 		});
-//		contentPane.add(cerrarButton, BorderLayout.SOUTH);
 
 		JPanel pnlBotonesOperaciones = new JPanel();
 		pnlBotonesOperaciones.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -114,16 +116,19 @@ public class ListadoUsuario extends JFrame {
 		pnlBotonesOperaciones.add(activarButton);
 		pnlBotonesOperaciones.add(cerrarButton);
 
-		// Deshabilitar botones que requieren tener una fila seleccionada
+		// desabilita botones que requieren tener una fila seleccionada
 		habilitarBotones(false);
 	}
 
+	// Metodos
+	// metodo para habilitar botones
 	private void habilitarBotones(boolean b) {
 		activarButton.setEnabled(b);
 		desactivarButton.setEnabled(b);
 
 	}
 
+	// metodo para actualizar tabla
 	private void actualizarTabla() {
 		DefaultTableModel modelo = (DefaultTableModel) table.getModel();
 		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
@@ -132,7 +137,6 @@ public class ListadoUsuario extends JFrame {
 		for (UsuarioDTO u : usuarios) {
 			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
 		}
-
 	}
 
 }

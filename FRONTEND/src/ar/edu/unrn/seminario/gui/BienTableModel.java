@@ -7,7 +7,7 @@ import ar.edu.unrn.seminario.dto.BienDTO;
 public class BienTableModel extends AbstractTableModel {
 
     private final List<BienDTO> bienes;
-    private final String[] columnNames = {"Categoría", "Cantidad", "Estado", "Fecha de Vencimiento", "Descripción"};
+    private final String[] columnNames = {"Categoria", "Cantidad", "Estado", "Fecha de Vencimiento", "Descripcion"};
 
     public BienTableModel(List<BienDTO> bienes) {
         this.bienes = bienes;
@@ -33,7 +33,7 @@ public class BienTableModel extends AbstractTableModel {
         BienDTO bien = bienes.get(rowIndex);
         switch (columnIndex) {
             case 0:
-                return mapCategoriaToString(bien.getCategoria());
+                return mapCategoriaAString(bien.getCategoria());
             case 1:
                 return bien.getCantidad();
             case 2:
@@ -47,7 +47,7 @@ public class BienTableModel extends AbstractTableModel {
         }
     }
 
-    private String mapCategoriaToString(int categoriaId) {
+    private String mapCategoriaAString(int categoriaId) {
         switch (categoriaId) {
             case BienDTO.CATEGORIA_ROPA:
                 return "Ropa";
@@ -56,7 +56,7 @@ public class BienTableModel extends AbstractTableModel {
             case BienDTO.CATEGORIA_ALIMENTOS:
                 return "Alimentos";
             case BienDTO.CATEGORIA_ELECTRODOMESTICOS:
-                return "Electrodomésticos";
+                return "Electrodomesticos";
             case BienDTO.CATEGORIA_HERRAMIENTAS:
                 return "Herramientas";
             case BienDTO.CATEGORIA_JUGUETES:

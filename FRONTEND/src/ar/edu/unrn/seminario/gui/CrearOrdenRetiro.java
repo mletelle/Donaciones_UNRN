@@ -23,13 +23,13 @@ public class CrearOrdenRetiro extends JDialog {
 
 
     public CrearOrdenRetiro(Window owner, IApi api) {
-        super(owner, "Crear Orden de Retiro", ModalityType.APPLICATION_MODAL);
+        
+    	super(owner, "Crear Orden de Retiro", ModalityType.APPLICATION_MODAL);
         this.api = api;
 
         setLayout(new BorderLayout());
 
-        // Table setup
-        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante ID", "Tipo Vehículo" }) {
+        pedidosTableModel = new DefaultTableModel(new Object[][] {}, new String[] { "Seleccionar", "ID", "Fecha", "Donante", "Tipo Vehiculo" }) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0) {
@@ -38,12 +38,12 @@ public class CrearOrdenRetiro extends JDialog {
                 return super.getColumnClass(columnIndex);
             }
         };
+        
         pedidosTable = new JTable(pedidosTableModel);
         add(new JScrollPane(pedidosTable), BorderLayout.CENTER);
 
         cargarPedidosPendientes();
 
-        // Assignment panel setup
         JPanel panelAsignacion = new JPanel(new FlowLayout());
         panelAsignacion.add(new JLabel("Voluntario:"));
 
@@ -51,8 +51,8 @@ public class CrearOrdenRetiro extends JDialog {
         cargarVoluntarios();
         panelAsignacion.add(voluntarioComboBox);
 
-        panelAsignacion.add(new JLabel("Vehículo:"));
-        tipoVehiculoComboBox = new JComboBox<>(new String[] { "Auto", "Camioneta", "Camión" });
+        panelAsignacion.add(new JLabel("Vehiculo:"));
+        tipoVehiculoComboBox = new JComboBox<>(new String[] { "Auto", "Camioneta", "Camion" });
         panelAsignacion.add(tipoVehiculoComboBox);
 
         JButton btnAsignarCrearOrden = new JButton("Asignar y Crear");
@@ -63,7 +63,6 @@ public class CrearOrdenRetiro extends JDialog {
 
         add(panelAsignacion, BorderLayout.SOUTH);
 
-        // Button actions
         btnAsignarCrearOrden.addActionListener(e -> asignarYCrearOrden());
         btnCancelar.addActionListener(e -> dispose());
 
@@ -71,14 +70,17 @@ public class CrearOrdenRetiro extends JDialog {
         setLocationRelativeTo(owner);
     }
 
+    // Metodos
+    // meotodo para cargar pedidos pendientes
     private void cargarPedidosPendientes() {
         pedidosTableModel.setRowCount(0);
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
         for (PedidoDonacionDTO pedido : pedidos) {
-            pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonanteId(), pedido.getTipoVehiculo() });
+            pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonante(), pedido.getTipoVehiculo() });
         }
     }
 
+    // metodo para cargar voluntarios
     private void cargarVoluntarios() {
         List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios();
         for (VoluntarioDTO voluntario : voluntarios) {
@@ -97,6 +99,7 @@ public class CrearOrdenRetiro extends JDialog {
         });
     }
 
+    // metodo para asignar y crear una orden de retiro
     private void asignarYCrearOrden() {
         List<Integer> idsPedidosSeleccionados = new ArrayList<>();
 
@@ -122,11 +125,12 @@ public class CrearOrdenRetiro extends JDialog {
 
         try {
             api.crearOrdenRetiro(idsPedidosSeleccionados, voluntarioSeleccionado.getId(), tipoVehiculoSeleccionado);
-            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "exito", JOptionPane.INFORMATION_MESSAGE);
             cargarPedidosPendientes();
             dispose();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
 }

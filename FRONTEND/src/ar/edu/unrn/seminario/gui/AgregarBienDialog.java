@@ -32,14 +32,14 @@ public class AgregarBienDialog extends JDialog {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Categoría
+        // Categoria
         gbc.gridx = 0;
         gbc.gridy = 0;
-        formPanel.add(new JLabel("Categoría:"), gbc);
+        formPanel.add(new JLabel("Categoria:"), gbc);
 
         gbc.gridx = 1;
         categoriaComboBox = new JComboBox<>(new String[] {
-            "Ropa", "Muebles", "Alimentos", "Electrodomésticos", "Herramientas",
+            "Ropa", "Muebles", "Alimentos", "Electrodomesticos", "Herramientas",
             "Juguetes", "Libros", "Medicamentos", "Higiene", "Otros"
         });
         formPanel.add(categoriaComboBox, gbc);
@@ -75,7 +75,7 @@ public class AgregarBienDialog extends JDialog {
         // Descripcin
         gbc.gridx = 0;
         gbc.gridy = 4;
-        formPanel.add(new JLabel("Descripción:"), gbc);
+        formPanel.add(new JLabel("Descripcion:"), gbc);
 
         gbc.gridx = 1;
         descripcionTextField = new JTextField();
@@ -91,6 +91,7 @@ public class AgregarBienDialog extends JDialog {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // Accion del comboBox de categoria
         categoriaComboBox.addActionListener(event -> {
             String categoria = (String) categoriaComboBox.getSelectedItem();
             if ("Alimentos".equals(categoria)) {
@@ -101,13 +102,14 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // accion del boton "Aceptar"
         aceptarButton.addActionListener(event -> {
             try {
                 String categoria = (String) categoriaComboBox.getSelectedItem();
                 int cantidad = Integer.parseInt(cantidadTextField.getText());
                 String estado = (String) estadoComboBox.getSelectedItem();
 
-                int categoriaId = mapCategoriaToId(categoria);
+                int categoriaId = mapearCategoriaAId(categoria);
                 int estadoId = "Nuevo".equals(estado) ? BienDTO.TIPO_NUEVO : BienDTO.TIPO_USADO;
 
                 LocalDate fechaVencimiento = null;
@@ -123,9 +125,9 @@ public class AgregarBienDialog extends JDialog {
                 bien = new BienDTO(estadoId, cantidad, categoriaId, descripcionTextField.getText(), fechaVencimiento);
                 dispose();
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Cantidad debe ser un número.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Cantidad debe ser un numero.", "Error", JOptionPane.ERROR_MESSAGE);
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Fecha de vencimiento inválida.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Fecha de vencimiento invalida.", "Error", JOptionPane.ERROR_MESSAGE);
             } catch (FechaVencimientoInvalidaException ex) {
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Fecha", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
@@ -133,15 +135,16 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // Accion del boton cancelar
         cancelarButton.addActionListener(event -> dispose());
     }
 
-    private int mapCategoriaToId(String categoria) {
+    private int mapearCategoriaAId(String categoria) {
         switch (categoria) {
             case "Ropa": return BienDTO.CATEGORIA_ROPA;
             case "Muebles": return BienDTO.CATEGORIA_MUEBLES;
             case "Alimentos": return BienDTO.CATEGORIA_ALIMENTOS;
-            case "Electrodomésticos": return BienDTO.CATEGORIA_ELECTRODOMESTICOS;
+            case "Electrodomesticos": return BienDTO.CATEGORIA_ELECTRODOMESTICOS;
             case "Herramientas": return BienDTO.CATEGORIA_HERRAMIENTAS;
             case "Juguetes": return BienDTO.CATEGORIA_JUGUETES;
             case "Libros": return BienDTO.CATEGORIA_LIBROS;
@@ -150,7 +153,8 @@ public class AgregarBienDialog extends JDialog {
             default: return BienDTO.CATEGORIA_OTROS;
         }
     }
-
+    
+    // Getters
     public BienDTO getBien() {
         return bien;
     }

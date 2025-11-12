@@ -3,54 +3,62 @@ package ar.edu.unrn.seminario.modelo;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Rol {
+	
+	// Atributos
 	private Integer codigo;
 	private String nombre;
 	private boolean activo;
 
+	// Constructores
 	public Rol() {
 
 	}
-
+	
 	public Rol(Integer codigo, String nombre) throws CampoVacioException {
 		if (codigo == null) {
 			throw new CampoVacioException("El campo 'codigo' no puede ser nulo.");
 		}
 		if (nombre == null || nombre.isEmpty()) {
-			throw new CampoVacioException("El campo 'nombre' no puede estar vacío.");
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
 		}
 
 		this.codigo = codigo;
 		this.nombre = nombre;
 	}
 
+	// Getters
 	public Integer getCodigo() {
 		return codigo;
 	}
-
-	public void setCodigo(Integer codigo) {
-		this.codigo = codigo;
-	}
-
+	
 	public String getNombre() {
 		return nombre;
-	}
-
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
 	}
 
 	public boolean isActivo() {
 		return activo;
 	}
 
+	// Setters
+	public void setCodigo(Integer codigo) {
+		this.codigo = codigo;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
 	public void setActivo(boolean activo) {
 		this.activo = activo;
 	}
 
+	// Metodos
+	// metodo para activar
 	public void activar() {
 		this.activo = true;
 	}
 
+	// metodo para desactivar
 	public void desactivar() {
 		this.activo = false;
 	}

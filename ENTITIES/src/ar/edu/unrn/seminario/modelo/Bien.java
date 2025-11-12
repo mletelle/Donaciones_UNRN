@@ -6,7 +6,7 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Bien {
 
-    // constantes 
+    // constantes tipo
 	private static final int TIPO_ALIMENTO = 1;
 	private static final int TIPO_ROPA = 2;
 	private static final int TIPO_MOBILIARIO = 3;
@@ -26,37 +26,32 @@ public class Bien {
     private String estado;
     private Vehiculo vehiculo;
     
-    //constructores con todos los parametros
+    //constructores 
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
         if (cantidad <= 0) {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
         }
         if (categoria < CATEGORIA_BAJA || categoria > CATEGORIA_ALTA) {
-            throw new CampoVacioException("La categoría es inválida.");
+            throw new CampoVacioException("La categoria es invalida.");
         }
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.categoria = categoria;
     }
+    
     public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
         this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
         if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo no puede estar vacío.");
+            throw new CampoVacioException("El tipo no puede estar vacio.");
         }
     }
-    public Bien(String tipo) throws CampoVacioException {
-        if (tipo == null || tipo.trim().isEmpty()) {
-            throw new CampoVacioException("El tipo no puede ser nulo o vacío.");
-        }
-        this.tipo = TIPO_ALIMENTO; 
-        this.cantidad = 1; 
-        this.categoria = CATEGORIA_MEDIA;
-    }
+
     public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
         this(tipo, cantidad, categoria);
         this.vehiculo = vehiculo;
     }
-    //getters - setters
+    
+    // Getters 
     public int obtenerTipo() {
         return tipo;
     }
@@ -68,41 +63,46 @@ public class Bien {
     public int obtenerCategoria() {
         return categoria;
     }
+    
     public Date getFecVec() {
 		return fecVec;
 	}
-	public void setFecVec(Date fecVec) {
-		this.fecVec = fecVec;
-	}
+    
 	public Date getFechaIngreso() {
 		return fechaIngreso;
 	}
-	public void setFechaIngreso(Date fechaIngreso) {
-		this.fechaIngreso = fechaIngreso;
-	}
+	
 	public String getEstado() {
 		return estado;
 	}
-	public void setEstado(String estado) {
-		this.estado = estado;
-	}
+	
     public boolean isPerecedero() {
 		return perecedero;
 	}
+    
+    public Vehiculo obtenerVehiculo() {
+        return vehiculo;
+    }
+    
+	// Setters
+	public void setFecVec(Date fecVec) {
+		this.fecVec = fecVec;
+	}
+
+	public void setFechaIngreso(Date fechaIngreso) {
+		this.fechaIngreso = fechaIngreso;
+	}
+	
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+
 	public void setPerecedero(boolean perecedero) {
 		this.perecedero = perecedero;
 	}
-    
-    //calcular volumen: depende del tipo de bien
-    //se utilizaria para saber el tipo de vehiculo necesario
-    //para transportar los bienes
-    // no se usa en el main pero se deja por si se necesita
-    public double calcularVolumen() {
-        if (tipo == TIPO_MOBILIARIO)// mobiliario ocupa medio metro cubico por unidad
-            return cantidad * 0.5; 
-        if (tipo == TIPO_ALIMENTO)
-            return cantidad * 0.1; // alimentos ocupan 0.1 metro cubico por unidad
-        return cantidad * 0.05; // ropa e higiene ocupan 0.05 metro cubico por unidad
+	
+    public void asignarVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
     }
   
     //metodos de ayuda para el toString
@@ -132,20 +132,6 @@ public class Bien {
             default:
                 return "";
         }
-    }
-    public void aceptarItem() {
-     System.out.println("Item aceptado");
-    }
-
-    public void rechazarItem() {
-     System.out.println("Item rechazado");
-    }
-    public Vehiculo obtenerVehiculo() {
-        return vehiculo;
-    }
-    
-    public void asignarVehiculo(Vehiculo vehiculo) {
-        this.vehiculo = vehiculo;
     }
     
     @Override

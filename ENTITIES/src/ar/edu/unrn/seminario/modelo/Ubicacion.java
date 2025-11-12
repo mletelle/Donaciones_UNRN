@@ -8,6 +8,7 @@ public class Ubicacion {
     private String barrio;
     private Coordenada coordenada;
 
+    // Constructores
     // constructor que recibe ya el objeto coordenada
     public Ubicacion(String direccion, String zona, String barrio, Coordenada coord) {
         this.direccion = direccion;
@@ -50,4 +51,5 @@ public class Ubicacion {
                 barrio.equals(obj.barrio) &&
                 coordenada.equals(obj.coordenada);
     }
+    
 }
