@@ -57,17 +57,18 @@ public class PedidosDonacion {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
 
+	// Este constructor es usado por el DAO para "hidratar" (cargar) el objeto desde la BD
 	public PedidosDonacion(int id, LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante, EstadoPedido estado) throws ObjetoNuloException {
 		if (donante == null) {
 			throw new ObjetoNuloException("El donante no puede ser nulo.");
 		}
-		this.id = id; 
+		this.id = id; // Asigna el ID de la BD (NO usa la secuencia)
 		this.fecha = fecha;
 		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
 		this.observaciones = observaciones;
 		this.donante = donante;
 		this.estadoPedido = estado;
-		this.bienes = new ArrayList<>();
+		this.bienes = new ArrayList<>(); // Los bienes se cargan por separado (si es necesario)
 	}
 	
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
@@ -120,12 +121,12 @@ public class PedidosDonacion {
 	public int getId() {
 		return this.id;
 	}
-
-	// *** NUEVO SETID (para que el DAO actualice el ID después de un INSERT) ***
+	
+	// SETID (para que el DAO actualice el ID después de un INSERT)
 	public void setId(int id) {
 		this.id = id;
 	}
-	// **************************************
+	
 
 	public Usuario getDonante() {
 		return this.donante;

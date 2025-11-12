@@ -27,11 +27,11 @@ public class OrdenRetiro {
         if (pedidos == null || pedidos.isEmpty()) {
             throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
         }
-        this.id = ++secuencia;
+        this.id = ++secuencia; // Asigna ID de secuencia para nuevos
         this.estado = EstadoOrden.PENDIENTE;
         this.destino = dest;
         this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
+        this.voluntarios = new ArrayList<Usuario>(); 
         this.visitas = new ArrayList<Visita>();
         // asignar esta orden a cada pedido
         for (PedidosDonacion pedido : this.pedidos) {
@@ -123,6 +123,11 @@ public class OrdenRetiro {
               this.voluntarios = new ArrayList<>();
           }
           this.voluntarios.add(voluntario);
+      }
+      
+      // Permite al DAO establecer el ID de la BD después de un INSERT
+      public void setId(int id) {
+          this.id = id;
       }
     
     // metodos

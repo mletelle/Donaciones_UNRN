@@ -2,7 +2,9 @@ package ar.edu.unrn.seminario.api;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +42,7 @@ import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Vehiculo;
 import ar.edu.unrn.seminario.modelo.Visita;
 import ar.edu.unrn.seminario.modelo.ResultadoVisita;
+import ar.edu.unrn.seminario.modelo.Ubicacion;
 
 public class PersistenceApi implements IApi {
 
@@ -69,30 +72,33 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			Rol rol = rolDao.find(codigoRol, conn); // levantar el rol desde la base de datos
+			Rol rol = rolDao.find(codigoRol, conn); 
 			if (rol == null) {
 				throw new ObjetoNuloException("Rol no encontrado");
 			}
 			
-			Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion); // nuevo constructor
-			usuarioDao.create(usuario, conn); // crear el usuario
+			Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion); 
+			usuarioDao.create(usuario, conn); 
 			
 			conn.commit();
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
-				e2.printStackTrace(); // log error
+				e2.printStackTrace(); 
 			}
-			throw new RuntimeException("Error registrando usuario", e); 
-		} catch (Exception e) { // captura otros errores
+			throw new RuntimeException("Error registrando usuario: " + e.getMessage(), e); 
+		} catch (Exception e) { 
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw e;
-		} finally { // asegura restaurar auto-commit y desconectar
+			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
+		} finally { 
 			if (conn != null) {
 				try {
 					conn.setAutoCommit(true);
@@ -105,17 +111,17 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<UsuarioDTO> obtenerUsuarios() { // listado completo
+	public List<UsuarioDTO> obtenerUsuarios() { 
 		Connection conn = null;
 		List<UsuarioDTO> dtos = new ArrayList<>();
-		try { // obtener todos los usuarios
+		try { 
 			conn = ConnectionManager.getConnection();
 			List<Usuario> usuarios = usuarioDao.findAll(conn);
 			for (Usuario u : usuarios) {
 				dtos.add(new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
 						u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()));
 			}
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -124,7 +130,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public UsuarioDTO obtenerUsuario(String username) { // obtener por username
+	public UsuarioDTO obtenerUsuario(String username) { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -133,7 +139,7 @@ public class PersistenceApi implements IApi {
 				return new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
 						u.getRol().getNombre(), u.isActivo(), u.obtenerEstado());
 			}
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -147,17 +153,17 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<RolDTO> obtenerRoles() { // listado completo
+	public List<RolDTO> obtenerRoles() { 
 		Connection conn = null;
 		List<RolDTO> rolesDTO = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<Rol> roles = rolDao.findAll(conn); // obtener todos los roles
+			List<Rol> roles = rolDao.findAll(conn); 
 			for (Rol rol : roles) {
 				rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo()));
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // captura errores SQL
+			e.printStackTrace(); 
 		} finally {
 			ConnectionManager.disconnect();
 		}
@@ -165,7 +171,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<RolDTO> obtenerRolesActivos() { // listado de roles activos
+	public List<RolDTO> obtenerRolesActivos() { 
 		Connection conn = null;
 		List<RolDTO> rolesDTO = new ArrayList<>();
 		try {
@@ -173,7 +179,7 @@ public class PersistenceApi implements IApi {
 			List<Rol> roles = rolDao.findAll(conn);
 			for (Rol rol : roles) {
 				if (rol.isActivo()) {
-					rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo())); // solo activos
+					rolesDTO.add(new RolDTO(rol.getCodigo(), rol.getNombre(), rol.isActivo())); 
 				}
 			}
 		} catch (SQLException e) {
@@ -190,7 +196,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public RolDTO obtenerRolPorCodigo(Integer codigo) { // obtener rol por codigo
+	public RolDTO obtenerRolPorCodigo(Integer codigo) { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -217,22 +223,22 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void activarUsuario(String username) { // activar solo un usuario
+	public void activarUsuario(String username) { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			Usuario usuario = usuarioDao.find(username, conn); // buscar usuario
-			if (usuario != null) { // si existe, activarlo
+			Usuario usuario = usuarioDao.find(username, conn); 
+			if (usuario != null) { 
 				usuario.activar();
 				usuarioDao.update(usuario, conn);
 			}
 			
 			conn.commit();
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			try {
-				if (conn != null) conn.rollback(); // rollback si hay error
+				if (conn != null) conn.rollback(); 
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
@@ -250,7 +256,7 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void desactivarUsuario(String username) { // desactivar solo un usuario
+	public void desactivarUsuario(String username) { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -265,7 +271,7 @@ public class PersistenceApi implements IApi {
 			conn.commit();
 		} catch (SQLException e) {
 			try {
-				if (conn != null) conn.rollback(); // rollback si hay error
+				if (conn != null) conn.rollback(); 
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
@@ -273,7 +279,7 @@ public class PersistenceApi implements IApi {
 		} finally {
 			if (conn != null) {
 				try {
-					conn.setAutoCommit(true); // restaurar auto-commit
+					conn.setAutoCommit(true); 
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -283,15 +289,14 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException { // registrar nuevo pedido
+	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 
-			// encontrar donante por DNI
-			List<Usuario> donantes = usuarioDao.findByRol(3, conn);
 			Usuario donante = null;
+			List<Usuario> donantes = usuarioDao.findByRol(3, conn); // 3 = Rol Donante
 			for (Usuario u : donantes) {
 				if (u.getDni() == pedidoDTO.getDonanteId()) {
 					donante = u;
@@ -299,45 +304,52 @@ public class PersistenceApi implements IApi {
 				}
 			}
 			
-			if (donante == null) { // no se encontro donante
-				throw new ObjetoNuloException("Donante no encontrado");
+			if (donante == null) { 
+				throw new ObjetoNuloException("Donante no encontrado con DNI: " + pedidoDTO.getDonanteId());
 			}
 			
-			// convertir BienDTO a Bien
 			List<Bien> bienes = new ArrayList<>();
+			if (pedidoDTO.getBienes() == null || pedidoDTO.getBienes().isEmpty()) {
+				throw new CampoVacioException("El pedido debe tener al menos un bien.");
+			}
+			
 			for (BienDTO bienDTO : pedidoDTO.getBienes()) {
-				Bien bien = new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), bienDTO.getCategoria());
+				Bien bien = new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), 2); // Categoria 2 (MEDIA) por defecto
 				bienes.add(bien);
 			}
 			
-			// crear PedidoDonacion
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
+
 			PedidosDonacion pedido = new PedidosDonacion(
-					LocalDateTime.now(),
-					bienes,
+					fechaLocalDateTime,
+					new ArrayList<>(bienes), 
 					pedidoDTO.getTipoVehiculo(),
 					pedidoDTO.getObservaciones(),
 					donante);
 			
-			// persistir pedido
 			int idPedido = pedidoDao.create(pedido, conn);
 			
-			bienDao.createBatch(bienes, idPedido, conn); // persistir bienes
+			bienDao.createBatch(bienes, idPedido, conn); 
 			
 			conn.commit();
 		} catch (SQLException e) {
 			try {
-				if (conn != null) conn.rollback(); // rollback si hay error
+				if (conn != null) conn.rollback(); 
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw new RuntimeException("Error registrando pedido", e);
-		} catch (Exception e) { // captura otros errores
+			throw new RuntimeException("Error SQL registrando pedido: " + e.getMessage(), e);
+		} catch (Exception e) { 
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw e;
+			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado registrando pedido: " + e.getMessage(), e);
 		} finally {
 			if (conn != null) {
 				try {
@@ -351,16 +363,16 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<DonanteDTO> obtenerDonantes() { // listado de donantes
+	public List<DonanteDTO> obtenerDonantes() { 
 		Connection conn = null;
 		List<DonanteDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
 			List<Usuario> donantes = usuarioDao.findByRol(3, conn); // rol donante = 3
 			for (Usuario d : donantes) {
-				dtos.add(new DonanteDTO(d.getDni(), d.getNombre() + " " + d.getApellido(), d.obtenerDireccion()));
+				dtos.add(new DonanteDTO(d.getDni(), d.getNombre(), d.getApellido())); // DNI, Nombre, Apellido
 			}
-		} catch (SQLException e) { // captura errores de SQL
+		} catch (SQLException e) { 
 			e.printStackTrace();
 		} finally {
 			ConnectionManager.disconnect();
@@ -369,20 +381,25 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<PedidoDonacionDTO> obtenerPedidosPendientes() { // pedidos con estado PENDIENTE
+	public List<PedidoDonacionDTO> obtenerPedidosPendientes() { 
 		Connection conn = null;
 		List<PedidoDonacionDTO> dtos = new ArrayList<>();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 		try {
 			conn = ConnectionManager.getConnection(); 
 			List<PedidosDonacion> pedidos = pedidoDao.findAllPendientes(conn); 
+			
 			for (PedidosDonacion p : pedidos) {
-				PedidoDonacionDTO dto = new PedidoDonacionDTO( // mapear a DTO
-						p.obtenerFecha().toString(),
-						new ArrayList<BienDTO>(),
+				String nombreDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido();
+				
+				PedidoDonacionDTO dto = new PedidoDonacionDTO(
+						p.getId(), // ID Correcto de la BD
+						p.obtenerFecha().format(formatter),
 						p.describirTipoVehiculo(),
 						p.obtenerObservaciones(),
-						p.getDonante().getDni());
-				dto.setId(p.getId());
+						p.getDonante().getDni(),
+						nombreDonante
+				);
 				dtos.add(dto);
 			}
 		} catch (SQLException e) {
@@ -394,21 +411,21 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) { // pedidos asociados a una orden
+	public List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden) { 
 		Connection conn = null;
 		List<PedidoDonacionDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos por orden
+			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); 
 			for (PedidosDonacion p : pedidos) {
 				String nombreDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido();
-				dtos.add(new PedidoDonacionDTO( // mapear a DTO
-						p.getId(),
-						p.obtenerFecha().toString(),
-						p.describirTipoVehiculo(),
-						p.obtenerObservaciones(),
-						p.getDonante().getDni(),
-						nombreDonante));
+				PedidoDonacionDTO dto = new PedidoDonacionDTO(
+						p.getId(), // ID Correcto de la BD
+						nombreDonante,
+						p.getDonante().obtenerDireccion(),
+						p.obtenerEstado()
+				);
+				dtos.add(dto);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -425,7 +442,7 @@ public class PersistenceApi implements IApi {
 		try {
 			conn = ConnectionManager.getConnection();
 			List<OrdenRetiro> ordenes = ordenDao.findByEstado(estado, conn);
-			for (OrdenRetiro o : ordenes) { // para cada orden de retiro, recorrer y mapear a DTO
+			for (OrdenRetiro o : ordenes) { 
 				String nombreVoluntario = "";
 				if (o.obtenerVoluntarioPrincipal() != null) {
 					Usuario vol = o.obtenerVoluntarioPrincipal();
@@ -462,58 +479,56 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) // registrar visita y actualizar estados
+	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) 
 			throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			// cargar OrdenRetiro y PedidoDonacion
 			OrdenRetiro orden = ordenDao.findById(idOrdenRetiro, conn);
 			PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
 			
-			if (orden == null) { // si no se encuentra orden o pedido, lanzar excepcion
+			if (orden == null) { 
 				throw new ObjetoNuloException("Orden no encontrada");
 			}
 			if (pedido == null) {
 				throw new ObjetoNuloException("Pedido no encontrado");
 			}
 			
-			// cargar datos de visita desde DTO
-			ResultadoVisita resultado = ResultadoVisita.valueOf(visitaDTO.getResultado().replace(" ", "_").toUpperCase());
-			Visita visita = new Visita(LocalDateTime.now(), resultado, visitaDTO.getObservacion());
+			ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
+			Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
 			
-			// persistir visita
 			visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 			
-			// actualizar estado pedido segun resultado visita
-			if ("RECOLECCION_EXITOSA".equals(visitaDTO.getResultado())) {
+			if (resultado == ResultadoVisita.RECOLECCION_EXITOSA) {
 				pedido.marcarCompletado();
 			} else {
-				pedido.marcarEnEjecucion();
+				pedido.marcarEnEjecucion(); 
 			}
 			pedidoDao.update(pedido, conn);
 			
-			// actualizar estado orden automaticamente
 			orden.actualizarEstadoAutomatico();
 			ordenDao.update(orden, conn);
 			
 			conn.commit();
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw new RuntimeException("Error registrando visita", e);
+			throw new RuntimeException("Error registrando visita: " + e.getMessage(), e);
 		} catch (Exception e) {
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw e;
+			if (e instanceof ReglaNegocioException || e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
 		} finally {
 			if (conn != null) {
 				try {
@@ -527,12 +542,12 @@ public class PersistenceApi implements IApi {
 	}
 
 	@Override
-	public List<VoluntarioDTO> obtenerVoluntarios() { // listado de voluntarios
+	public List<VoluntarioDTO> obtenerVoluntarios() { 
 		Connection conn = null;
 		List<VoluntarioDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
+			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn); // rol voluntario = 2
 			for (Usuario v : voluntarios) {
 				dtos.add(new VoluntarioDTO(v.getDni(), v.getNombre(), v.getApellido()));
 			}
@@ -543,11 +558,8 @@ public class PersistenceApi implements IApi {
 		}
 		return dtos;
 	}
-/*
-Este metodo al fin anda, ya no carga nulls.
-El problema era que no estaba manejando bien las transacciones 
-Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en la base de datos.
-*/ 
+
+	// **** MÉTODO CORREGIDO ****
 	@Override
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
 			throws ReglaNegocioException, ObjetoNuloException {
@@ -556,25 +568,30 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			conn = ConnectionManager.getConnection();
 			conn.setAutoCommit(false);
 			
-			List<PedidosDonacion> pedidos = new ArrayList<>(); // cargar pedidos por ids
+			List<PedidosDonacion> pedidos = new ArrayList<>(); 
 			for (Integer idPedido : idsPedidos) {
 				PedidosDonacion p = pedidoDao.findById(idPedido, conn);
 				if (p != null) {
+					if (p.obtenerOrden() != null) {
+						throw new ReglaNegocioException("El pedido " + p.getId() + " ya pertenece a otra orden.");
+					}
 					pedidos.add(p);
+				} else {
+					throw new ObjetoNuloException("No se encontraron pedidos. (ID: " + idPedido + ")");
 				}
 			}
 			
 			if (pedidos.isEmpty()) {
-				throw new ObjetoNuloException("No se encontraron pedidos");
+				throw new ObjetoNuloException("No se seleccionaron pedidos válidos.");
 			}
 			
-			Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn); // buscar vehiculo disponible
+			Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn); 
 			if (vehiculo == null) {
 				throw new ReglaNegocioException("No hay vehiculos disponibles del tipo: " + tipoVehiculo);
 			}
 			
-			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn); // rol voluntario = 2
 			Usuario voluntario = null;
+			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn); // rol voluntario = 2
 			for (Usuario v : voluntarios) { // buscar voluntario por dni
 				if (v.getDni() == idVoluntario) {
 					voluntario = v;
@@ -583,22 +600,32 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			}
 			
 			if (voluntario == null) {
-				throw new ObjetoNuloException("Voluntario no encontrado");
+				throw new ObjetoNuloException("Voluntario no encontrado (DNI: " + idVoluntario + ")");
 			}
 			
-			OrdenRetiro orden = new OrdenRetiro(pedidos, null); // crear nueva orden
+			Ubicacion destino = pedidos.get(0).getDonante().getUbicacionEntidad(); 
+			if (destino == null) {
+				destino = new Ubicacion(pedidos.get(0).getDonante().obtenerDireccion(), "N/A", "N/A", 0.0, 0.0);
+			}
+
+			OrdenRetiro orden = new OrdenRetiro(pedidos, destino); 
 			orden.asignarVehiculo(vehiculo);
 			orden.asignarVoluntario(voluntario);
 			
-			ordenDao.create(orden, conn);
+			int idOrden = ordenDao.create(orden, conn);
 			
-			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido
-				pedido.asignarOrden(orden);
+			// **** CORRECCIÓN: Asignar el ID de la BD al objeto en memoria ****
+			// (Asegúrate de tener 'public void setId(int id) { this.id = id; }' en OrdenRetiro.java)
+			orden.setId(idOrden); 
+			
+			for (PedidosDonacion pedido : pedidos) { 
+				pedido.asignarOrden(orden); 
 				try {
 					pedido.marcarEnEjecucion();
 				} catch (ReglaNegocioException e) {
+					// Ignorar
 				}
-				pedidoDao.update(pedido, conn);
+				pedidoDao.update(pedido, conn); // Actualiza el pedido con el id_orden_retiro
 			}
 			
 			conn.commit();
@@ -608,14 +635,17 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw new RuntimeException("Error creando orden de retiro", e); 
+			throw new RuntimeException("Error SQL creando orden de retiro: " + e.getMessage(), e); 
 		} catch (Exception e) {
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
-			throw e;
+			if (e instanceof ReglaNegocioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado creando orden: " + e.getMessage(), e);
 		} finally {
 			if (conn != null) {
 				try {
@@ -629,38 +659,49 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	}
 
 	@Override
-	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) { // ordenes asignadas a un voluntario, filtrado por estado y voluntario
+	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) { 
 		Connection conn = null;
 		List<OrdenRetiroDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
-			List<OrdenRetiro> ordenes = ordenDao.findByVoluntario(voluntario, conn);
+			
+			String usernameVoluntario = null;
+			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
+			for (Usuario v : voluntarios) {
+				if (v.getNombre().equalsIgnoreCase(nombreVoluntario)) {
+					usernameVoluntario = v.getUsuario();
+					break;
+				}
+			}
+			
+			if (usernameVoluntario == null) {
+				System.out.println("No se encontró voluntario con nombre: " + nombreVoluntario);
+				return dtos; 
+			}
+
+			List<OrdenRetiro> ordenes = ordenDao.findByVoluntario(usernameVoluntario, conn);
+			
 			for (OrdenRetiro o : ordenes) {
-				String nombreVoluntario = "";
-				if (o.obtenerVoluntarioPrincipal() != null) {
-					Usuario vol = o.obtenerVoluntarioPrincipal();
-					nombreVoluntario = vol.getNombre() + " " + vol.getApellido();
+				String nombreVoluntarioCompleto = o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido();
+				String nombreDonante = "N/A";
+				if (o.obtenerDonante() != null) { 
+					nombreDonante = o.obtenerDonante().getNombre() + " " + o.obtenerDonante().getApellido();
 				}
 				
-				String nombreDonante = "";
-				if (o.obtenerDonante() != null) {
-					Usuario don = o.obtenerDonante();
-					nombreDonante = don.getNombre() + " " + don.getApellido();
-				}
-				
-				String descripcionVehiculo = "";
+				String patenteVehiculo = "N/A";
 				if (o.obtenerVehiculo() != null) {
-					descripcionVehiculo = o.obtenerVehiculo().getDescripcion();
+					patenteVehiculo = o.obtenerVehiculo().getPatente();
 				}
 				
 				OrdenRetiroDTO dto = new OrdenRetiroDTO(
 						o.getId(),
 						o.obtenerNombreEstado(),
 						o.obtenerFechaCreacion(),
-						new ArrayList<VisitaDTO>(),
+						new ArrayList<VisitaDTO>(), 
 						nombreDonante,
-						descripcionVehiculo,
-						nombreVoluntario);
+						patenteVehiculo,
+						nombreVoluntarioCompleto
+				);
 				dtos.add(dto);
 			}
 		} catch (SQLException e) {
@@ -672,33 +713,40 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	}
 
 	@Override
-	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) { // visitas realizadas por un voluntario, filtrado por voluntario y estado
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntarioDTO) { 
 		Connection conn = null;
 		List<VisitaDTO> dtos = new ArrayList<>();
 		try {
 			conn = ConnectionManager.getConnection();
 			
-			// encontrar voluntario por DNI
+			Usuario voluntario = null;
 			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
-			Usuario vol = null;
-			for (Usuario u : voluntarios) {
-				if (u.getDni() == voluntario.getId()) {
-					vol = u; // si coincide, asignar y salir del bucle
+			for(Usuario u : voluntarios) {
+				if (u.getDni() == voluntarioDTO.getId()) { // ID del DTO es el DNI
+					voluntario = u;
 					break;
 				}
 			}
 			
-			if (vol == null) {
-				return dtos;
+			if (voluntario == null) {
+				System.out.println("No se encontró voluntario (DTO_ID): " + voluntarioDTO.getId());
+				return dtos; 
 			}
 			
-			List<Visita> visitas = visitaDao.findByVoluntario(vol, conn);
+			List<Visita> visitas = visitaDao.findByVoluntario(voluntario, conn);
 			for (Visita v : visitas) {
+				
+				String nombreDonante = "Sin datos";
+				if (v.getPedidoRelacionado() != null && v.getPedidoRelacionado().getDonante() != null) {
+					Usuario donante = v.getPedidoRelacionado().getDonante();
+					nombreDonante = donante.getNombre() + " " + donante.getApellido();
+				}
+				
 				dtos.add(new VisitaDTO(
 						v.obtenerFechaFormateada(),
 						v.obtenerObservacion(),
 						v.obtenerResultado().toString(),
-						""));  // nombre donante vacio por ahora, no lo levanta, revisar
+						nombreDonante));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -709,7 +757,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	}
 
 	@Override
-	public String obtenerNombreDonantePorId(int idPedido) { // obtener nombre completo del donante por id de pedido
+	public String obtenerNombreDonantePorId(int idPedido) { 
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -723,7 +771,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 		} finally {
 			ConnectionManager.disconnect();
 		}
-		return "";
+		return "Donante Desconocido";
 	}
 
 }
