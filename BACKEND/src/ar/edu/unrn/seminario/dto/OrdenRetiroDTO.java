@@ -7,7 +7,9 @@ import java.util.List;
 import java.sql.Timestamp;
 
 public class OrdenRetiroDTO {
-    private int id;
+    
+	// Atributos
+	private int id;
     private String estado; // cambiado de int a String
     private Date fechaCreacion;
     private List<VisitaDTO> visitas;
@@ -15,7 +17,7 @@ public class OrdenRetiroDTO {
     private String vehiculo;
     private String voluntario;
 
-
+    // Constructores
     public OrdenRetiroDTO(int id, String estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
         this.id = id;
         this.estado = estado;
@@ -26,65 +28,66 @@ public class OrdenRetiroDTO {
         this.voluntario = voluntario;
     }
 
+    // Getters
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getEstado() {
         return estado;
+    }
+    
+    public Date getFechaCreacion() {
+        return fechaCreacion;
+    }
+    
+    public List<VisitaDTO> getVisitas() {
+        return visitas;
+    }
+    
+    public String getDonante() {
+        return donante;
+    }
+    
+    public String getVehiculo() {
+        return vehiculo;
+    }
+    
+    public String getVoluntario() {
+        return voluntario;
+    }
+    
+    public String getDescripcion() {
+        return "Donante: " + donante + ", Vehiculo: " + vehiculo + ", Voluntario: " + voluntario;
+    }
+    
+    // Setters
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setEstado(String estado) {
         this.estado = estado;
     }
 
-    public Date getFechaCreacion() {
-        return fechaCreacion;
-    }
-
     public void setFechaCreacion(Date fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
-    }
-
-    public List<VisitaDTO> getVisitas() {
-        return visitas;
     }
 
     public void setVisitas(List<VisitaDTO> visitas) {
         this.visitas = visitas;
     }
 
-    public String getDonante() {
-        return donante;
-    }
-
     public void setDonante(String donante) {
         this.donante = donante;
-    }
-
-    public String getVehiculo() {
-        return vehiculo;
     }
 
     public void setVehiculo(String vehiculo) {
         this.vehiculo = vehiculo;
     }
 
-    public String getVoluntario() {
-        return voluntario;
-    }
-
     public void setVoluntario(String voluntario) {
         this.voluntario = voluntario;
     }
 
-    public String getDescripcion() {
-        return "Donante: " + donante + ", Vehiculo: " + vehiculo + ", Voluntario: " + voluntario;
-    }
-
-    // el metod getEstadoTexto() eliminado, ahora getEstado() devuelve String directamente
 }

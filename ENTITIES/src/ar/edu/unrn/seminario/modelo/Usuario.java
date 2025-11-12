@@ -6,6 +6,8 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Usuario {
+	
+	// Atributos
 	private String usuario;
 	private String contrasena;
 	private String nombre;
@@ -13,15 +15,16 @@ public class Usuario {
 	private Rol rol;
 	private boolean activo;
 	
-	//  absorbidos de Persona
+	//  Atributos absorbidos de Persona
 	private String apellido;
 	private int dni;
 	private String direccion; // SIMPLIFICADO: solo String en lugar de objeto Ubicacion
 	
-	//  para roles específicos
+	// Atributos para roles específicos
 	private ArrayList<PedidosDonacion> pedidos; // Para Donante
 	private ArrayList<OrdenRetiro> ordenesAsignadas; // Para Voluntario
 
+	// Constructores
 	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
 		if (usuario == null || usuario.isEmpty()) {
 			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
@@ -64,68 +67,37 @@ public class Usuario {
 		this.ordenesAsignadas = new ArrayList<>();
 	}
 
+	// Getters
 	public String getUsuario() {
 		return usuario;
 	}
-
-	public void setUsuario(String usuario) {
-		this.usuario = usuario;
-	}
-
+	
 	public String getContrasena() {
 		return contrasena;
-	}
-
-	public void setContrasena(String contrasena) {
-		this.contrasena = contrasena;
 	}
 
 	public String getNombre() {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
-
 	public String getEmail() {
 		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
 	}
 
 	public Rol getRol() {
 		return rol;
 	}
 
-	public void setRol(Rol rol) {
-		this.rol = rol;
-	}
-
 	public String getApellido() {
 		return apellido;
-	}
-
-	public void setApellido(String apellido) {
-		this.apellido = apellido;
 	}
 
 	public int getDni() {
 		return dni;
 	}
 
-	public void setDni(int dni) {
-		this.dni = dni;
-	}
-
 	public String getDireccion() {
 		return direccion;
-	}
-
-	public void setDireccion(String direccion) {
-		this.direccion = direccion;
 	}
 
 	public ArrayList<PedidosDonacion> getPedidos() {
@@ -136,7 +108,6 @@ public class Usuario {
 		return ordenesAsignadas;
 	}
 
-	// Métodos con nomenclatura obtener (estilo del dominio)
 	public String obtenerApellido() {
 		return apellido;
 	}
@@ -161,11 +132,47 @@ public class Usuario {
 		return isActivo() ? "ACTIVO" : "INACTIVO";
 	}
 
+	// Setters
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
+
+	public void setContrasena(String contrasena) {
+		this.contrasena = contrasena;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setRol(Rol rol) {
+		this.rol = rol;
+	}
+
+	public void setApellido(String apellido) {
+		this.apellido = apellido;
+	}
+
+	public void setDni(int dni) {
+		this.dni = dni;
+	}
+
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
+	}
+
+	// Metodos
+	// metodo para activar
 	public void activar() {
 		if (!isActivo())
 			this.activo = true;
 	}
 
+	// metodo para desactivar
 	public void desactivar() {
 		if (isActivo())
 			this.activo = false;

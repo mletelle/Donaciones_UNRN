@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public class VisitaDTO {
 
+	// Atributos
     private String fechaDeVisita;
     private String observacion;
     private List<String> bienesRetirados;
@@ -12,6 +13,7 @@ public class VisitaDTO {
     private LocalDateTime fechaHora;
     private String donante;
 
+    // Constructores
     public VisitaDTO(String fechaDeVisita, String observacion) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
@@ -24,7 +26,7 @@ public class VisitaDTO {
         this.donante = donante;
     }
 
-    //  completo con todos los datos para el historial
+    // Constructor completo con todos los datos para el historial
     public VisitaDTO(String fechaDeVisita, String observacion, String resultado, String donante) {
         this.fechaDeVisita = fechaDeVisita;
         this.observacion = observacion;
@@ -49,10 +51,6 @@ public class VisitaDTO {
         return resultado;
     }
 
-    public void setResultado(String resultado) {
-        this.resultado = resultado;
-    }
-
     public LocalDateTime getFechaHora() {
         return fechaHora;
     }
@@ -64,4 +62,10 @@ public class VisitaDTO {
     public String getDonante() {
         return donante;
     }
+    
+    // Setters
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
+    }
+
 }

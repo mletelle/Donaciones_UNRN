@@ -255,6 +255,7 @@ public class VentanaPrincipal extends JFrame {
 		});
 	}
 
+	// Metodos
 	public void actualizarUIporRol() {
 	    // segun el rol
 	    usuarioMenu.setVisible("ADMINISTRADOR".equals(rolActual));
@@ -276,4 +277,5 @@ public class VentanaPrincipal extends JFrame {
 	    listadoPedidosMenuItem.setVisible(!"DONANTE".equals(rolActual));
 	    voluntarioSelectorComboBox.setVisible("VOLUNTARIO".equals(rolActual)); // actualizar visibilidad del selector
 	}
+	
 }

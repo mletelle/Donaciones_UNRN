@@ -1,13 +1,17 @@
 package ar.edu.unrn.seminario.modelo;
 
 public enum ResultadoVisita {
+	
+	// Constantes
 	RECOLECCION_EXITOSA("Recoleccion Exitosa"),
 	RECOLECCION_PARCIAL("Recoleccion Parcial"),
 	DONANTE_AUSENTE("Donante Ausente"),
 	CANCELADO("Cancelado");
 
+	// Atributos
 	private String descripcion;
 	
+	// Constructores
 	ResultadoVisita(String descripcion) {
 		this.descripcion = descripcion;
 	}
@@ -25,4 +29,5 @@ public enum ResultadoVisita {
 		}
 		throw new IllegalArgumentException("Resultado de visita desconocido: " + texto);
 	}
+	
 }

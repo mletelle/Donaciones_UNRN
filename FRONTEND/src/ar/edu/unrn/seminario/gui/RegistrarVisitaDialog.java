@@ -123,12 +123,15 @@ public class RegistrarVisitaDialog extends JDialog {
         // Panel de botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT)); 
         JButton btnGuardar = new JButton("Guardar");
+        
+        // Accion del boton "Guardar"
         btnGuardar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 guardarVisita();
             }
         });
+        
         panelBotones.add(btnGuardar);
 
         // Al principal
@@ -141,6 +144,7 @@ public class RegistrarVisitaDialog extends JDialog {
         add(panelPrincipal);
     }
 
+    // Metodos
     public RegistrarVisitaDialog(IApi api, int idOrden, int idPedido) {
         this(api, idOrden); // Llama al constructor que construye la GUI
         this.idPedido = idPedido;
@@ -153,6 +157,7 @@ public class RegistrarVisitaDialog extends JDialog {
         this.ventanaPadre = ventanaPadre;
     }
 
+    // metodo para guardar una visita
     private void guardarVisita() {
         try {
             String fecha = txtFecha.getText();
@@ -213,4 +218,5 @@ public class RegistrarVisitaDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Error al registrar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
 }

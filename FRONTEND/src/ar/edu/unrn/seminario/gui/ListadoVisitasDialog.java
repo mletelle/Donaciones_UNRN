@@ -63,4 +63,5 @@ public class ListadoVisitasDialog extends JDialog {
 
         add(buttonPanel, BorderLayout.SOUTH);
     }
+    
 }

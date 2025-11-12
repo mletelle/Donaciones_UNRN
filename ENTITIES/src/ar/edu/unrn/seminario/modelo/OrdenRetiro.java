@@ -9,7 +9,7 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class OrdenRetiro {
 
-    // variables y catalogos
+    // variables
     private static int secuencia = 0;//para el id
 
     // atributos
@@ -22,9 +22,7 @@ public class OrdenRetiro {
     private int id;
     private Vehiculo vehiculo;
 
-    
-
-    // constructor con todos los parametros
+    // Constructores
     public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
         if (pedidos == null || pedidos.isEmpty()) {
             throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
@@ -41,15 +39,93 @@ public class OrdenRetiro {
         }
     }
 
-    // metodos
-    // asignacion de voluntario
-    public void asignarVoluntario(Usuario voluntario) { // ahora recibe Usuario
-        if (this.voluntarios == null) {
-            this.voluntarios = new ArrayList<>();
-        }
-        this.voluntarios.add(voluntario);
+    // Getters
+    public String obtenerNombreEstado() {
+        return describirEstado();
     }
-  
+    
+    public EstadoOrden obtenerEstadoOrden() {
+        return this.estado;
+    }
+    
+    public Usuario obtenerPrimerVoluntario() { 
+        if (voluntarios.isEmpty()) {
+            return null; // no hay voluntarios disponibles
+        }
+        return voluntarios.get(0); // devuelve el primero de la lista
+      }
+    
+      public int obtenerId() {
+          return this.id;
+      }
+
+      public LocalDateTime obtenerFechaCreacion() {
+          return this.fechaGeneracion;
+      }
+
+      public ArrayList<Visita> obtenerVisitas() {
+          return this.visitas;
+      }
+      
+      public Usuario obtenerDonante() { // ahora devuelve Usuario
+          return (!this.pedidos.isEmpty() && this.pedidos.get(0) != null) ? this.pedidos.get(0).obtenerDonante() : null;
+      }
+      
+      public List<PedidosDonacion> obtenerPedidos() {
+          return new ArrayList<>(this.pedidos);
+      }
+      
+      public PedidosDonacion obtenerPedidoPorId(int idPedido) {
+          for (PedidosDonacion pedido : this.pedidos) {
+              if (pedido.obtenerId() == idPedido) {
+                  return pedido;
+              }
+          }
+          return null;
+      }
+
+      public Vehiculo obtenerVehiculo() {
+          return this.vehiculo;
+      }
+
+      public Usuario obtenerVoluntarioPrincipal() { 
+          return voluntarios.isEmpty() ? null : voluntarios.get(0);
+      }
+
+      public Usuario getVoluntario() { 
+          return obtenerVoluntarioPrincipal();
+      }
+
+      public int getId() {
+          return obtenerId();
+      }
+
+      public LocalDateTime getFechaCreacion() {
+          return obtenerFechaCreacion();
+      }
+
+      public Usuario getDonante() { 
+          return obtenerDonante();
+      }
+
+      public Vehiculo getVehiculo() {
+          return obtenerVehiculo();
+      }
+      
+      // Setters
+      public void asignarVehiculo(Vehiculo vehiculo) {
+          this.vehiculo = vehiculo;
+      }
+      
+      // asignacion de voluntario
+      public void asignarVoluntario(Usuario voluntario) { // ahora recibe Usuario
+          if (this.voluntarios == null) {
+              this.voluntarios = new ArrayList<>();
+          }
+          this.voluntarios.add(voluntario);
+      }
+    
+    // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos
     public void actualizarEstadoAutomatico() {
         if (this.pedidos == null || this.pedidos.isEmpty()) {
@@ -79,59 +155,13 @@ public class OrdenRetiro {
         }
         // si no, permanece en PENDIENTE
     }
-    
-    public String obtenerNombreEstado() {
-        return describirEstado();
-    }
-  
-    // getters
-    /*corregido a pedido de los profesores
-     * public int obtenerEstado() {
-        // retornar un valor numerico 
-        switch (this.estado) {
-            case PENDIENTE: return 1;
-            case EN_EJECUCION: return 2;
-            case COMPLETADO: return 3;
-            default: return 1;
-        }
-    }*/
-    
-    public EstadoOrden obtenerEstadoOrden() {
-        return this.estado;
-    }
 
+    // metodo para marcar como completado
 	public boolean estaCompletada() {
 		return estado == EstadoOrden.COMPLETADO;
 	}
-    public Usuario obtenerPrimerVoluntario() { // ahora devuelve Usuario
-      if (voluntarios.isEmpty()) {
-          return null; // no hay voluntarios disponibles
-      }
-      return voluntarios.get(0); // devuelve el primero de la lista
-    }
-  
-    public int obtenerId() {
-        return this.id;
-    }
 
-    public LocalDateTime obtenerFechaCreacion() {
-        return this.fechaGeneracion;
-    }
-
-    public ArrayList<Visita> obtenerVisitas() {
-        return this.visitas;
-    }
-  
-  
-    // metodo de ayuda para el toString
-    public String describirEstado() {
-        return this.estado.toString();
-    }
-  
-	public boolean equals(OrdenRetiro obj) {
-        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidos.equals(obj.pedidos));
-    }
-
+	// metodo para agregar una visita
     public void agregarVisita(Visita visita) {
         this.visitas.add(visita);
         // cambiar a EN_EJECUCION si estaba PENDIENTE
@@ -140,6 +170,7 @@ public class OrdenRetiro {
         }
     }
 
+    // metodo para registrar una visita
     public void registrarVisita(LocalDateTime fechaHora, String observacion) throws ObjetoNuloException, CampoVacioException {
         if (fechaHora == null) {
             throw new ObjetoNuloException("La fecha de la visita no puede ser nula.");
@@ -157,54 +188,14 @@ public class OrdenRetiro {
             this.estado = EstadoOrden.EN_EJECUCION;
         }
     }
-
-    public Usuario obtenerDonante() { // ahora devuelve Usuario
-        return (!this.pedidos.isEmpty() && this.pedidos.get(0) != null) ? this.pedidos.get(0).obtenerDonante() : null;
+    
+    // metodo de ayuda para el toString
+    public String describirEstado() {
+        return this.estado.toString();
+    }
+  
+	public boolean equals(OrdenRetiro obj) {
+        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidos.equals(obj.pedidos));
     }
     
-    public List<PedidosDonacion> obtenerPedidos() {
-        return new ArrayList<>(this.pedidos);
-    }
-    
-    public PedidosDonacion obtenerPedidoPorId(int idPedido) {
-        for (PedidosDonacion pedido : this.pedidos) {
-            if (pedido.obtenerId() == idPedido) {
-                return pedido;
-            }
-        }
-        return null;
-    }
-
-    public Vehiculo obtenerVehiculo() {
-        return this.vehiculo;
-    }
-
-    public void asignarVehiculo(Vehiculo vehiculo) {
-        this.vehiculo = vehiculo;
-    }
-
-    public Usuario obtenerVoluntarioPrincipal() { // ahora devuelve Usuario
-        return voluntarios.isEmpty() ? null : voluntarios.get(0);
-    }
-
-    public Usuario getVoluntario() { //  ahora devuelve Usuario
-        return obtenerVoluntarioPrincipal();
-    }
-
-    public int getId() {
-        return obtenerId();
-    }
-
-
-    public LocalDateTime getFechaCreacion() {
-        return obtenerFechaCreacion();
-    }
-
-    public Usuario getDonante() { // ahora devuelve Usuario
-        return obtenerDonante();
-    }
-
-    public Vehiculo getVehiculo() {
-        return obtenerVehiculo();
-    }
 }

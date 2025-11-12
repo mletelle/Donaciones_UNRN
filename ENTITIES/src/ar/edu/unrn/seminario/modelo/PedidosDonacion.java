@@ -10,15 +10,15 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
-	// variables de clase
+	// Variables 
 	private static int secuencia = 0;//para usarlo de id
 
-	// catalogos
+	// Constantes catalogo
 	private static final int VEHICULO_AUTO = 1;
 	private static final int VEHICULO_CAMIONETA = 2;
 	private static final int VEHICULO_CAMION = 3;
 
-	// atributos
+	// Atributos
 	private int id;
 	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
@@ -28,7 +28,8 @@ public class PedidosDonacion {
 	private OrdenRetiro ordenRetiro; // 1 a 1
 	private EstadoPedido estadoPedido; //  guardar el estado del pedido
 
-	// constructor con todos los parametros
+	// Constructores
+	// con todos los atributos
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
@@ -47,6 +48,7 @@ public class PedidosDonacion {
 		this.donante = d;
 		this.estadoPedido = EstadoPedido.PENDIENTE; // inicializar en PENDIENTE
 	}
+	
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
@@ -55,6 +57,7 @@ public class PedidosDonacion {
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
+	
 	// getters
 	public int obtenerId() {
 		return id;
@@ -112,6 +115,7 @@ public class PedidosDonacion {
 		this.ordenRetiro = o;
 	}
 
+	// Metodos
 	// metodos para cambiar el estado
 	public void marcarEnEjecucion() throws ReglaNegocioException {
 		// validar transicion de estado

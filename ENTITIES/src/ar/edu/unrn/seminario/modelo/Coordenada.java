@@ -2,9 +2,12 @@ package ar.edu.unrn.seminario.modelo;
 
 public class Coordenada {
 
+	// Atributos
     private double latitud;
     private double longitud;
-    //crea una coordenada con latitud y longitud
+    
+    
+    // Constructores
     public Coordenada(double latitud, double longitud) {
         this.latitud = latitud;
         this.longitud = longitud;
@@ -23,11 +26,14 @@ public class Coordenada {
     public String toString() {
         return "(" + latitud + ", " + longitud + ")";
     }
+    
     public boolean equals(Coordenada obj) {
         return (latitud == obj.latitud && longitud == obj.longitud);//si son iguales todos los atributos, son iguales
     }
+    
     @Override 
     public int hashCode() {
         return java.util.Objects.hash(latitud, longitud); 
     }
+    
 }

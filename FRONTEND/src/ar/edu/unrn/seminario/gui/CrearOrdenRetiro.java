@@ -23,7 +23,8 @@ public class CrearOrdenRetiro extends JDialog {
 
 
     public CrearOrdenRetiro(Window owner, IApi api) {
-        super(owner, "Crear Orden de Retiro", ModalityType.APPLICATION_MODAL);
+        
+    	super(owner, "Crear Orden de Retiro", ModalityType.APPLICATION_MODAL);
         this.api = api;
 
         setLayout(new BorderLayout());
@@ -37,6 +38,7 @@ public class CrearOrdenRetiro extends JDialog {
                 return super.getColumnClass(columnIndex);
             }
         };
+        
         pedidosTable = new JTable(pedidosTableModel);
         add(new JScrollPane(pedidosTable), BorderLayout.CENTER);
 
@@ -68,6 +70,8 @@ public class CrearOrdenRetiro extends JDialog {
         setLocationRelativeTo(owner);
     }
 
+    // Metodos
+    // meotodo para cargar pedidos pendientes
     private void cargarPedidosPendientes() {
         pedidosTableModel.setRowCount(0);
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
@@ -76,6 +80,7 @@ public class CrearOrdenRetiro extends JDialog {
         }
     }
 
+    // metodo para cargar voluntarios
     private void cargarVoluntarios() {
         List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios();
         for (VoluntarioDTO voluntario : voluntarios) {
@@ -94,6 +99,7 @@ public class CrearOrdenRetiro extends JDialog {
         });
     }
 
+    // metodo para asignar y crear una orden de retiro
     private void asignarYCrearOrden() {
         List<Integer> idsPedidosSeleccionados = new ArrayList<>();
 
@@ -126,4 +132,5 @@ public class CrearOrdenRetiro extends JDialog {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
 }

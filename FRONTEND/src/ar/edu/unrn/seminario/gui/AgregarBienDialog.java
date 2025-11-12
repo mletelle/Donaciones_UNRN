@@ -91,6 +91,7 @@ public class AgregarBienDialog extends JDialog {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // Accion del comboBox de categoria
         categoriaComboBox.addActionListener(event -> {
             String categoria = (String) categoriaComboBox.getSelectedItem();
             if ("Alimentos".equals(categoria)) {
@@ -101,6 +102,7 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // accion del boton "Aceptar"
         aceptarButton.addActionListener(event -> {
             try {
                 String categoria = (String) categoriaComboBox.getSelectedItem();
@@ -133,6 +135,7 @@ public class AgregarBienDialog extends JDialog {
             }
         });
 
+        // Accion del boton cancelar
         cancelarButton.addActionListener(event -> dispose());
     }
 
@@ -150,7 +153,8 @@ public class AgregarBienDialog extends JDialog {
             default: return BienDTO.CATEGORIA_OTROS;
         }
     }
-
+    
+    // Getters
     public BienDTO getBien() {
         return bien;
     }

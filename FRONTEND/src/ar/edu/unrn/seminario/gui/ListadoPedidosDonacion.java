@@ -35,6 +35,8 @@ public class ListadoPedidosDonacion extends JFrame {
         cargarPedidos(api);
     }
 
+    // Metodos
+    // metodo para cargar pedidos
     private void cargarPedidos(IApi api) {
         tableModel.setRowCount(0);
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
@@ -42,4 +44,5 @@ public class ListadoPedidosDonacion extends JFrame {
             tableModel.addRow(new Object[] { pedido.getId(), pedido.getFecha(), pedido.getTipoVehiculo(), pedido.getObservaciones(), pedido.getDonante() });
         }
     }
+    
 }
