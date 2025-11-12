@@ -14,130 +14,167 @@ import ar.edu.unrn.seminario.modelo.Usuario;
 public class UsuarioDAOJDBC implements UsuarioDao {
 
 	@Override
-	public void create(Usuario usuario) {
+	public void create(Usuario usuario, Connection conn) throws SQLException {
+		PreparedStatement statement = null;
 		try {
-
-			Connection conn = ConnectionManager.getConnection();
-			PreparedStatement statement = conn
-					.prepareStatement("INSERT INTO usuarios(usuario, contrasena, nombre, email, activo,rol) "
-							+ "VALUES (?, ?, ?, ?, ?, ?)");
-
+			statement = conn
+					.prepareStatement("INSERT INTO usuarios(usuario, contrasena, nombre, correo, activo, rol, apellido, dni, direccion) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+// atributos modificados de proyecto base, tiene mas atributos el nuestro
 			statement.setString(1, usuario.getUsuario());
 			statement.setString(2, usuario.getContrasena());
 			statement.setString(3, usuario.getNombre());
 			statement.setString(4, usuario.getEmail());
 			statement.setBoolean(5, usuario.isActivo());
 			statement.setInt(6, usuario.getRol().getCodigo());
+			statement.setString(7, usuario.getApellido());
+			statement.setInt(8, usuario.getDni());
+			statement.setString(9, usuario.obtenerDireccion());
+			
 			int cantidad = statement.executeUpdate();
-			if (cantidad > 0) {
-				// System.out.println("Modificando " + cantidad + " registros");
-			} else {
-				System.out.println("Error al actualizar");
-				// TODO: disparar Exception propia
+			if (cantidad <= 0) {
+				throw new SQLException("Error al insertar usuario");
 			}
-
-		} catch (SQLException e) {
-			System.out.println("Error al procesar consulta");
-			// TODO: disparar Exception propia
-		} catch (Exception e) {
-			System.out.println("Error al insertar un usuario");
-			// TODO: disparar Exception propia
 		} finally {
-			ConnectionManager.disconnect();
+			if (statement != null) statement.close();
 		}
-
 	}
 
 	@Override
-	public void update(Usuario usuario) {
-		// TODO Auto-generated method stub
-
-//		if (e instanceof SQLIntegrityConstraintViolationException) {
-//	        // Duplicate entry
-//	    } else {
-//	        // Other SQL Exception
-//	    }
-
-	}
-
-	@Override
-	public void remove(Long id) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void remove(Usuario rol) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public Usuario find(String username) {
-		Usuario usuario = null;
+	public void update(Usuario usuario, Connection conn) throws SQLException {
+		PreparedStatement statement = null;
 		try {
-			Connection conn = ConnectionManager.getConnection();
-			PreparedStatement statement = conn.prepareStatement(
-					"SELECT u.usuario,  u.contrasena, u.nombre, u.email, r.codigo as codigo_rol, r.nombre as nombre_rol "
-							+ " FROM usuarios u JOIN roles r ON (u.rol = r.codigo) " + " WHERE u.usuario = ?");
+			statement = conn.prepareStatement(
+					"UPDATE usuarios SET contrasena = ?, nombre = ?, correo = ?, activo = ?, apellido = ?, dni = ?, direccion = ? WHERE usuario = ?");
+			// no se puede modificar el usuario ni el rol, pero quedan por las dudas
+			statement.setString(1, usuario.getContrasena());
+			statement.setString(2, usuario.getNombre());
+			statement.setString(3, usuario.getEmail());
+			statement.setBoolean(4, usuario.isActivo());
+			statement.setString(5, usuario.getApellido());
+			statement.setInt(6, usuario.getDni());
+			statement.setString(7, usuario.obtenerDireccion());
+			statement.setString(8, usuario.getUsuario());
+			
+			statement.executeUpdate();
+		} finally {
+			if (statement != null) statement.close();
+		}
+	}
+
+	@Override
+	public Usuario find(String username, Connection conn) throws SQLException {
+		Usuario usuario = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = conn.prepareStatement(
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+							+ "WHERE u.usuario = ?");
 
 			statement.setString(1, username);
-			ResultSet rs = statement.executeQuery();
+			rs = statement.executeQuery();
 			if (rs.next()) {
-				Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
-				// TODO: Añadir columnas apellido, dni, ubicacion a la base de datos
-				// Por ahora usamos valores por defecto para que compile
-				usuario = new Usuario(rs.getString("usuario"), rs.getString("contrasena"), rs.getString("nombre"),
-						rs.getString("email"), rol, "SinApellido", 0, null);
+				try {
+					Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
+					usuario = new Usuario(
+							rs.getString("usuario"), 
+							rs.getString("contrasena"), 
+							rs.getString("nombre"),
+							rs.getString("correo"), 
+							rol, 
+							rs.getString("apellido"), 
+							rs.getInt("dni"), 
+							rs.getString("direccion"));
+					if (!rs.getBoolean("activo")) {
+						usuario.desactivar();
+					}
+				} catch (Exception e) {
+					throw new SQLException("Error buscando Usuario ", e);
+				}
 			}
-
-		} catch (SQLException e) {
-			System.out.println("Error al procesar consulta");
-			// TODO: disparar Exception propia
-			// throw new AppException(e, e.getSQLState(), e.getMessage());
-		} catch (Exception e) {
-			// TODO: disparar Exception propia
-			// throw new AppException(e, e.getCause().getMessage(), e.getMessage());
 		} finally {
-			ConnectionManager.disconnect();
+			if (rs != null) rs.close();
+			if (statement != null) statement.close();
 		}
-
 		return usuario;
 	}
 
 	@Override
-	public List<Usuario> findAll() {
+	public List<Usuario> findAll(Connection conn) throws SQLException {
 		List<Usuario> usuarios = new ArrayList<Usuario>();
+		Statement statement = null;
+		ResultSet rs = null;
 		try {
-			Connection conn = ConnectionManager.getConnection();
-			Statement statement = conn.createStatement();
-			ResultSet rs = statement.executeQuery(
-					"SELECT u.usuario,  u.contrasena, u.nombre, u.email, r.codigo as codigo_rol, r.nombre as nombre_rol  "
-							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) ");
+			statement = conn.createStatement();
+			rs = statement.executeQuery(
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo)");
+// para el listado completo, sin filtro de activos
+			while (rs.next()) {
+				try {
+					Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
+					Usuario usuario = new Usuario(
+							rs.getString("usuario"), 
+							rs.getString("contrasena"),
+							rs.getString("nombre"), 
+							rs.getString("correo"), 
+							rol, 
+							rs.getString("apellido"), 
+							rs.getInt("dni"),
+							rs.getString("direccion"));
+					if (!rs.getBoolean("activo")) {
+						usuario.desactivar();
+					}
+					usuarios.add(usuario);
+				} catch (Exception e) {
+					System.err.println("Error encontrando Usuario: " + e.getMessage());
+				}
+			}
+		} finally {
+			if (rs != null) rs.close();
+			if (statement != null) statement.close();
+		}
+		return usuarios;
+	}
+
+	@Override
+	public List<Usuario> findByRol(int codigoRol, Connection conn) throws SQLException {
+		List<Usuario> usuarios = new ArrayList<Usuario>();
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = conn.prepareStatement(
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+							+ "WHERE r.codigo = ? AND u.activo = 1");
+			
+			statement.setInt(1, codigoRol);
+			rs = statement.executeQuery();
 
 			while (rs.next()) {
-
-				Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
-				// TODO: Añadir columnas apellido, dni, ubicacion a la base de datos
-				// Por ahora usamos valores por defecto para que compile
-				Usuario usuario = new Usuario(rs.getString("usuario"), rs.getString("contrasena"),
-						rs.getString("nombre"), rs.getString("email"), rol, "SinApellido", 0, null);
-
-				usuarios.add(usuario);
+				try {
+					Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
+					Usuario usuario = new Usuario(
+							rs.getString("usuario"), 
+							rs.getString("contrasena"),
+							rs.getString("nombre"), 
+							rs.getString("correo"), 
+							rol, 
+							rs.getString("apellido"), 
+							rs.getInt("dni"),
+							rs.getString("direccion"));
+					// no hay necesidad de verificar activo ya que filtramos en SQL
+					usuarios.add(usuario);
+				} catch (Exception e) {
+					System.err.println("Error buscando Usuario: " + e.getMessage());
+				}
 			}
-		} catch (SQLException e) {
-			System.out.println("Error de mySql\n" + e.toString());
-			// TODO: disparar Exception propia
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			// TODO: disparar Exception propia
-		} catch (Exception e) {
-			System.out.println("Error al crear usuario: " + e.getMessage());
-			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect();
+			if (rs != null) rs.close();
+			if (statement != null) statement.close();
 		}
-
 		return usuarios;
 	}
 

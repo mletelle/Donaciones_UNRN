@@ -57,6 +57,21 @@ public class PedidosDonacion {
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
+	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
+	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante) throws ObjetoNuloException {
+		if (fecha == null) {
+			throw new ObjetoNuloException("La fecha no puede ser nula.");
+		}
+		if (donante == null) {
+			throw new ObjetoNuloException("El donante no puede ser nulo.");
+		}
+		this.fecha = fecha;
+		this.bienes = new ArrayList<>();
+		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
+		this.observaciones = observaciones;
+		this.donante = donante;
+		this.estadoPedido = EstadoPedido.PENDIENTE;
+	}
 	
 	// getters
 	public int obtenerId() {

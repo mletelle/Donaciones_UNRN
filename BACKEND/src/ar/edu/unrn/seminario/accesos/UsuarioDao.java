@@ -1,20 +1,21 @@
 package ar.edu.unrn.seminario.accesos;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import ar.edu.unrn.seminario.modelo.Usuario;
 
 public interface UsuarioDao {
-	void create(Usuario Usuario);
+	
+	void create(Usuario usuario, Connection conn) throws SQLException;
 
-	void update(Usuario Usuario);
+	void update(Usuario usuario, Connection conn) throws SQLException;
 
-	void remove(Long id);
+	Usuario find(String username, Connection conn) throws SQLException;
 
-	void remove(Usuario Usuario);
-
-	Usuario find(String username);
-
-	List<Usuario> findAll();
+	List<Usuario> findAll(Connection conn) throws SQLException;
+	
+	List<Usuario> findByRol(int codigoRol, Connection conn) throws SQLException;
 
 }

@@ -3,6 +3,10 @@ USE `seminario_2025_1`;
 -- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)
 --
 -- Host: 127.0.0.1    Database: seminario_2025_1
+-- Chicos hay que tener las mismas credenciales, o cada uno modifique su conectionamnager, hay que crear el usuario y otorgarle permisos
+-- CREATE USER 'seminario'@'localhost' IDENTIFIED BY 'Seminario_Pass_123!';
+-- GRANT ALL PRIVILEGES ON seminario_2025_1.* TO 'seminario'@'localhost';
+-- FLUSH PRIVILEGES;
 -- ------------------------------------------------------
 -- Server version	8.0.43-0ubuntu0.24.04.2
 
