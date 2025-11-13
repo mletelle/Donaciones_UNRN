@@ -6,11 +6,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.modelo.EstadoOrden;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
+import ar.edu.unrn.seminario.modelo.Ubicacion;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Vehiculo;
 
@@ -29,11 +32,10 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 					"INSERT INTO ordenes_retiro(fecha_generacion, estado, usuario_voluntario, patente_vehiculo) "
 					+ "VALUES (?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
-			// mismo que el contructor de memory pero cambian a prepared statement
-			statement.setTimestamp(1, Timestamp.valueOf(orden.obtenerFechaCreacion()));
-			statement.setString(2, orden.obtenerNombreEstado());
 			
-			// usuario_voluntario
+			statement.setTimestamp(1, Timestamp.valueOf(orden.obtenerFechaCreacion()));
+			statement.setString(2, orden.obtenerNombreEstado()); // Usa el toString() del Enum ("Pendiente")
+			
 			Usuario voluntario = orden.obtenerVoluntarioPrincipal();
 			if (voluntario != null) {
 				statement.setString(3, voluntario.getUsuario());
@@ -41,7 +43,6 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 				statement.setNull(3, java.sql.Types.VARCHAR);
 			}
 			
-			// patente_vehiculo
 			Vehiculo vehiculo = orden.obtenerVehiculo();
 			if (vehiculo != null) {
 				statement.setString(4, vehiculo.getPatente());
@@ -56,7 +57,9 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			
 			generatedKeys = statement.getGeneratedKeys();
 			if (generatedKeys.next()) {
-				return generatedKeys.getInt(1);
+				int generatedId = generatedKeys.getInt(1);
+				orden.setId(generatedId); // Actualiza el ID del objeto en memoria
+				return generatedId;
 			} else {
 				throw new SQLException("No se pudo obtener el ID de la orden");
 			}
@@ -72,8 +75,8 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 		try {
 			statement = conn.prepareStatement(
 					"UPDATE ordenes_retiro SET estado = ? WHERE id = ?");
-			// solo se puede actualizar el estado por ahora, no editables otros campos
-			statement.setString(1, orden.obtenerNombreEstado());
+			
+			statement.setString(1, orden.obtenerNombreEstado()); // Usa el toString() del Enum
 			statement.setInt(2, orden.getId());
 			
 			statement.executeUpdate();
@@ -113,7 +116,7 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			statement = conn.prepareStatement(
 					"SELECT id, fecha_generacion, estado, usuario_voluntario, patente_vehiculo "
 					+ "FROM ordenes_retiro WHERE estado = ?");
-			statement.setString(1, estado);
+			statement.setString(1, estado); // Busca por el String "Pendiente"
 			rs = statement.executeQuery();
 			
 			while (rs.next()) {
@@ -158,12 +161,37 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 		return ordenes;
 	}
 	
+	// **** MÉTODO MAPEADOR CORREGIDO ****
 	private OrdenRetiro mapearResultadoOrden(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			int idOrden = rs.getInt("id");
+            LocalDateTime fechaGen = rs.getTimestamp("fecha_generacion").toLocalDateTime();
+            String estadoStr = rs.getString("estado");
+            
+            // Convertir String (ej. "Pendiente") a Enum (EstadoOrden.PENDIENTE)
+            EstadoOrden estado = EstadoOrden.PENDIENTE; // Default
+            if (estadoStr.equals(EstadoOrden.EN_EJECUCION.toString())) {
+                estado = EstadoOrden.EN_EJECUCION;
+            } else if (estadoStr.equals(EstadoOrden.COMPLETADO.toString())) {
+                estado = EstadoOrden.COMPLETADO;
+            }
+            // (Falta CANCELADO si lo implementas)
+            
 			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos para esta orden
-			OrdenRetiro orden = new OrdenRetiro(pedidos, null); // crea orden sin voluntario ni vehiculo
-			String usuarioVoluntario = rs.getString("usuario_voluntario"); // obtener y asignar voluntario
+            
+            // Obtener Ubicacion (usando la del primer pedido si existe)
+            Ubicacion destino = null;
+            if (!pedidos.isEmpty() && pedidos.get(0).getDonante() != null) {
+                destino = pedidos.get(0).getDonante().getUbicacionEntidad();
+                if (destino == null) { // Fallback por si getUbicacionEntidad() devuelve null
+                     destino = new Ubicacion(pedidos.get(0).getDonante().obtenerDireccion(), "N/A", "N/A", 0.0, 0.0);
+                }
+            }
+
+			// **** USAR EL NUEVO CONSTRUCTOR DE HIDRATACIÓN ****
+			OrdenRetiro orden = new OrdenRetiro(idOrden, fechaGen, estado, destino, pedidos); 
+			
+            String usuarioVoluntario = rs.getString("usuario_voluntario"); // obtener y asignar voluntario
 			if (usuarioVoluntario != null) {
 				Usuario voluntario = usuarioDao.find(usuarioVoluntario, conn);
 				if (voluntario != null) {
@@ -179,10 +207,9 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 				}
 			}
 			// no asignamos visitas aqui para evitar complejidad
-			// se pueden cargar aparte con VisitaDao si es necesario
 			return orden;
 		} catch (Exception e) {
-			throw new SQLException("Error al mapear OrdenRetiro", e);
+			throw new SQLException("Error al mapear OrdenRetiro: " + e.getMessage(), e);
 		}
 	}
 
