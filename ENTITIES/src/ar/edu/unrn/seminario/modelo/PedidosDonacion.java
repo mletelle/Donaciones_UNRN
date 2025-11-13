@@ -10,15 +10,15 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
-	// Variables 
+	// variables de clase
 	private static int secuencia = 0;//para usarlo de id
 
-	// Constantes catalogo
+	// catalogos
 	private static final int VEHICULO_AUTO = 1;
 	private static final int VEHICULO_CAMIONETA = 2;
 	private static final int VEHICULO_CAMION = 3;
 
-	// Atributos
+	// atributos
 	private int id;
 	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
@@ -28,8 +28,7 @@ public class PedidosDonacion {
 	private OrdenRetiro ordenRetiro; // 1 a 1
 	private EstadoPedido estadoPedido; //  guardar el estado del pedido
 
-	// Constructores
-	// Constructor para NUEVOS pedidos (usa secuencia)
+	// constructor con todos los parametros
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
@@ -48,16 +47,15 @@ public class PedidosDonacion {
 		this.donante = d;
 		this.estadoPedido = EstadoPedido.PENDIENTE; // inicializar en PENDIENTE
 	}
-	
 	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
 	}
 
+	// constructor para LocalDateTime
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
 
-	// Este constructor es usado por el DAO para "hidratar" (cargar) el objeto desde la BD
 	public PedidosDonacion(int id, LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante, EstadoPedido estado) throws ObjetoNuloException {
 		if (donante == null) {
 			throw new ObjetoNuloException("El donante no puede ser nulo.");
@@ -70,6 +68,7 @@ public class PedidosDonacion {
 		this.estadoPedido = estado;
 		this.bienes = new ArrayList<>(); // Los bienes se cargan por separado (si es necesario)
 	}
+
 	
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
 	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante) throws ObjetoNuloException {
@@ -122,11 +121,10 @@ public class PedidosDonacion {
 		return this.id;
 	}
 	
-	// SETID (para que el DAO actualice el ID después de un INSERT)
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 
 	public Usuario getDonante() {
 		return this.donante;
@@ -200,9 +198,10 @@ public class PedidosDonacion {
 		}
 	}
 	public boolean equals(PedidosDonacion obj) {
-		return (fecha.equals(obj.fecha))&&
-		(this.tipoVehiculo==obj.tipoVehiculo)&&
-		(this.donante.equals(obj.donante));
+		if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+		final PedidosDonacion other = (PedidosDonacion) obj;
+		return this.id == other.id; // Comparar por ID
 	}	
 
 }

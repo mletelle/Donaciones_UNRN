@@ -22,8 +22,6 @@ public class OrdenRetiro {
     private int id;
     private Vehiculo vehiculo;
 
-    // **** NUEVO CONSTRUCTOR PARA JDBC ****
-    // Este constructor es para cargar ("hidratar") una orden desde la BD
     public OrdenRetiro(int id, LocalDateTime fechaGeneracion, EstadoOrden estado, Ubicacion dest, List<PedidosDonacion> pedidos) throws ObjetoNuloException {
         if (pedidos == null) {
              throw new ObjetoNuloException("La lista de pedidos no puede ser nula.");
@@ -41,7 +39,6 @@ public class OrdenRetiro {
         }
     }
     
-    // constructor para NUEVAS ordenes (usa secuencia)
     public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
         if (pedidos == null || pedidos.isEmpty()) {
             throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
@@ -143,12 +140,10 @@ public class OrdenRetiro {
           }
           this.voluntarios.add(voluntario);
       }
-      
-      // **** MÉTODO FALTANTE AGREGADO ****
+
       public void setId(int id) {
           this.id = id;
       }
-      // **********************************
     
     // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos

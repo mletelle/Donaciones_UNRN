@@ -49,7 +49,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			generatedKeys = statement.getGeneratedKeys(); 
 			if (generatedKeys.next()) {
 				int generatedId = generatedKeys.getInt(1);
-				pedido.setId(generatedId); //Actualiza el ID del objeto en memoria
+				pedido.setId(generatedId); 
 				return generatedId;
 			} else {
 				throw new SQLException("No se pudo crear. Error al obtener ID.");
@@ -111,7 +111,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.createStatement();
-			// *** CORRECCIÓN: Busca por el String "Pendiente" del Enum ***
+			
 			rs = statement.executeQuery(
 					"SELECT id, fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro "
 					+ "FROM pedidos_donacion WHERE estado = 'Pendiente'"); 
@@ -159,7 +159,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		}
 		return pedidos;
 	}
-	
+
 	private PedidosDonacion mapearResultadoPedido(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			String usuarioDonante = rs.getString("usuario_donante");
@@ -185,7 +185,6 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			}
 			// (Falta CANCELADO si lo implementas)
 
-			// Usar el nuevo constructor que incluye el ID 
 			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;
