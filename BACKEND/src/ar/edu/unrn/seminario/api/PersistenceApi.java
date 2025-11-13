@@ -98,7 +98,7 @@ public class PersistenceApi implements IApi {
 			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
 				throw e;
 			}
-			throw e;
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
 		} finally { // asegura restaurar auto-commit y desconectar
 			if (conn != null) {
 				try {
@@ -541,7 +541,10 @@ public class PersistenceApi implements IApi {
 				e2.printStackTrace();
 			}
 			// Lanza la excepción original (ReglaNegocio, etc.)
-			throw e;
+			if (e instanceof ReglaNegocioException || e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
 		} finally {
 			if (conn != null) {
 				try {
@@ -630,9 +633,8 @@ public class PersistenceApi implements IApi {
 			// Crear la orden y obtener su ID de la base de datos
 			int idOrden = ordenDao.create(orden, conn);
 			
-			//ASIGNAR EL ID DE LA BD AL OBJETO EN MEMORIA
-			orden.setId(idOrden); 
-			
+			// **** LÍNEA CORREGIDA (DESCOMENTADA) ****
+			orden.setId(idOrden); // Asignar el ID de la BD al objeto en memoria
 			
 			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido
 				pedido.asignarOrden(orden); // Asigna la orden (que ahora tiene el ID de BD correcto)
