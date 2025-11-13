@@ -161,9 +161,7 @@ public class OrdenRetiro {
           this.voluntarios.add(voluntario);
       }
       
-      public void setId(int id) {
-          this.id = id;
-      }
+
     
     // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos
