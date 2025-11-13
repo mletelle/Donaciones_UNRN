@@ -31,7 +31,7 @@ public class OrdenRetiro {
         this.estado = EstadoOrden.PENDIENTE;
         this.destino = dest;
         this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
+        this.voluntarios = new ArrayList<Usuario>(); // ahora anda
         this.visitas = new ArrayList<Visita>();
         // asignar esta orden a cada pedido
         for (PedidosDonacion pedido : this.pedidos) {
@@ -123,6 +123,10 @@ public class OrdenRetiro {
               this.voluntarios = new ArrayList<>();
           }
           this.voluntarios.add(voluntario);
+      }
+
+      public void setId(int id) {
+          this.id = id;
       }
     
     // metodos

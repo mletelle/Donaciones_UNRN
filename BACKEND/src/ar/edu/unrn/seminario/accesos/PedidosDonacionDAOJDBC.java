@@ -27,7 +27,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement = conn.prepareStatement(
 					"INSERT INTO pedidos_donacion(fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro) "
 					+ "VALUES (?, ?, ?, ?, ?, ?)",
-					Statement.RETURN_GENERATED_KEYS); // el generated keys para obtener el id autogenerado, si no fallaba
+					Statement.RETURN_GENERATED_KEYS); // Pedir las claves generadas
 			
 			statement.setTimestamp(1, Timestamp.valueOf(pedido.obtenerFecha()));
 			statement.setString(2, pedido.describirTipoVehiculo());
@@ -35,11 +35,10 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement.setString(4, pedido.getDonante().getUsuario());
 			statement.setString(5, pedido.obtenerEstado());
 			
-			// id_orden_retiro puede ser null
 			if (pedido.obtenerOrden() != null) {
 				statement.setInt(6, pedido.obtenerOrden().getId());
 			} else {
-				statement.setNull(6, java.sql.Types.INTEGER);// sin esto tira error
+				statement.setNull(6, java.sql.Types.INTEGER);
 			}
 			
 			int affectedRows = statement.executeUpdate();
@@ -47,13 +46,13 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 				throw new SQLException("No se pudo crear. Error.");
 			}
 
-			generatedKeys = statement.getGeneratedKeys(); // sirve para obtener las claves generadas automaticamente por la base de datos
+			generatedKeys = statement.getGeneratedKeys(); 
 			if (generatedKeys.next()) {
 				int generatedId = generatedKeys.getInt(1);
-				pedido.setId(generatedId); // *** CORRECCIÓN: Actualiza el ID del objeto en memoria ***
+				pedido.setId(generatedId); 
 				return generatedId;
 			} else {
-				throw new SQLException("No se pudo crear. Error.");
+				throw new SQLException("No se pudo crear. Error al obtener ID.");
 			}
 		} finally {
 			if (generatedKeys != null) generatedKeys.close();
@@ -122,7 +121,8 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 					PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
 					pedidos.add(pedido);
 				} catch (Exception e) {
-					System.err.println("Error al crear registro: " + e.getMessage());
+					System.err.println("Error al mapear PedidosDonacion: " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		} finally {
@@ -149,7 +149,8 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 					PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
 					pedidos.add(pedido);
 				} catch (Exception e) {
-					System.err.println("Error al crear PedidosDonacion: " + e.getMessage());
+					System.err.println("Error al mapear PedidosDonacion: " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		} finally {
@@ -159,37 +160,33 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		return pedidos;
 	}
 	
+	// **** MÉTODO MAPEADOR CORREGIDO ****
 	private PedidosDonacion mapearResultadoPedido(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			String usuarioDonante = rs.getString("usuario_donante");
 			Usuario donante = usuarioDao.find(usuarioDonante, conn);
 			
 			if (donante == null) {
-				throw new SQLException("Donante no encontrado: " + usuarioDonante);
+				throw new SQLException("Error de integridad: Donante no encontrado: " + usuarioDonante);
 			}
-
-			int id = rs.getInt("id"); // LEER EL ID
+			
+			// Leer los datos de la BD
+			int id = rs.getInt("id"); // *** CORRECCIÓN: LEER EL ID ***
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();
 			String tipoVehiculo = rs.getString("tipo_vehiculo");
 			String observaciones = rs.getString("observaciones");
 			String estadoStr = rs.getString("estado");
 			
 			// Convertir String del estado a Enum
-			EstadoPedido estado;
-			try {
-				// Busca el Enum por su descripción (toString)
-				if (estadoStr.equals(EstadoPedido.EN_EJECUCION.toString())) {
-					estado = EstadoPedido.EN_EJECUCION;
-				} else if (estadoStr.equals(EstadoPedido.COMPLETADO.toString())) {
-					estado = EstadoPedido.COMPLETADO;
-				} else {
-					estado = EstadoPedido.PENDIENTE;
-				}
-			} catch (Exception e) {
-				estado = EstadoPedido.PENDIENTE; // Default
+			EstadoPedido estado = EstadoPedido.PENDIENTE; // Default
+			if (estadoStr.equals(EstadoPedido.EN_EJECUCION.toString())) {
+				estado = EstadoPedido.EN_EJECUCION;
+			} else if (estadoStr.equals(EstadoPedido.COMPLETADO.toString())) {
+				estado = EstadoPedido.COMPLETADO;
 			}
+			// (Falta CANCELADO si lo implementas)
 
-			// Usar el nuevo constructor que incluye el ID
+			// *** CORRECCIÓN: Usar el nuevo constructor que incluye el ID ***
 			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;
