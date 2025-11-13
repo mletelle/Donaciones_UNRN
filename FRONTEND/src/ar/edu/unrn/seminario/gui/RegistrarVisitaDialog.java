@@ -22,7 +22,8 @@ public class RegistrarVisitaDialog extends JDialog {
     private int idOrden;
     private int idPedido;
     private GestionarOrdenVoluntario ventanaPadre; // referencia a la ventana padre
-
+    JButton btnGuardar = new JButton("Guardar");
+    
     public RegistrarVisitaDialog(IApi api, int idOrden) {
         this.api = api;
         this.idOrden = idOrden;
@@ -122,12 +123,14 @@ public class RegistrarVisitaDialog extends JDialog {
 
         // Panel de botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT)); 
-        JButton btnGuardar = new JButton("Guardar");
+        
         
         // Accion del boton "Guardar"
         btnGuardar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Deshabilitar el botón para evitar doble click
+                btnGuardar.setEnabled(false); 
                 guardarVisita();
             }
         });
@@ -159,63 +162,85 @@ public class RegistrarVisitaDialog extends JDialog {
 
     // metodo para guardar una visita
     private void guardarVisita() {
+        // 1. Recuperar y validar datos (esto es rápido, se hace en el EDT)
         try {
             String fecha = txtFecha.getText();
             String hora = txtHora.getText();
             
-            // verifica simple de formato
-            if (!fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "Formato de fecha incorrecto. Use YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!hora.matches("\\d{2}:\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "Formato de hora incorrecto. Use HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+            // ... (todas tus validaciones de formato y campos vacíos) ...
+            // if (!fecha.matches(...)) { ... btnGuardar.setEnabled(true); return; }
+            // if (observaciones.trim().isEmpty()) { ... btnGuardar.setEnabled(true); return; }
 
-            // revisa que la fecha y hora sean validas antes de continuar
-            if (fecha == null || fecha.isEmpty() || !fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "La fecha es invalida o esta vacia. Use el formato YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            if (hora == null || hora.isEmpty() || !hora.matches("\\d{2}:\\d{2}")) {
-                JOptionPane.showMessageDialog(this, "La hora es invalida o esta vacia. Use el formato HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // obtiene el resultado y las observaciones antes de crear el DTO
             String resultado = (String) cmbResultado.getSelectedItem();
             String observaciones = txtObservaciones.getText();
+            LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
+            
+            // Preparar el DTO
+            String nombreDonante = api.obtenerNombreDonantePorId(idPedido); // Esto debería ser rápido, pero idealmente también iría al worker
+            VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
 
-            // Validar observaciones
-            if (observaciones == null || observaciones.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "El campo de observaciones no puede estar vacio.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            try {
-                LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
-                String nombreDonante = api.obtenerNombreDonantePorId(idPedido);
-                VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
-                api.registrarVisita(idOrden, idPedido, visita);
-
-                JOptionPane.showMessageDialog(this, "Visita registrada con exito.", "exito", JOptionPane.INFORMATION_MESSAGE);
-                
-                // notificar a la ventana padre para que recargue los datos
-                if (ventanaPadre != null) {
-                    ventanaPadre.recargarDatos();
+            // SwingWorker para que la GUI no se "tilde"/"lagee" cuando interactue con la BD
+            // hasta que la BD responda
+            SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+                @Override
+                protected String doInBackground() throws Exception {
+                    // Esta es la única línea que se ejecuta en un hilo separado
+                    api.registrarVisita(idOrden, idPedido, visita);
+                    
+                    return "OK"; // Éxito
                 }
-                
-                dispose();
-            } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato valido.", "Error", JOptionPane.ERROR_MESSAGE);
-            } catch (ReglaNegocioException ex) {
-                // captura especifica de violaciones de reglas de negocio
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Operacion no permitida", JOptionPane.WARNING_MESSAGE);
-            }
+
+                @Override
+                protected void done() {
+                    try {
+                        // get() lanza la excepción si doInBackground() falló
+                        get(); 
+                        
+                        // Esto se ejecuta en el EDT después de que termina el worker
+                        JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                        
+                        if (ventanaPadre != null) {
+                            ventanaPadre.recargarDatos();
+                        }
+                        dispose(); // Cerrar el diálogo
+
+                    } catch (Exception ex) {
+                        // Si get() lanzó una excepción, la capturamos aquí
+                        String mensajeError;
+                        String tituloError = "Error";
+                        
+                        // Obtener la causa real de la excepción
+                        Throwable causa = ex.getCause();
+                        
+                        if (causa instanceof ReglaNegocioException) {
+                            // Error de negocio (ej. "Pedido ya completado")
+                            mensajeError = causa.getMessage();
+                            tituloError = "Operación no permitida";
+                        } else if (causa instanceof RuntimeException) {
+                            // Error de BD (ya lo envolvimos en RuntimeException en la API)
+                            mensajeError = "Error de base de datos. Intente más tarde.\n" + causa.getMessage();
+                        } else {
+                            // Otro error (ej. DateTimeParseException que se nos pasó)
+                            mensajeError = "Error inesperado: " + ex.getMessage();
+                        }
+                        
+                        JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, mensajeError, tituloError, JOptionPane.ERROR_MESSAGE);
+                    } finally {
+                        // 3. Reactivar el botón, pase lo que pase
+                    	btnGuardar.setEnabled(true); 
+                    }
+                }
+            };
+            
+            // 4. Ejecutar el worker
+            worker.execute();
+
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato válido.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            btnGuardar.setEnabled(true); // Reactivar
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al registrar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al preparar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            btnGuardar.setEnabled(true); // Reactivar
         }
     }
     

@@ -529,8 +529,9 @@ public class PersistenceApi implements IApi {
 		return dtos;
 	}
 
+	// Archivo: mletelle/donaciones_unrn/Donaciones_UNRN-ra/BACKEND/src/ar/edu/unrn/seminario/api/PersistenceApi.java
+
 	@Override
-	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) // registrar visita y actualizar estados
 			throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		Connection conn = null;
 		try {
@@ -597,6 +598,75 @@ public class PersistenceApi implements IApi {
 		}
 	}
 
+	        // Escritura
+	        
+	        // Insertar la visita
+	        visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
+
+	        // Actualizar el estado del pedido
+	        if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+	            pedido.marcarCompletado();
+	        } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+	            pedido.marcarEnEjecucion();
+	        }
+	        pedidoDao.update(pedido, conn);
+
+	        // Actualizar el estado de la orden (el modelo se actualiza solo por la llamada anterior)
+	        ordenDao.update(orden, conn);
+
+	        // Si salió bien, se comittea la transaccion
+	        conn.commit();
+
+	    } catch (SQLException e) {
+	        // SI ALGO FALLÓ (SQLException, ReglaNegocioException, etc.)
+	        try {
+	            if (conn != null) {
+	                System.err.println("Error en la transacción. Iniciando rollback...");
+	                conn.rollback(); // Se deshacen todos los cambios
+	            }
+	        } catch (SQLException e2) {
+	            // Error crítico: no se pudo hacer rollback
+	            e2.printStackTrace();
+	        }
+	        // Relanzar el error para que la capa superior (GUI) se entere
+	        throw new RuntimeException("Error de base de datos al registrar la visita: " + e.getMessage(), e);
+	    
+	    } catch (ReglaNegocioException | ObjetoNuloException | CampoVacioException e) {
+	        // Fallo de validación de negocio
+	        try {
+	            if (conn != null) {
+	                conn.rollback(); // Deshacer por si acaso
+	            }
+	        } catch (SQLException e2) {
+	            e2.printStackTrace();
+	        }
+	        // Relanzar la excepción de negocio para que la GUI la muestre
+	        throw e; 
+	    
+	    } catch (Exception e) {
+	        // Captura genérica para otros errores (ej. IllegalArgumentException de fromString)
+	         try {
+	            if (conn != null) {
+	                conn.rollback();
+	            }
+	        } catch (SQLException e2) {
+	            e2.printStackTrace();
+	        }
+	        // Relanzar como un error no controlado
+	        throw new RuntimeException("Error inesperado al registrar visita: " + e.getMessage(), e);
+
+	    } finally {
+	        // SIEMPRE devolver el AutoCommit a true y cerrar la conexión
+	        if (conn != null) {
+	            try {
+	                conn.setAutoCommit(true);
+	            } catch (SQLException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        ConnectionManager.disconnect(); // Esto cierra la conexión
+	    }
+	}
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() { // listado de voluntarios
 		Connection conn = null;
