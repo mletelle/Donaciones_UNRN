@@ -137,7 +137,6 @@ public class OrdenRetiro {
           this.vehiculo = vehiculo;
       }
       
-      // asignacion de voluntario
       public void asignarVoluntario(Usuario voluntario) { // ahora recibe Usuario
           if (this.voluntarios == null) {
               this.voluntarios = new ArrayList<>();
