@@ -19,6 +19,9 @@ import javax.swing.table.DefaultTableModel;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
+// Importaciones de excepciones propias
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException; 
 
 public class ListadoUsuario extends JFrame {
 
@@ -32,7 +35,7 @@ public class ListadoUsuario extends JFrame {
 	public ListadoUsuario(IApi api) {
 		this.api = api;
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cambiado a DISPOSE_ON_CLOSE
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -49,17 +52,14 @@ public class ListadoUsuario extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				habilitarBotones(true);
-
 			}
 		});
+		
 		modelo = new DefaultTableModel(new Object[][] {}, titulos);
+		table.setModel(modelo); // Se establece el modelo antes de cargar
 
-		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		for (UsuarioDTO u : usuarios) {
-			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
-		}
-
-		table.setModel(modelo);
+		// Llama a cargar la tabla usando el método para manejar excepciones
+		actualizarTabla();
 
 		scrollPane.setViewportView(table);
 
@@ -68,15 +68,36 @@ public class ListadoUsuario extends JFrame {
 		// accion del boton "Activar"
 		activarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int filaSeleccionada = table.getSelectedRow();
+				if (filaSeleccionada == -1) {
+					// Esta validación es redundante debido a habilitarBotones(false),
+					// pero es buena práctica para asegurar.
+					JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
 				int opcionSeleccionada = JOptionPane.showConfirmDialog(null,
-						"Estas seguro que queres cambiar el estado del Usuario?", "Confirmar cambio de estado.",
+						"¿Está seguro que desea cambiar el estado del Usuario?", "Confirmar cambio de estado.",
 						JOptionPane.YES_NO_OPTION);
+				
 				if (opcionSeleccionada == JOptionPane.YES_OPTION) {
-					String username = (String) table.getModel().getValueAt(table.getSelectedRow(), 0);
+					try {
+						String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
-					api.activarUsuario(username);
-					actualizarTabla();
+						// --- USO DE CAMPOVACIOEXCEPTION (Validar que el username no sea vacío/nulo) ---
+						if (username == null || username.trim().isEmpty()) {
+							throw new CampoVacioException("El nombre de usuario seleccionado es inválido o nulo.");
+						}
+						
+						api.activarUsuario(username);
+						JOptionPane.showMessageDialog(null, "Usuario activado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+						actualizarTabla();
 
+					} catch (CampoVacioException ex) {
+						JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+					} catch (Exception ex) {
+						JOptionPane.showMessageDialog(null, "Error al activar el usuario: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			}
 		});
@@ -86,15 +107,34 @@ public class ListadoUsuario extends JFrame {
 		// Accion del boton "Desacivar"
 		desactivarButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int filaSeleccionada = table.getSelectedRow();
+				if (filaSeleccionada == -1) {
+					JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
 				int reply = JOptionPane.showConfirmDialog(null,
-						"Estas seguro que queres cambiar el estado del Usuario?", "Confirmar cambio de estado.",
+						"¿Está seguro que desea cambiar el estado del Usuario?", "Confirmar cambio de estado.",
 						JOptionPane.YES_NO_OPTION);
+				
 				if (reply == JOptionPane.YES_OPTION) {
-					String username = (String) table.getModel().getValueAt(table.getSelectedRow(), 0);
+					try {
+						String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
-					api.desactivarUsuario(username);
-					actualizarTabla();
+						// --- USO DE CAMPOVACIOEXCEPTION (Validar que el username no sea vacío/nulo) ---
+						if (username == null || username.trim().isEmpty()) {
+							throw new CampoVacioException("El nombre de usuario seleccionado es inválido o nulo.");
+						}
 
+						api.desactivarUsuario(username);
+						JOptionPane.showMessageDialog(null, "Usuario desactivado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+						actualizarTabla();
+
+					} catch (CampoVacioException ex) {
+						JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+					} catch (Exception ex) {
+						JOptionPane.showMessageDialog(null, "Error al desactivar el usuario: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			}
 		});
@@ -125,18 +165,34 @@ public class ListadoUsuario extends JFrame {
 	private void habilitarBotones(boolean b) {
 		activarButton.setEnabled(b);
 		desactivarButton.setEnabled(b);
-
 	}
 
 	// metodo para actualizar tabla
 	private void actualizarTabla() {
 		DefaultTableModel modelo = (DefaultTableModel) table.getModel();
-		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		modelo.setRowCount(0);
+		modelo.setRowCount(0); // Limpiar la tabla
 
-		for (UsuarioDTO u : usuarios) {
-			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
+		try {
+			List<UsuarioDTO> usuarios = api.obtenerUsuarios();
+
+			// --- USO DE OBJETONULOEXCEPTION (Si la API retorna null) ---
+			if (usuarios == null) {
+				throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de usuarios.");
+			}
+			// -----------------------------------------------------------
+
+			for (UsuarioDTO u : usuarios) {
+				modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
+			}
+		} catch (ObjetoNuloException ex) {
+			// Manejo de la excepción custom para datos nulos
+			JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
+		} catch (Exception ex) {
+			// Manejo de otros errores de la API
+			JOptionPane.showMessageDialog(this, "Error al obtener usuarios: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
+		} finally {
+			// Deshabilita los botones después de la actualización (o si falla)
+			habilitarBotones(false);
 		}
 	}
-
 }
