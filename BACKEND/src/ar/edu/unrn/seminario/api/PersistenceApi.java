@@ -575,7 +575,6 @@ public class PersistenceApi implements IApi {
 		return dtos;
 	}
 
-	// **** MÉTODO CORREGIDO: Usa setId para actualizar el objeto OrdenRetiro ****
 	@Override
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
 			throws ReglaNegocioException, ObjetoNuloException {
@@ -633,7 +632,6 @@ public class PersistenceApi implements IApi {
 			// Crear la orden y obtener su ID de la base de datos
 			int idOrden = ordenDao.create(orden, conn);
 			
-			// **** LÍNEA CORREGIDA (DESCOMENTADA) ****
 			orden.setId(idOrden); // Asignar el ID de la BD al objeto en memoria
 			
 			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido

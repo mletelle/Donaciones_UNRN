@@ -160,7 +160,6 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		return pedidos;
 	}
 	
-	// **** MÉTODO MAPEADOR CORREGIDO ****
 	private PedidosDonacion mapearResultadoPedido(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			String usuarioDonante = rs.getString("usuario_donante");
@@ -184,9 +183,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			} else if (estadoStr.equals(EstadoPedido.COMPLETADO.toString())) {
 				estado = EstadoPedido.COMPLETADO;
 			}
-			// (Falta CANCELADO si lo implementas)
 
-			// *** CORRECCIÓN: Usar el nuevo constructor que incluye el ID ***
 			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;

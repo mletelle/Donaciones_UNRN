@@ -161,7 +161,6 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 		return ordenes;
 	}
 	
-	// **** MÉTODO MAPEADOR CORREGIDO ****
 	private OrdenRetiro mapearResultadoOrden(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			int idOrden = rs.getInt("id");
