@@ -98,10 +98,16 @@ public class PersistenceApi implements IApi {
 			if (e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
 				throw e;
 			}
-			throw e;
-		} finally { // Asegura desconectar la conexión específica
-			// La restauración de auto-commit se remueve o simplifica ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
+		} finally { // asegura restaurar auto-commit y desconectar
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -119,7 +125,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -137,7 +143,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return null;
 	}
@@ -160,7 +166,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace(); // captura errores SQL
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return rolesDTO;
 	}
@@ -180,7 +186,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return rolesDTO;
 	}
@@ -202,7 +208,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return null;
 	}
@@ -239,8 +245,14 @@ public class PersistenceApi implements IApi {
 			}
 			e.printStackTrace();
 		} finally {
-			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -266,8 +278,14 @@ public class PersistenceApi implements IApi {
 			}
 			e.printStackTrace();
 		} finally {
-			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true); // restaurar auto-commit
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -341,8 +359,14 @@ public class PersistenceApi implements IApi {
 			// Lanza cualquier otra excepción inesperada
 			throw new RuntimeException("Error inesperado registrando pedido: " + e.getMessage(), e);
 		} finally {
-			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -359,7 +383,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) { // captura errores de SQL
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -390,7 +414,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -416,7 +440,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -459,7 +483,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -517,10 +541,19 @@ public class PersistenceApi implements IApi {
 				e2.printStackTrace();
 			}
 			// Lanza la excepción original (ReglaNegocio, etc.)
-			throw e;
+			if (e instanceof ReglaNegocioException || e instanceof CampoVacioException || e instanceof ObjetoNuloException) {
+				throw e;
+			}
+			throw new RuntimeException("Error inesperado: " + e.getMessage(), e);
 		} finally {
-			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -537,7 +570,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -600,9 +633,8 @@ public class PersistenceApi implements IApi {
 			// Crear la orden y obtener su ID de la base de datos
 			int idOrden = ordenDao.create(orden, conn);
 			
-			//ASIGNAR EL ID DE LA BD AL OBJETO EN MEMORIA
-			orden.setId(idOrden); 
-			
+			// **** LÍNEA CORREGIDA (DESCOMENTADA) ****
+			orden.setId(idOrden); // Asignar el ID de la BD al objeto en memoria
 			
 			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido
 				pedido.asignarOrden(orden); // Asigna la orden (que ahora tiene el ID de BD correcto)
@@ -633,8 +665,14 @@ public class PersistenceApi implements IApi {
 			}
 			throw new RuntimeException("Error inesperado creando orden: " + e.getMessage(), e);
 		} finally {
-			// El código de restaurar auto-commit se remueve ya que la conexión se cierra.
-			ConnectionManager.disconnect(conn);
+			if (conn != null) {
+				try {
+					conn.setAutoCommit(true);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			ConnectionManager.disconnect();
 		}
 	}
 
@@ -689,7 +727,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -734,7 +772,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return dtos;
 	}
@@ -752,7 +790,7 @@ public class PersistenceApi implements IApi {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			ConnectionManager.disconnect(conn);
+			ConnectionManager.disconnect();
 		}
 		return "Donante Desconocido";
 	}

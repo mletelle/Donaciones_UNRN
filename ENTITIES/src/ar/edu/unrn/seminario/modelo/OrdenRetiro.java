@@ -31,9 +31,28 @@ public class OrdenRetiro {
         this.estado = EstadoOrden.PENDIENTE;
         this.destino = dest;
         this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Usuario>(); // ahora anda
+        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
         this.visitas = new ArrayList<Visita>();
         // asignar esta orden a cada pedido
+        for (PedidosDonacion pedido : this.pedidos) {
+            pedido.asignarOrden(this);
+        }
+    }
+
+    // Constructor para JDBC (Hidratación)
+    public OrdenRetiro(int id, LocalDateTime fechaGeneracion, EstadoOrden estado, Ubicacion dest, List<PedidosDonacion> pedidos) throws ObjetoNuloException {
+        if (pedidos == null) {
+             throw new ObjetoNuloException("La lista de pedidos no puede ser nula.");
+        }
+        this.id = id; // Asigna ID de la BD
+        this.fechaGeneracion = fechaGeneracion;
+        this.estado = estado;
+        this.destino = dest;
+        this.pedidos = new ArrayList<>(pedidos);
+        this.voluntarios = new ArrayList<Usuario>();
+        this.visitas = new ArrayList<Visita>();
+        
+        // Asignar esta orden a los pedidos hijos
         for (PedidosDonacion pedido : this.pedidos) {
             pedido.asignarOrden(this);
         }
@@ -124,7 +143,7 @@ public class OrdenRetiro {
           }
           this.voluntarios.add(voluntario);
       }
-
+      
       public void setId(int id) {
           this.id = id;
       }
@@ -199,7 +218,10 @@ public class OrdenRetiro {
     }
   
 	public boolean equals(OrdenRetiro obj) {
-        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidos.equals(obj.pedidos));
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        final OrdenRetiro other = (OrdenRetiro) obj;
+        return this.id == other.id; // Comparar por ID
     }
     
 }
