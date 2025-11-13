@@ -34,6 +34,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement.setString(3, pedido.getDonante().getUsuario());
 			statement.setString(4, pedido.obtenerEstado());
 			
+			// id_orden_retiro puede ser null
 			if (pedido.obtenerOrden() != null) {
 				statement.setInt(5, pedido.obtenerOrden().getId());
 			} else {
@@ -45,13 +46,11 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 				throw new SQLException("No se pudo crear. Error.");
 			}
 
-			generatedKeys = statement.getGeneratedKeys(); 
+			generatedKeys = statement.getGeneratedKeys(); // sirve para obtener las claves generadas automaticamente por la base de datos
 			if (generatedKeys.next()) {
-				int generatedId = generatedKeys.getInt(1);
-				pedido.setId(generatedId); // *** CORRECCIÓN: Actualiza el ID del objeto en memoria ***
-				return generatedId;
+				return generatedKeys.getInt(1);
 			} else {
-				throw new SQLException("No se pudo crear. Error al obtener ID.");
+				throw new SQLException("No se pudo crear. Error.");
 			}
 		} finally {
 			if (generatedKeys != null) generatedKeys.close();
@@ -110,7 +109,6 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.createStatement();
-			
 			rs = statement.executeQuery(
 					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
 					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE'");
@@ -120,8 +118,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 					PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
 					pedidos.add(pedido);
 				} catch (Exception e) {
-					System.err.println("Error al mapear PedidosDonacion: " + e.getMessage());
-					e.printStackTrace();
+					System.err.println("Error al crear registro: " + e.getMessage());
 				}
 			}
 		} finally {
@@ -174,8 +171,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 					PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
 					pedidos.add(pedido);
 				} catch (Exception e) {
-					System.err.println("Error al mapear PedidosDonacion: " + e.getMessage());
-					e.printStackTrace();
+					System.err.println("Error al crear PedidosDonacion: " + e.getMessage());
 				}
 			}
 		} finally {
@@ -192,11 +188,9 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			Usuario donante = usuarioDao.find(usuarioDonante, conn);
 			
 			if (donante == null) {
-				throw new SQLException("Error de integridad: Donante no encontrado: " + usuarioDonante);
+				throw new SQLException("Donante no encontrado: " + usuarioDonante);
 			}
 			
-			// Leer los datos de la BD
-			int id = rs.getInt("id"); // *** CORRECCIÓN: LEER EL ID ***
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();
 			String tipoVehiculo = rs.getString("tipo_vehiculo");
 			
@@ -214,13 +208,10 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 				OrdenRetiro ordenTemp = new OrdenRetiro(idOrdenRetiro);
 				pedido.asignarOrden(ordenTemp);
 			}
-
-			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;
-			
-		} catch (ObjetoNuloException e) {
-			throw new SQLException("Error al mapear PedidosDonacion (ObjetoNulo): " + e.getMessage(), e);
+		} catch (Exception e) {
+			throw new SQLException("Error al mapear PedidosDonacion: " + e.getMessage(), e);
 		}
 	}
 
