@@ -16,7 +16,7 @@ public class ListadoOrdenesRetiro extends JFrame {
 
     public ListadoOrdenesRetiro(IApi api) {
         this.api = api;
-        setTitle("Listado de Ordenes de Retiro Pendientes");
+        setTitle("Listado de Ordenes de Retiro");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -42,7 +42,7 @@ public class ListadoOrdenesRetiro extends JFrame {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
 
-        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesDeRetiro("PENDIENTE");
+        List<OrdenRetiroDTO> ordenes = api.obtenerTodasOrdenesRetiro();
         for (OrdenRetiroDTO orden : ordenes) {
             String estadoTexto = orden.getEstado(); // ahora getEstado() devuelve String directamente
             String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehiculo Desconocido";

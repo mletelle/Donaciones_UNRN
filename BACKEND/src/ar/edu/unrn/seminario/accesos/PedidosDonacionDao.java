@@ -16,6 +16,8 @@ public interface PedidosDonacionDao {
 	
 	List<PedidosDonacion> findAllPendientes(Connection conn) throws SQLException;
 	
+	List<PedidosDonacion> findAll(Connection conn) throws SQLException;
+	
 	List<PedidosDonacion> findByOrden(int idOrden, Connection conn) throws SQLException;
 	
 }

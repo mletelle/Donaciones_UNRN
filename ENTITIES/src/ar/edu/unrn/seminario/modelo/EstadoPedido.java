@@ -20,4 +20,17 @@ public enum EstadoPedido {
 		return descripcion;
 	}
 	
+	public static EstadoPedido fromString(String texto) {
+		if (texto == null || texto.isEmpty()) {
+			throw new IllegalArgumentException("El estado no puede ser nulo o vacio");
+		}
+		String textoNormalizado = texto.trim().toUpperCase();
+		for (EstadoPedido e : EstadoPedido.values()) {
+			if (e.name().equals(textoNormalizado)) {
+				return e;
+			}
+		}
+		throw new IllegalArgumentException("Estado de pedido desconocido: " + texto);
+	}
+	
 }

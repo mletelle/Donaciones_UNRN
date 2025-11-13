@@ -16,6 +16,8 @@ public interface OrdenRetiroDao {
 	
 	List<OrdenRetiro> findByEstado(String estado, Connection conn) throws SQLException;
 	
+	List<OrdenRetiro> findAll(Connection conn) throws SQLException;
+	
 	List<OrdenRetiro> findByVoluntario(String username, Connection conn) throws SQLException;
 	
 }

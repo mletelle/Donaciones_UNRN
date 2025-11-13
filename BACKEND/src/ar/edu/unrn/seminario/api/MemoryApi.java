@@ -84,20 +84,20 @@ public class MemoryApi implements IApi {
 			// PEDIDO 1 (Donante Juan Perez)
 			List<Bien> bienes1 = new ArrayList<>();
 			bienes1.add(new Bien(1, 10, 2, vehiculoCamioneta)); 
-			this.pedidos.add(new PedidosDonacion(LocalDateTime.now(), new ArrayList<>(bienes1), "Camioneta", "Pedido 1: Sin observaciones", donante1));
+			this.pedidos.add(new PedidosDonacion(LocalDateTime.now(), new ArrayList<>(bienes1), "Camioneta", donante1));
 
 			// PEDIDO 2 (Donante Maria Gomez)
 			List<Bien> bienes2 = new ArrayList<>();
 			bienes2.add(new Bien(2, 5, 1, vehiculoCamion)); 
 			bienes2.add(new Bien(3, 1, 3, vehiculoCamion));
 			LocalDateTime fecha2 = LocalDateTime.now().minusDays(1); 
-			this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camion", "Pedido 2: Mueble grande", donante2));
+			this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camion", donante2));
 
 			// PEDIDO 3 (Donante Juan Perez)
 			List<Bien> bienes3 = new ArrayList<>();
 			bienes3.add(new Bien(4, 15, 2, vehiculoAuto)); 
 			LocalDateTime fecha3 = LocalDateTime.now().minusDays(2); 
-			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), "Auto", "Pedido 3: Cajas pequeñas", donante1));
+			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), "Auto", donante1));
 			
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			e.printStackTrace();
@@ -215,7 +215,7 @@ public class MemoryApi implements IApi {
 	    LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
 
 		// crea el pedido directamente 
-	    PedidosDonacion pedido = new PedidosDonacion(fechaLocalDateTime, bienes, pedidoDTO.getTipoVehiculo(), pedidoDTO.getObservaciones(), donante);
+	    PedidosDonacion pedido = new PedidosDonacion(fechaLocalDateTime, bienes, pedidoDTO.getTipoVehiculo(), donante);
 	    this.pedidos.add(pedido);
 	}
 
@@ -253,13 +253,34 @@ public class MemoryApi implements IApi {
 					pedido.obtenerId(),
 					formattedDate, // usar la fecha formateada como string
 					pedido.describirTipoVehiculo(),
-					pedido.obtenerObservaciones(),
 					pedido.obtenerDonante().obtenerDni(),
 					nombreDonante // nombre completo del donante
 				));
 			}
 		}
 		return pendientes; // devuelve lista
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerTodosPedidos() {
+		List<PedidoDonacionDTO> todos = new ArrayList<>();
+
+		for (PedidosDonacion pedido : pedidos) {
+			DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			String formattedDate = pedido.obtenerFecha().format(formatter2);
+
+			String nombreDonante = pedido.obtenerDonante().obtenerNombre() + " " + pedido.obtenerDonante().obtenerApellido();
+
+			todos.add(new PedidoDonacionDTO(
+				pedido.obtenerId(),
+				formattedDate,
+				pedido.describirTipoVehiculo(),
+				pedido.obtenerDonante().obtenerDni(),
+				nombreDonante,
+				pedido.obtenerEstado()
+			));
+		}
+		return todos;
 	}
 
 	@Override
@@ -279,6 +300,22 @@ public class MemoryApi implements IApi {
 	}
 	return ordenesFiltradas;
 	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro() {
+		List<OrdenRetiroDTO> todasOrdenes = new ArrayList<>();
+		for (OrdenRetiro orden : ordenes) {
+			List<VisitaDTO> visitasDTO = new ArrayList<>();
+			for (Visita visita : orden.obtenerVisitas()) {
+				visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion()));
+			}
+			String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
+			String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehiculo Desconocido";
+			String voluntario = orden.obtenerVoluntarioPrincipal() != null ? orden.obtenerVoluntarioPrincipal().obtenerNombre() : "Voluntario Desconocido";
+			todasOrdenes.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstadoOrden().toString(), orden.obtenerFechaCreacion(), visitasDTO, donante, vehiculo, voluntario));
+		}
+		return todasOrdenes;
+	}
 	
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() {
@@ -286,7 +323,7 @@ public class MemoryApi implements IApi {
 		// filtra usuarios ACTIVOS con rol VOLUNTARIO ( 2)
 		for (Usuario usuario : this.usuarios) {
 			if (usuario.getRol().getCodigo() == 2 && usuario.isActivo()) {
-				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido()));
+				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido(), usuario.getUsuario()));
 			}
 		}
 		return voluntariosDTO;
