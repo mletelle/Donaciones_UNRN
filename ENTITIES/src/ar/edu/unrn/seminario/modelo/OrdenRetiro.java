@@ -13,7 +13,7 @@ public class OrdenRetiro {
     private static int secuencia = 0;//para el id
 
     // atributos
-    private LocalDateTime fechaGeneracion = LocalDateTime.now();
+    private LocalDateTime fechaGeneracion;
     private EstadoOrden estado;
     private Ubicacion destino;
     private ArrayList<Usuario> voluntarios; // ahora es Usuario, antes voluntario
@@ -22,24 +22,8 @@ public class OrdenRetiro {
     private int id;
     private Vehiculo vehiculo;
 
-    // Constructores
-    public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
-        if (pedidos == null || pedidos.isEmpty()) {
-            throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
-        }
-        this.id = ++secuencia;
-        this.estado = EstadoOrden.PENDIENTE;
-        this.destino = dest;
-        this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
-        this.visitas = new ArrayList<Visita>();
-        // asignar esta orden a cada pedido
-        for (PedidosDonacion pedido : this.pedidos) {
-            pedido.asignarOrden(this);
-        }
-    }
-
-    // Constructor para JDBC (Hidratación)
+    // **** NUEVO CONSTRUCTOR PARA JDBC ****
+    // Este constructor es para cargar ("hidratar") una orden desde la BD
     public OrdenRetiro(int id, LocalDateTime fechaGeneracion, EstadoOrden estado, Ubicacion dest, List<PedidosDonacion> pedidos) throws ObjetoNuloException {
         if (pedidos == null) {
              throw new ObjetoNuloException("La lista de pedidos no puede ser nula.");
@@ -52,7 +36,24 @@ public class OrdenRetiro {
         this.voluntarios = new ArrayList<Usuario>();
         this.visitas = new ArrayList<Visita>();
         
-        // Asignar esta orden a los pedidos hijos
+        for (PedidosDonacion pedido : this.pedidos) {
+            pedido.asignarOrden(this);
+        }
+    }
+    
+    // constructor para NUEVAS ordenes (usa secuencia)
+    public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
+        if (pedidos == null || pedidos.isEmpty()) {
+            throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
+        }
+        this.id = ++secuencia;
+        this.fechaGeneracion = LocalDateTime.now();
+        this.estado = EstadoOrden.PENDIENTE;
+        this.destino = dest;
+        this.pedidos = new ArrayList<>(pedidos);
+        this.voluntarios = new ArrayList<Usuario>(); 
+        this.visitas = new ArrayList<Visita>();
+        // asignar esta orden a cada pedido
         for (PedidosDonacion pedido : this.pedidos) {
             pedido.asignarOrden(this);
         }
@@ -144,9 +145,11 @@ public class OrdenRetiro {
           this.voluntarios.add(voluntario);
       }
       
+      // **** MÉTODO FALTANTE AGREGADO ****
       public void setId(int id) {
           this.id = id;
       }
+      // **********************************
     
     // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos
