@@ -49,7 +49,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			generatedKeys = statement.getGeneratedKeys(); 
 			if (generatedKeys.next()) {
 				int generatedId = generatedKeys.getInt(1);
-				pedido.setId(generatedId); 
+				pedido.setId(generatedId); //Actualiza el ID del objeto en memoria
 				return generatedId;
 			} else {
 				throw new SQLException("No se pudo crear. Error al obtener ID.");
@@ -160,7 +160,6 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		return pedidos;
 	}
 	
-	// **** MÉTODO MAPEADOR CORREGIDO ****
 	private PedidosDonacion mapearResultadoPedido(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			String usuarioDonante = rs.getString("usuario_donante");
@@ -171,7 +170,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			}
 			
 			// Leer los datos de la BD
-			int id = rs.getInt("id"); // *** CORRECCIÓN: LEER EL ID ***
+			int id = rs.getInt("id"); 
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();
 			String tipoVehiculo = rs.getString("tipo_vehiculo");
 			String observaciones = rs.getString("observaciones");
@@ -186,7 +185,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			}
 			// (Falta CANCELADO si lo implementas)
 
-			// *** CORRECCIÓN: Usar el nuevo constructor que incluye el ID ***
+			// Usar el nuevo constructor que incluye el ID 
 			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);
 			
 			return pedido;
