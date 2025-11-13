@@ -33,7 +33,6 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 import ar.edu.unrn.seminario.modelo.Bien;
-import ar.edu.unrn.seminario.modelo.EstadoPedido;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Rol;
@@ -549,6 +548,9 @@ public class PersistenceApi implements IApi {
 				throw new ObjetoNuloException("Pedido no encontrado");
 			}
 			
+			// asignar la orden completa al pedido para que las validaciones funcionen correctamente
+			pedido.asignarOrden(orden);
+			
 			// cargar datos de visita desde DTO
 			ResultadoVisita resultado = ResultadoVisita.valueOf(visitaDTO.getResultado().replace(" ", "_").toUpperCase());
 			Visita visita = new Visita(LocalDateTime.now(), resultado, visitaDTO.getObservacion());
@@ -557,15 +559,15 @@ public class PersistenceApi implements IApi {
 			visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 			
 			// actualizar estado pedido segun resultado visita
+			// usar metodos con validaciones para evitar cambios invalidos de estado
 			if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
-				pedido.setEstado(EstadoPedido.COMPLETADO);
+				pedido.marcarCompletado(); // lanza excepcion si ya esta completado
 			} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
-				pedido.setEstado(EstadoPedido.EN_EJECUCION);
+				pedido.marcarEnEjecucion(); // lanza excepcion si ya esta completado
 			}
 			pedidoDao.update(pedido, conn);
 			
-			// actualizar estado orden automaticamente
-			orden.actualizarEstadoAutomatico();
+			// actualizar estado orden automaticamente (ya fue llamado por marcarCompletado/marcarEnEjecucion)
 			ordenDao.update(orden, conn);
 			
 			conn.commit();
