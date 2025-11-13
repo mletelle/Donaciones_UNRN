@@ -194,7 +194,7 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
-	    // buscar usuario donante por DNI
+	    // busacr usuario donante por DNI
 		Usuario donante = buscarUsuarioPorDni(pedidoDTO.getDonanteId());
 	    if (donante == null) {
 	        throw new ObjetoNuloException("Donante no encontrado.");
@@ -333,28 +333,30 @@ public class MemoryApi implements IApi {
 	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
 		
-		// normalizar el nombre del voluntario para la comparacion
-		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		// el parametro es el username del voluntario (ej: "clopez", "bgoro")
+		String usernameBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
 		
 		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
 		for (OrdenRetiro orden : this.ordenes) {
-			Usuario voluntarioAsignado = orden.getVoluntario(); // MODIFICADO: ahora es Usuario
+			Usuario voluntarioAsignado = orden.getVoluntario();
 			
 			// validar que la orden tenga un voluntario asignado
 			if (voluntarioAsignado != null) {
-				String nombreAsignado = voluntarioAsignado.obtenerNombre().trim(); // MODIFICADO: usar obtenerNombre()
+				String usernameAsignado = voluntarioAsignado.getUsuario().trim();
 				
-				// comparar nombres (case-insensitive y sin espacios)
-				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+				// comparar usernames (case-insensitive)
+				if (usernameAsignado.equalsIgnoreCase(usernameBuscado)) {
 					int idOrden = orden.getId();
+					String nombreCompleto = voluntarioAsignado.getNombre() + " " + voluntarioAsignado.getApellido();
+					
 					ordenesAsignadas.add(new OrdenRetiroDTO(
 						idOrden,
 						orden.obtenerEstadoOrden().toString(), // Enum a String
 						orden.getFechaCreacion(),
-						null, // visita no incluidas aqui
+						null, // visitas no incluidas aqui
 						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
 						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
-						nombreAsignado
+						nombreCompleto
 					));
 				}
 			}
@@ -395,7 +397,11 @@ public class MemoryApi implements IApi {
 						Usuario donante = visita.getPedidoRelacionado().getDonante(); // MODIFICADO: ahora es Usuario
 						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
 						
-					} 
+						// DEBUG
+						// System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+					} else {
+						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
+					}
 					
 					// crear DTO con todos los datos relevantes
 					VisitaDTO visitaDTO = new VisitaDTO(
@@ -420,7 +426,6 @@ public class MemoryApi implements IApi {
         return "Donante Desconocido";
     }
 
-	// Metodos
 	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
@@ -460,6 +465,8 @@ public class MemoryApi implements IApi {
 			pedido.marcarEnEjecucion();
 		}
 
+		// llamada a marcarCompletado() o marcarEnEjecucion() 
+		// automatic notifica a la orden para que actualice su estado
 	}
 
 	private Rol buscarRol(Integer codigo) {
@@ -550,12 +557,20 @@ public class MemoryApi implements IApi {
 		// agrega la orden a la lista
 		this.ordenes.add(nuevaOrden);
 	}
+
+	private List<String> convertirBienesAStrings(List<Bien> bienes) {//no manejamos logica de bienes, quedo de antes
+        List<String> bienesStr = new ArrayList<>();
+        for (Bien bien : bienes) {
+            bienesStr.add(bien.toString()); 
+        }
+        return bienesStr;
+    }
 	
 	private PedidoDonacionDTO convertirPedidoADTO(PedidosDonacion pedido) {
 	    if (pedido == null) {
 	        return null;
 	    }
-	    Usuario donante = pedido.obtenerDonante(); 
+	    Usuario donante = pedido.obtenerDonante(); // ahora es Usuario
 	    if (donante == null) {
 	        System.out.println("Advertencia: El pedido " + pedido.obtenerId() + " no tiene un donante asociado.");
 	        return null;
