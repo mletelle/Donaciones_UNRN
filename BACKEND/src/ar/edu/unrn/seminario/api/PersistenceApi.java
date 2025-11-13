@@ -33,6 +33,7 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 import ar.edu.unrn.seminario.modelo.Bien;
+import ar.edu.unrn.seminario.modelo.EstadoPedido;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Rol;
@@ -315,7 +316,6 @@ public class PersistenceApi implements IApi {
 					LocalDateTime.now(),
 					bienes,
 					pedidoDTO.getTipoVehiculo(),
-					pedidoDTO.getObservaciones(),
 					donante);
 			
 			// persistir pedido
@@ -376,13 +376,39 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection(); 
 			List<PedidosDonacion> pedidos = pedidoDao.findAllPendientes(conn); 
 			for (PedidosDonacion p : pedidos) {
-				PedidoDonacionDTO dto = new PedidoDonacionDTO( // mapear a DTO
+				String nombreCompletoDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido() + " " + p.getDonante().obtenerDireccion();
+				PedidoDonacionDTO dto = new PedidoDonacionDTO(
+						p.getId(),
 						p.obtenerFecha().toString(),
-						new ArrayList<BienDTO>(),
 						p.describirTipoVehiculo(),
-						p.obtenerObservaciones(),
-						p.getDonante().getDni());
-				dto.setId(p.getId());
+						p.getDonante().getDni(),
+						nombreCompletoDonante);
+				dtos.add(dto);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.disconnect();
+		}
+		return dtos;
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerTodosPedidos() { // todos los pedidos sin filtro
+		Connection conn = null;
+		List<PedidoDonacionDTO> dtos = new ArrayList<>();
+		try {
+			conn = ConnectionManager.getConnection(); 
+			List<PedidosDonacion> pedidos = pedidoDao.findAll(conn); 
+			for (PedidosDonacion p : pedidos) {
+				String nombreCompletoDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido() + " " + p.getDonante().obtenerDireccion();
+				PedidoDonacionDTO dto = new PedidoDonacionDTO(
+						p.getId(),
+						p.obtenerFecha().toString(),
+						p.describirTipoVehiculo(),
+						p.getDonante().getDni(),
+						nombreCompletoDonante,
+						p.obtenerEstado());
 				dtos.add(dto);
 			}
 		} catch (SQLException e) {
@@ -402,13 +428,13 @@ public class PersistenceApi implements IApi {
 			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos por orden
 			for (PedidosDonacion p : pedidos) {
 				String nombreDonante = p.getDonante().getNombre() + " " + p.getDonante().getApellido();
-				dtos.add(new PedidoDonacionDTO( // mapear a DTO
+				String direccion = p.obtenerDireccion();
+				String estado = p.obtenerEstado();
+				dtos.add(new PedidoDonacionDTO( // mapear a DTO con direccion y estado
 						p.getId(),
-						p.obtenerFecha().toString(),
-						p.describirTipoVehiculo(),
-						p.obtenerObservaciones(),
-						p.getDonante().getDni(),
-						nombreDonante));
+						nombreDonante,
+						direccion,
+						estado));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -426,6 +452,49 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection();
 			List<OrdenRetiro> ordenes = ordenDao.findByEstado(estado, conn);
 			for (OrdenRetiro o : ordenes) { // para cada orden de retiro, recorrer y mapear a DTO
+				String nombreVoluntario = "";
+				if (o.obtenerVoluntarioPrincipal() != null) {
+					Usuario vol = o.obtenerVoluntarioPrincipal();
+					nombreVoluntario = vol.getNombre() + " " + vol.getApellido();
+				}
+				
+				String nombreDonante = "";
+				if (o.obtenerDonante() != null) {
+					Usuario don = o.obtenerDonante();
+					nombreDonante = don.getNombre() + " " + don.getApellido();
+				}
+				
+				String descripcionVehiculo = "";
+				if (o.obtenerVehiculo() != null) {
+					descripcionVehiculo = o.obtenerVehiculo().getDescripcion();
+				}
+				
+				OrdenRetiroDTO dto = new OrdenRetiroDTO(
+						o.getId(),
+						o.obtenerNombreEstado(),
+						o.obtenerFechaCreacion(),
+						new ArrayList<VisitaDTO>(),
+						nombreDonante,
+						descripcionVehiculo,
+						nombreVoluntario);
+				dtos.add(dto);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			ConnectionManager.disconnect();
+		}
+		return dtos;
+	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro() { // todas las ordenes sin filtro
+		Connection conn = null;
+		List<OrdenRetiroDTO> dtos = new ArrayList<>();
+		try {
+			conn = ConnectionManager.getConnection();
+			List<OrdenRetiro> ordenes = ordenDao.findAll(conn);
+			for (OrdenRetiro o : ordenes) {
 				String nombreVoluntario = "";
 				if (o.obtenerVoluntarioPrincipal() != null) {
 					Usuario vol = o.obtenerVoluntarioPrincipal();
@@ -488,10 +557,10 @@ public class PersistenceApi implements IApi {
 			visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 			
 			// actualizar estado pedido segun resultado visita
-			if ("RECOLECCION_EXITOSA".equals(visitaDTO.getResultado())) {
-				pedido.marcarCompletado();
-			} else {
-				pedido.marcarEnEjecucion();
+			if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+				pedido.setEstado(EstadoPedido.COMPLETADO);
+			} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+				pedido.setEstado(EstadoPedido.EN_EJECUCION);
 			}
 			pedidoDao.update(pedido, conn);
 			
@@ -534,7 +603,7 @@ public class PersistenceApi implements IApi {
 			conn = ConnectionManager.getConnection();
 			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn);
 			for (Usuario v : voluntarios) {
-				dtos.add(new VoluntarioDTO(v.getDni(), v.getNombre(), v.getApellido()));
+				dtos.add(new VoluntarioDTO(v.getDni(), v.getNombre(), v.getApellido(), v.getUsuario()));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -590,14 +659,11 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			orden.asignarVehiculo(vehiculo);
 			orden.asignarVoluntario(voluntario);
 			
-			ordenDao.create(orden, conn);
+			int idOrdenGenerado = ordenDao.create(orden, conn);
+			orden.setId(idOrdenGenerado);
 			
-			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido
+			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido con la orden asignada
 				pedido.asignarOrden(orden);
-				try {
-					pedido.marcarEnEjecucion();
-				} catch (ReglaNegocioException e) {
-				}
 				pedidoDao.update(pedido, conn);
 			}
 			
@@ -672,7 +738,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	}
 
 	@Override
-	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) { // visitas realizadas por un voluntario, filtrado por voluntario y estado
+	public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) { // visitas realizadas por un voluntario
 		Connection conn = null;
 		List<VisitaDTO> dtos = new ArrayList<>();
 		try {
@@ -683,7 +749,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 			Usuario vol = null;
 			for (Usuario u : voluntarios) {
 				if (u.getDni() == voluntario.getId()) {
-					vol = u; // si coincide, asignar y salir del bucle
+					vol = u;
 					break;
 				}
 			}
@@ -692,13 +758,24 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 				return dtos;
 			}
 			
+			// obtener visitas con sus pedidos asociados
 			List<Visita> visitas = visitaDao.findByVoluntario(vol, conn);
 			for (Visita v : visitas) {
+				String nombreDonante = "";
+				
+				// obtener donante desde el pedido relacionado
+				if (v.getPedidoRelacionado() != null) {
+					Usuario donante = v.getPedidoRelacionado().getDonante();
+					if (donante != null) {
+						nombreDonante = donante.getNombre() + " " + donante.getApellido();
+					}
+				}
+				
 				dtos.add(new VisitaDTO(
 						v.obtenerFechaFormateada(),
 						v.obtenerObservacion(),
 						v.obtenerResultado().toString(),
-						""));  // nombre donante vacio por ahora, no lo levanta, revisar
+						nombreDonante));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

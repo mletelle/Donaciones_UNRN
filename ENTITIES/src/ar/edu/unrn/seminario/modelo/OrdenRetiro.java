@@ -38,6 +38,15 @@ public class OrdenRetiro {
             pedido.asignarOrden(this);
         }
     }
+    
+    // constructor jdbc - permite crear orden temporal con solo id para mantener referencias
+    public OrdenRetiro(int id) {
+        this.id = id;
+        this.pedidos = new ArrayList<>();
+        this.voluntarios = new ArrayList<>();
+        this.visitas = new ArrayList<>();
+        this.estado = EstadoOrden.PENDIENTE;
+    }
 
     // Getters
     public String obtenerNombreEstado() {
@@ -113,6 +122,14 @@ public class OrdenRetiro {
       }
       
       // Setters
+      public void setId(int id) {
+          this.id = id;
+      }
+      
+      public void setEstado(EstadoOrden estado) {
+          this.estado = estado;
+      }
+      
       public void asignarVehiculo(Vehiculo vehiculo) {
           this.vehiculo = vehiculo;
       }
@@ -129,19 +146,21 @@ public class OrdenRetiro {
     //  para actualizar el estado automaticamente basado en los pedidos hijos
     public void actualizarEstadoAutomatico() {
         if (this.pedidos == null || this.pedidos.isEmpty()) {
-            return; // si hay pedidos, no se actualiza
+            return; // si no hay pedidos, no se actualiza
         }
         
         boolean todosCompletados = true;
-        boolean algunoEnEjecucion = false;
+        boolean algunoNoPendiente = false;
         
         for (PedidosDonacion pedido : this.pedidos) {
             EstadoPedido estadoPedido = pedido.obtenerEstadoPedido();
+            
             if (estadoPedido != EstadoPedido.COMPLETADO) {
                 todosCompletados = false;
             }
-            if (estadoPedido == EstadoPedido.EN_EJECUCION) {
-                algunoEnEjecucion = true;
+            
+            if (estadoPedido != EstadoPedido.PENDIENTE) {
+                algunoNoPendiente = true;
             }
         }
         
@@ -149,11 +168,14 @@ public class OrdenRetiro {
         if (todosCompletados) {
             this.estado = EstadoOrden.COMPLETADO;
         }
-        // si al menos uno esta en ejecucion, o si hay visitas registradas
-        else if (algunoEnEjecucion || !this.visitas.isEmpty()) {
+        // si al menos uno no esta pendiente (en ejecucion o completado), la orden esta en ejecucion
+        else if (algunoNoPendiente) {
             this.estado = EstadoOrden.EN_EJECUCION;
         }
-        // si no, permanece en PENDIENTE
+        // si todos estan pendientes, la orden permanece pendiente
+        else {
+            this.estado = EstadoOrden.PENDIENTE;
+        }
     }
 
     // metodo para marcar como completado
@@ -191,7 +213,7 @@ public class OrdenRetiro {
     
     // metodo de ayuda para el toString
     public String describirEstado() {
-        return this.estado.toString();
+        return this.estado.name();
     }
   
 	public boolean equals(OrdenRetiro obj) {

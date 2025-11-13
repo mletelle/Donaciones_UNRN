@@ -20,7 +20,7 @@ public class ListadoPedidosDonacion extends JFrame {
     public ListadoPedidosDonacion(IApi api) {
         setTitle("Listado de Pedidos de Donacion");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 600, 400);
+        setBounds(100, 100, 700, 400);
 
         JPanel panel = new JPanel();
         getContentPane().add(panel, BorderLayout.SOUTH);
@@ -28,7 +28,7 @@ public class ListadoPedidosDonacion extends JFrame {
         JScrollPane scrollPane = new JScrollPane();
         getContentPane().add(scrollPane, BorderLayout.CENTER);
 
-        tableModel = new DefaultTableModel(new Object[][] {}, new String[] { "ID", "Fecha", "Tipo Vehiculo", "Observaciones", "Donante" });
+        tableModel = new DefaultTableModel(new Object[][] {}, new String[] { "ID", "Fecha", "Tipo Vehiculo", "Donante", "Estado" });
         table = new JTable(tableModel);
         scrollPane.setViewportView(table);
 
@@ -39,9 +39,9 @@ public class ListadoPedidosDonacion extends JFrame {
     // metodo para cargar pedidos
     private void cargarPedidos(IApi api) {
         tableModel.setRowCount(0);
-        List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
+        List<PedidoDonacionDTO> pedidos = api.obtenerTodosPedidos();
         for (PedidoDonacionDTO pedido : pedidos) {
-            tableModel.addRow(new Object[] { pedido.getId(), pedido.getFecha(), pedido.getTipoVehiculo(), pedido.getObservaciones(), pedido.getDonante() });
+            tableModel.addRow(new Object[] { pedido.getId(), pedido.getFecha(), pedido.getTipoVehiculo(), pedido.getDonante(), pedido.getEstado() });
         }
     }
     

@@ -131,7 +131,7 @@ public class RegistrarPedidoDonacion extends JDialog {
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
 
                     // creacion y Registro
-                    PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, "", idDonanteSeleccionado);
+                    PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
                     JOptionPane.showMessageDialog(null, "Pedido registrado con exito.");
