@@ -10,15 +10,15 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
-	// Variables 
+	// variables de clase
 	private static int secuencia = 0;//para usarlo de id
 
-	// Constantes catalogo
+	// catalogos
 	private static final int VEHICULO_AUTO = 1;
 	private static final int VEHICULO_CAMIONETA = 2;
 	private static final int VEHICULO_CAMION = 3;
 
-	// Atributos
+	// atributos
 	private int id;
 	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
@@ -55,6 +55,21 @@ public class PedidosDonacion {
 	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, Usuario donante) throws CampoVacioException, ObjetoNuloException {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, donante);
 	}
+
+	public PedidosDonacion(int id, LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante, EstadoPedido estado) throws ObjetoNuloException {
+		if (donante == null) {
+			throw new ObjetoNuloException("El donante no puede ser nulo.");
+		}
+		this.id = id; // Asigna el ID de la BD (NO usa la secuencia)
+		this.fecha = fecha;
+		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
+		this.observaciones = observaciones;
+		this.donante = donante;
+		this.estadoPedido = estado;
+		this.bienes = new ArrayList<>(); // Los bienes se cargan por separado (si es necesario)
+	}
+
+	
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
 	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, Usuario donante) throws ObjetoNuloException {
 		if (fecha == null) {
@@ -63,6 +78,7 @@ public class PedidosDonacion {
 		if (donante == null) {
 			throw new ObjetoNuloException("El donante no puede ser nulo.");
 		}
+		this.id = ++secuencia; // Usa secuencia para nuevos pedidos
 		this.fecha = fecha;
 		this.bienes = new ArrayList<>();
 		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
@@ -98,6 +114,10 @@ public class PedidosDonacion {
 
 	public int getId() {
 		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public Usuario getDonante() {
@@ -182,9 +202,10 @@ public class PedidosDonacion {
 		}
 	}
 	public boolean equals(PedidosDonacion obj) {
-		return (fecha.equals(obj.fecha))&&
-		(this.tipoVehiculo==obj.tipoVehiculo)&&
-		(this.donante.equals(obj.donante));
+		if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+		final PedidosDonacion other = (PedidosDonacion) obj;
+		return this.id == other.id; // Comparar por ID
 	}	
 
 }
