@@ -56,6 +56,7 @@ public class PedidosDonacion {
 		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
 	}
 
+	// **** NUEVO CONSTRUCTOR PARA JDBC (HIDRATACIÓN) ****
 	public PedidosDonacion(int id, LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante, EstadoPedido estado) throws ObjetoNuloException {
 		if (donante == null) {
 			throw new ObjetoNuloException("El donante no puede ser nulo.");
@@ -68,7 +69,7 @@ public class PedidosDonacion {
 		this.estadoPedido = estado;
 		this.bienes = new ArrayList<>(); // Los bienes se cargan por separado (si es necesario)
 	}
-
+	// ****************************************************
 	
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
 	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante) throws ObjetoNuloException {
@@ -121,10 +122,11 @@ public class PedidosDonacion {
 		return this.id;
 	}
 	
+	// **** SETTER DE ID AÑADIDO ****
 	public void setId(int id) {
 		this.id = id;
 	}
-
+	// ******************************
 
 	public Usuario getDonante() {
 		return this.donante;
