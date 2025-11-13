@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnectionManager {
-	// por alguna razon el driver no anda, logre hacerlo andar solo con credenciales
 	// private static String DRIVER = "com.mysql.jdbc.Driver";
 /*
 	// Railway MySQL 
