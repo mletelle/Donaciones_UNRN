@@ -27,7 +27,7 @@ public class BienDAOJDBC implements BienDao {
 				if (bien.getFecVec() != null) {
 					statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
 				} else {
-					statement.setNull(6, java.sql.Types.DATE);// no anda si no uso esto, antes daba error, tan dificil era signar un null?
+					statement.setNull(6, java.sql.Types.DATE); 
 				}
 				
 				statement.executeUpdate();
