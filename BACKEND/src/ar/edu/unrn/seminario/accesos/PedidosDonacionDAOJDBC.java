@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.modelo.EstadoPedido;
+import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Usuario;
 
@@ -25,20 +25,19 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		ResultSet generatedKeys = null;
 		try {
 			statement = conn.prepareStatement(
-					"INSERT INTO pedidos_donacion(fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro) "
-					+ "VALUES (?, ?, ?, ?, ?, ?)",
-					Statement.RETURN_GENERATED_KEYS); // Pedir las claves generadas
+					"INSERT INTO pedidos_donacion(fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro) "
+					+ "VALUES (?, ?, ?, ?, ?)",
+					Statement.RETURN_GENERATED_KEYS); // el generated keys para obtener el id autogenerado, si no fallaba
 			
 			statement.setTimestamp(1, Timestamp.valueOf(pedido.obtenerFecha()));
 			statement.setString(2, pedido.describirTipoVehiculo());
-			statement.setString(3, pedido.obtenerObservaciones());
-			statement.setString(4, pedido.getDonante().getUsuario());
-			statement.setString(5, pedido.obtenerEstado());
+			statement.setString(3, pedido.getDonante().getUsuario());
+			statement.setString(4, pedido.obtenerEstado());
 			
 			if (pedido.obtenerOrden() != null) {
-				statement.setInt(6, pedido.obtenerOrden().getId());
+				statement.setInt(5, pedido.obtenerOrden().getId());
 			} else {
-				statement.setNull(6, java.sql.Types.INTEGER);
+				statement.setNull(5, java.sql.Types.INTEGER);// sin esto tira error
 			}
 			
 			int affectedRows = statement.executeUpdate();
@@ -89,7 +88,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.prepareStatement(
-					"SELECT id, fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro "
+					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
 					+ "FROM pedidos_donacion WHERE id = ?");
 			statement.setInt(1, idPedido);
 			rs = statement.executeQuery();
@@ -113,8 +112,8 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement = conn.createStatement();
 			
 			rs = statement.executeQuery(
-					"SELECT id, fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE estado = 'Pendiente'"); 
+					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
+					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE'");
 			
 			while (rs.next()) {
 				try {
@@ -133,13 +132,39 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 	}
 
 	@Override
+	public List<PedidosDonacion> findAll(Connection conn) throws SQLException {
+		List<PedidosDonacion> pedidos = new ArrayList<PedidosDonacion>();
+		Statement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = conn.createStatement();
+			rs = statement.executeQuery(
+					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
+					+ "FROM pedidos_donacion ORDER BY fecha DESC");
+			
+			while (rs.next()) {
+				try {
+					PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
+					pedidos.add(pedido);
+				} catch (Exception e) {
+					System.err.println("Error al crear registro: " + e.getMessage());
+				}
+			}
+		} finally {
+			if (rs != null) rs.close();
+			if (statement != null) statement.close();
+		}
+		return pedidos;
+	}
+
+	@Override
 	public List<PedidosDonacion> findByOrden(int idOrden, Connection conn) throws SQLException {
 		List<PedidosDonacion> pedidos = new ArrayList<PedidosDonacion>();
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
 			statement = conn.prepareStatement(
-					"SELECT id, fecha, tipo_vehiculo, observaciones, usuario_donante, estado, id_orden_retiro "
+					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
 					+ "FROM pedidos_donacion WHERE id_orden_retiro = ?");
 			statement.setInt(1, idOrden);
 			rs = statement.executeQuery();
@@ -162,6 +187,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 	
 	private PedidosDonacion mapearResultadoPedido(ResultSet rs, Connection conn) throws SQLException {
 		try {
+			int id = rs.getInt("id");
 			String usuarioDonante = rs.getString("usuario_donante");
 			Usuario donante = usuarioDao.find(usuarioDonante, conn);
 			
@@ -173,15 +199,20 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			int id = rs.getInt("id"); // *** CORRECCIÓN: LEER EL ID ***
 			LocalDateTime fecha = rs.getTimestamp("fecha").toLocalDateTime();
 			String tipoVehiculo = rs.getString("tipo_vehiculo");
-			String observaciones = rs.getString("observaciones");
-			String estadoStr = rs.getString("estado");
 			
-			// Convertir String del estado a Enum
-			EstadoPedido estado = EstadoPedido.PENDIENTE; // Default
-			if (estadoStr.equals(EstadoPedido.EN_EJECUCION.toString())) {
-				estado = EstadoPedido.EN_EJECUCION;
-			} else if (estadoStr.equals(EstadoPedido.COMPLETADO.toString())) {
-				estado = EstadoPedido.COMPLETADO;
+			PedidosDonacion pedido = new PedidosDonacion(fecha, tipoVehiculo, donante);
+			pedido.setId(id);
+			
+			String estadoStr = rs.getString("estado");
+			EstadoPedido estado = EstadoPedido.fromString(estadoStr.toUpperCase());
+			pedido.setEstado(estado);
+			
+			// cargar id_orden_retiro si existe
+			Integer idOrdenRetiro = rs.getInt("id_orden_retiro");
+			if (!rs.wasNull() && idOrdenRetiro != null) {
+				// crear una orden temporal solo con el id para mantener la referencia
+				OrdenRetiro ordenTemp = new OrdenRetiro(idOrdenRetiro);
+				pedido.asignarOrden(ordenTemp);
 			}
 
 			PedidosDonacion pedido = new PedidosDonacion(id, fecha, tipoVehiculo, observaciones, donante, estado);

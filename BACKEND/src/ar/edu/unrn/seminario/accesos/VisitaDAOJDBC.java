@@ -9,11 +9,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.ResultadoVisita;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Visita;
 
 public class VisitaDAOJDBC implements VisitaDao {
+	
+	private PedidosDonacionDao pedidoDao = new PedidosDonacionDAOJDBC();
 
 	@Override
 	public void create(Visita visita, int idOrden, int idPedido, Connection conn) throws SQLException {
@@ -57,11 +60,20 @@ public class VisitaDAOJDBC implements VisitaDao {
 					LocalDateTime fechaHora = timestamp.toLocalDateTime();
 					String observacion = rs.getString("observacion");
 					String resultadoStr = rs.getString("resultado");
+					int idPedido = rs.getInt("id_pedido_donacion");
 					
 					// convertir el string a enum
 					ResultadoVisita resultado = ResultadoVisita.fromString(resultadoStr);
-					// usar el metodo fromString que coincide con los valores de la BD
 					Visita visita = new Visita(fechaHora, resultado, observacion);
+					
+					// cargar el pedido asociado
+					if (idPedido > 0) {
+						PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
+						if (pedido != null) {
+							visita.setPedidoRelacionado(pedido);
+						}
+					}
+					
 					visitas.add(visita);
 				} catch (Exception e) {
 					System.err.println("Error creando Visita: " + e.getMessage());

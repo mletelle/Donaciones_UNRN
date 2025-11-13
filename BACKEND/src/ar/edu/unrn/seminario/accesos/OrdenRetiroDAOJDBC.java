@@ -115,16 +115,48 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 		try {
 			statement = conn.prepareStatement(
 					"SELECT id, fecha_generacion, estado, usuario_voluntario, patente_vehiculo "
-					+ "FROM ordenes_retiro WHERE estado = ?");
-			statement.setString(1, estado); // Busca por el String "Pendiente"
+					+ "FROM ordenes_retiro WHERE UPPER(estado) = UPPER(?)");
+			statement.setString(1, estado);
 			rs = statement.executeQuery();
 			
 			while (rs.next()) {
 				try {
 					OrdenRetiro orden = mapearResultadoOrden(rs, conn);
-					ordenes.add(orden);
+					if (orden != null) {
+						ordenes.add(orden);
+					}
 				} catch (Exception e) {
-					System.err.println("Error al crear OrdenRetiro: " + e.getMessage());
+					System.err.println("Error al crear OrdenRetiro (ID=" + rs.getInt("id") + "): " + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		} finally {
+			if (rs != null) rs.close();
+			if (statement != null) statement.close();
+		}
+		return ordenes;
+	}
+
+	@Override
+	public List<OrdenRetiro> findAll(Connection conn) throws SQLException {
+		List<OrdenRetiro> ordenes = new ArrayList<OrdenRetiro>();
+		Statement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = conn.createStatement();
+			rs = statement.executeQuery(
+					"SELECT id, fecha_generacion, estado, usuario_voluntario, patente_vehiculo "
+					+ "FROM ordenes_retiro ORDER BY fecha_generacion DESC");
+			
+			while (rs.next()) {
+				try {
+					OrdenRetiro orden = mapearResultadoOrden(rs, conn);
+					if (orden != null) {
+						ordenes.add(orden);
+					}
+				} catch (Exception e) {
+					System.err.println("Error al crear OrdenRetiro (ID=" + rs.getInt("id") + "): " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		} finally {
@@ -149,9 +181,12 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			while (rs.next()) {
 				try {
 					OrdenRetiro orden = mapearResultadoOrden(rs, conn);
-					ordenes.add(orden);
+					if (orden != null) {
+						ordenes.add(orden);
+					}
 				} catch (Exception e) {
-					System.err.println("Error al crear OrdenRetiro: " + e.getMessage());
+					System.err.println("Error al crear OrdenRetiro (ID=" + rs.getInt("id") + "): " + e.getMessage());
+					e.printStackTrace();
 				}
 			}
 		} finally {
@@ -164,33 +199,22 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 	private OrdenRetiro mapearResultadoOrden(ResultSet rs, Connection conn) throws SQLException {
 		try {
 			int idOrden = rs.getInt("id");
-            LocalDateTime fechaGen = rs.getTimestamp("fecha_generacion").toLocalDateTime();
-            String estadoStr = rs.getString("estado");
-            
-            // Convertir String (ej. "Pendiente") a Enum (EstadoOrden.PENDIENTE)
-            EstadoOrden estado = EstadoOrden.PENDIENTE; // Default
-            if (estadoStr.equals(EstadoOrden.EN_EJECUCION.toString())) {
-                estado = EstadoOrden.EN_EJECUCION;
-            } else if (estadoStr.equals(EstadoOrden.COMPLETADO.toString())) {
-                estado = EstadoOrden.COMPLETADO;
-            }
-            // (Falta CANCELADO si lo implementas)
-            
-			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn); // obtener pedidos para esta orden
-            
-            // Obtener Ubicacion (usando la del primer pedido si existe)
-            Ubicacion destino = null;
-            if (!pedidos.isEmpty() && pedidos.get(0).getDonante() != null) {
-                destino = pedidos.get(0).getDonante().getUbicacionEntidad();
-                if (destino == null) { // Fallback por si getUbicacionEntidad() devuelve null
-                     destino = new Ubicacion(pedidos.get(0).getDonante().obtenerDireccion(), "N/A", "N/A", 0.0, 0.0);
-                }
-            }
-
-			// **** USAR EL NUEVO CONSTRUCTOR DE HIDRATACIÓN ****
-			OrdenRetiro orden = new OrdenRetiro(idOrden, fechaGen, estado, destino, pedidos); 
+			List<PedidosDonacion> pedidos = pedidoDao.findByOrden(idOrden, conn);
 			
-            String usuarioVoluntario = rs.getString("usuario_voluntario"); // obtener y asignar voluntario
+			// si no hay pedidos asociados, no se puede crear la orden (datos inconsistentes)
+			if (pedidos == null || pedidos.isEmpty()) {
+				System.err.println("Orden ID=" + idOrden + " no tiene pedidos asociados, se omite");
+				return null;
+			}
+			
+			OrdenRetiro orden = new OrdenRetiro(pedidos, null);
+			orden.setId(idOrden);
+			
+			String estadoStr = rs.getString("estado");
+			EstadoOrden estado = EstadoOrden.fromString(estadoStr.toUpperCase());
+			orden.setEstado(estado);
+			
+			String usuarioVoluntario = rs.getString("usuario_voluntario");
 			if (usuarioVoluntario != null) {
 				Usuario voluntario = usuarioDao.find(usuarioVoluntario, conn);
 				if (voluntario != null) {
@@ -198,14 +222,17 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 				}
 			}
 			
-			String patenteVehiculo = rs.getString("patente_vehiculo"); // obtener y asignar vehiculo
+			String patenteVehiculo = rs.getString("patente_vehiculo");
 			if (patenteVehiculo != null) {
 				Vehiculo vehiculo = vehiculoDao.findByPatente(patenteVehiculo, conn);
 				if (vehiculo != null) {
 					orden.asignarVehiculo(vehiculo);
 				}
 			}
-			// no asignamos visitas aqui para evitar complejidad
+			
+			// recalcular estado basado en los pedidos actuales
+			orden.actualizarEstadoAutomatico();
+			
 			return orden;
 		} catch (Exception e) {
 			throw new SQLException("Error al mapear OrdenRetiro: " + e.getMessage(), e);

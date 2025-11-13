@@ -44,9 +44,13 @@ public interface IApi {
 
 	List<PedidoDonacionDTO> obtenerPedidosPendientes();
 
+	List<PedidoDonacionDTO> obtenerTodosPedidos();
+
 	List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
 
 	List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
+
+	List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro();
 
 	void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
 

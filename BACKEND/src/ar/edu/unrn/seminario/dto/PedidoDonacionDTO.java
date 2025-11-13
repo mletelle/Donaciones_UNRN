@@ -9,18 +9,16 @@ public class PedidoDonacionDTO {
     private String fecha;
     private List<BienDTO> bienes;
     private String tipoVehiculo;
-    private String observaciones;
     private int donanteId;
     private String donante;
     private String direccion;
     private String estado;
 
     // Constructores
-    public PedidoDonacionDTO(String fecha, List<BienDTO> bienes, String tipoVehiculo, String observaciones, int donanteId) {
+    public PedidoDonacionDTO(String fecha, List<BienDTO> bienes, String tipoVehiculo, int donanteId) {
         this.fecha = fecha;
         this.bienes = bienes;
         this.tipoVehiculo = tipoVehiculo;
-        this.observaciones = observaciones;
         this.donanteId = donanteId;
     }
 
@@ -32,13 +30,22 @@ public class PedidoDonacionDTO {
     }
 
     //  Constructor completo para listados con nombre de donante
-    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, String observaciones, int donanteId, String nombreDonante) {
+    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, int donanteId, String nombreDonante) {
         this.id = id;
         this.fecha = fecha;
         this.tipoVehiculo = tipoVehiculo;
-        this.observaciones = observaciones;
         this.donanteId = donanteId;
         this.donante = nombreDonante;
+    }
+
+    //  Constructor completo con estado para listados
+    public PedidoDonacionDTO(int id, String fecha, String tipoVehiculo, int donanteId, String nombreDonante, String estado) {
+        this.id = id;
+        this.fecha = fecha;
+        this.tipoVehiculo = tipoVehiculo;
+        this.donanteId = donanteId;
+        this.donante = nombreDonante;
+        this.estado = estado;
     }
 
     // Getters
@@ -56,10 +63,6 @@ public class PedidoDonacionDTO {
     
     public String getTipoVehiculo() {
         return tipoVehiculo;
-    }
-    
-    public String getObservaciones() {
-        return observaciones;
     }
     
     public int getDonanteId() {
@@ -93,10 +96,6 @@ public class PedidoDonacionDTO {
 
     public void setTipoVehiculo(String tipoVehiculo) {
         this.tipoVehiculo = tipoVehiculo;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
     }
 
     public void setDonanteId(int donanteId) {

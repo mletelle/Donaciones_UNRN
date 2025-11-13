@@ -73,7 +73,7 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
     // metodo para cargar ordenes
     private void cargarOrdenesAsignadas() {
         modeloTabla.setRowCount(0); // Limpiar la tabla
-        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getNombre());
+        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getUsuario());
         for (OrdenRetiroDTO orden : ordenes) {
             modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstado(), orden.getDescripcion()});
         }
