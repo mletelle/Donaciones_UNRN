@@ -558,9 +558,9 @@ public class PersistenceApi implements IApi {
 			
 			// actualizar estado pedido segun resultado visita
 					if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
-						pedido.marcarCompletado(); // Usar el método de la entidad
+						pedido.marcarCompletado(); 
 					} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
-						pedido.marcarEnEjecucion(); // Usar el método de la entidad
+						pedido.marcarEnEjecucion(); 
 					}
 					pedidoDao.update(pedido, conn);
 						

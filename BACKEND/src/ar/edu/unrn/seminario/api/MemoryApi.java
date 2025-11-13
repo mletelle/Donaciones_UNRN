@@ -194,7 +194,7 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
-	    // busacr usuario donante por DNI
+	    // buscar usuario donante por DNI
 		Usuario donante = buscarUsuarioPorDni(pedidoDTO.getDonanteId());
 	    if (donante == null) {
 	        throw new ObjetoNuloException("Donante no encontrado.");
@@ -395,11 +395,7 @@ public class MemoryApi implements IApi {
 						Usuario donante = visita.getPedidoRelacionado().getDonante(); // MODIFICADO: ahora es Usuario
 						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
 						
-						// DEBUG
-						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
-					} else {
-						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
-					}
+					} 
 					
 					// crear DTO con todos los datos relevantes
 					VisitaDTO visitaDTO = new VisitaDTO(
@@ -424,6 +420,7 @@ public class MemoryApi implements IApi {
         return "Donante Desconocido";
     }
 
+	// Metodos
 	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
@@ -463,8 +460,6 @@ public class MemoryApi implements IApi {
 			pedido.marcarEnEjecucion();
 		}
 
-		// llamada a marcarCompletado() o marcarEnEjecucion() 
-		// automatic notifica a la orden para que actualice su estado
 	}
 
 	private Rol buscarRol(Integer codigo) {
@@ -555,20 +550,12 @@ public class MemoryApi implements IApi {
 		// agrega la orden a la lista
 		this.ordenes.add(nuevaOrden);
 	}
-
-	private List<String> convertirBienesAStrings(List<Bien> bienes) {//no manejamos logica de bienes, quedo de antes
-        List<String> bienesStr = new ArrayList<>();
-        for (Bien bien : bienes) {
-            bienesStr.add(bien.toString()); 
-        }
-        return bienesStr;
-    }
 	
 	private PedidoDonacionDTO convertirPedidoADTO(PedidosDonacion pedido) {
 	    if (pedido == null) {
 	        return null;
 	    }
-	    Usuario donante = pedido.obtenerDonante(); // ahora es Usuario
+	    Usuario donante = pedido.obtenerDonante(); 
 	    if (donante == null) {
 	        System.out.println("Advertencia: El pedido " + pedido.obtenerId() + " no tiene un donante asociado.");
 	        return null;
