@@ -333,28 +333,30 @@ public class MemoryApi implements IApi {
 	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
 		
-		// normalizar el nombre del voluntario para la comparacion
-		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		// el parametro es el username del voluntario (ej: "clopez", "bgoro")
+		String usernameBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
 		
 		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
 		for (OrdenRetiro orden : this.ordenes) {
-			Usuario voluntarioAsignado = orden.getVoluntario(); // MODIFICADO: ahora es Usuario
+			Usuario voluntarioAsignado = orden.getVoluntario();
 			
 			// validar que la orden tenga un voluntario asignado
 			if (voluntarioAsignado != null) {
-				String nombreAsignado = voluntarioAsignado.obtenerNombre().trim(); // MODIFICADO: usar obtenerNombre()
+				String usernameAsignado = voluntarioAsignado.getUsuario().trim();
 				
-				// comparar nombres (case-insensitive y sin espacios)
-				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+				// comparar usernames (case-insensitive)
+				if (usernameAsignado.equalsIgnoreCase(usernameBuscado)) {
 					int idOrden = orden.getId();
+					String nombreCompleto = voluntarioAsignado.getNombre() + " " + voluntarioAsignado.getApellido();
+					
 					ordenesAsignadas.add(new OrdenRetiroDTO(
 						idOrden,
 						orden.obtenerEstadoOrden().toString(), // Enum a String
 						orden.getFechaCreacion(),
-						null, // visita no incluidas aqui
+						null, // visitas no incluidas aqui
 						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
 						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
-						nombreAsignado
+						nombreCompleto
 					));
 				}
 			}
@@ -396,7 +398,7 @@ public class MemoryApi implements IApi {
 						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
 						
 						// DEBUG
-						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+						// System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
 					} else {
 						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
 					}
