@@ -177,5 +177,44 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 		}
 		return usuarios;
 	}
+	public Usuario findByDni(int dni, Connection conn) throws SQLException {
+	    Usuario usuario = null;
+	    PreparedStatement statement = null;
+	    ResultSet rs = null;
+	    try {
+	        statement = conn.prepareStatement(
+	                "SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+	                        + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+	                        + "WHERE u.dni = ?"); // Búsqueda por DNI
+
+	        statement.setInt(1, dni);
+	        rs = statement.executeQuery();
+	        
+	        if (rs.next()) { // Solo debe haber uno
+	            try {
+	                Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
+	                usuario = new Usuario(
+	                        rs.getString("usuario"), 
+	                        rs.getString("contrasena"), 
+	                        rs.getString("nombre"),
+	                        rs.getString("correo"), 
+	                        rol, 
+	                        rs.getString("apellido"), 
+	                        rs.getInt("dni"), 
+	                        rs.getString("direccion"));
+	                
+	                if (!rs.getBoolean("activo")) {
+	                    usuario.desactivar();
+	                }
+	            } catch (Exception e) {
+	                throw new SQLException("Error buscando Usuario por DNI", e);
+	            }
+	        }
+	    } finally {
+	        if (rs != null) rs.close();
+	        if (statement != null) statement.close();
+	    }
+	    return usuario;
+	}
 
 }
