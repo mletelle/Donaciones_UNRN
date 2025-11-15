@@ -542,23 +542,30 @@ public class PersistenceApi implements IApi {
 	        conn.setAutoCommit(false);
 
 	        // Se obtienen las entidades de la transacción
+	        
+	        // Se crea para validar que no sea null, es decir, que exista y para poder hacer un update en el dao
 	        OrdenRetiro orden = ordenDao.findById(idOrdenRetiro, conn);
+	        
+	        // Se crea para validar que no sea null, es decir, que exista y para poder cambiar la logica de estado mas adelante y para hacer un update en el dao
 	        PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
-
+	        
+	        // Validar que el pedido pertenezca a la orden
 	        if (orden == null) {
 	            throw new ObjetoNuloException("Orden no encontrada con ID: " + idOrdenRetiro);
 	        }
 	        if (pedido == null) {
 	            throw new ObjetoNuloException("Pedido no encontrado con ID: " + idPedido);
 	        }
-
-	        // Validar que el pedido pertenezca a la orden
+	        
 	        // Asignamos la orden al pedido (en memoria) para que las validaciones de negocio funcionen
 	        pedido.asignarOrden(orden);
 	        
-	        // Logica de negocio
+	        // Se crea para crear visita y para poder comparar los resultados de la visita para manejar la logica de estados
 	        ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
+	        
+	        // Se crea para poder asignarle el pedido en cuestion
 	        Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
+	        
 	        visita.setPedidoRelacionado(pedido); // Enlaza la visita al pedido específico
 
 	        // Escritura
@@ -572,9 +579,11 @@ public class PersistenceApi implements IApi {
 	        } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
 	            pedido.marcarEnEjecucion();
 	        }
+	        
+	        // se actualiza el dao
 	        pedidoDao.update(pedido, conn);
 
-	        // Actualizar el estado de la orden (el modelo se actualiza solo por la llamada anterior)
+	        // Actualizar el estado de la orden 
 	        ordenDao.update(orden, conn);
 
 	        // Si salió bien, se comittea la transaccion
@@ -630,6 +639,7 @@ public class PersistenceApi implements IApi {
 	        ConnectionManager.disconnect(); // Esto cierra la conexión
 	    }
 	}
+	
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() { // listado de voluntarios
 		Connection conn = null;
