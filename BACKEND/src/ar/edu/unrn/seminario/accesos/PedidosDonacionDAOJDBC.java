@@ -215,4 +215,10 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		}
 	}
 
+	@Override
+	public PedidosDonacion findById(int idPedido, Connection conn) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
