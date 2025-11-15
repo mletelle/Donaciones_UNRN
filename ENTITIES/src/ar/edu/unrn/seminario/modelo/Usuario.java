@@ -200,9 +200,21 @@ public class Usuario {
 		return this.dni == other.dni;
 	}
 
-	@Override
-	public String toString() {
-		return nombre + " " + apellido + " (DNI " + dni + ")";
+		public String toString() {
+			return nombre + " " + apellido + " (DNI " + dni + ")";
+		}
+
+		public Ubicacion getUbicacionEntidad() {
+			// Si el usuario no tiene dirección (ej. Admin, Voluntario), retorna null
+			if (this.direccion == null || this.direccion.isEmpty()) {
+				// Esto es válido, pero la API debe manejarlo (lo hace)
+				return null; 
+			}
+			
+			// Crea un objeto Ubicacion "dummy" usando la dirección de string.
+			// Asume valores vacíos para zona/barrio y 0.0 para coords,
+			// ya que el modelo Usuario (actualmente) no los almacena por separado.
+			return new Ubicacion(this.direccion, "N/A", "N/A", 0.0, 0.0);
+		}
 	}
 
-}

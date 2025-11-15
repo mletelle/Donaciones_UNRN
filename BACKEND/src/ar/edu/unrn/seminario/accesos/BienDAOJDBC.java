@@ -29,12 +29,15 @@ public class BienDAOJDBC implements BienDao {
 				} else {
 					statement.setNull(6, java.sql.Types.DATE);
 				}
-				
-				statement.executeUpdate();
+				// AGREGA LA CONSULTA AL LOTE (NO LA EJECUTA)
+				statement.addBatch();
+				// statement.executeUpdate();
+				// Iba a la base de datos 
 			}
+			// EJECUTA TODAS LAS CONSULTAS DEL LOTE EN UNA SOLA LLAMADA A LA BD
+			statement.executeBatch();
 		} finally {
 			if (statement != null) statement.close();
 		}
 	}
-
 }

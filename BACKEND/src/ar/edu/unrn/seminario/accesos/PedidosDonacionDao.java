@@ -20,4 +20,7 @@ public interface PedidosDonacionDao {
 	
 	List<PedidosDonacion> findByOrden(int idOrden, Connection conn) throws SQLException;
 	
+	// Agregado
+	List<PedidosDonacion> findByIds(List<Integer> idsPedidos, Connection conn) throws SQLException;
+	
 }
