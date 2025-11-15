@@ -529,7 +529,7 @@ public class PersistenceApi implements IApi {
 		}
 		return dtos;
 	}
-
+	
 	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO)
 	        throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
@@ -537,35 +537,29 @@ public class PersistenceApi implements IApi {
 	    Connection conn = null;
 	    try {
 	        conn = ConnectionManager.getConnection();
-	        // Inicio de transaccion
-	        conn.setAutoCommit(false);
+	        conn.setAutoCommit(false); // inicio de transacción
 
-	        // Se obtienen las entidades de la transacción
-	        OrdenRetiro orden = ordenDao.findById(idOrdenRetiro, conn);
-	        PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
+	        // Traer pedido y validar pertenencia a la orden en una sola consulta
+	        PedidosDonacion pedido = pedidoDao.findByIdAndOrden(idPedido, idOrdenRetiro, conn);
+	        if (pedido == null) {
+	            throw new ObjetoNuloException("Pedido " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
+	        }
 
+	        // La orden ya está referenciada en el pedido (con su ID)
+	        OrdenRetiro orden = pedido.obtenerOrden();
 	        if (orden == null) {
 	            throw new ObjetoNuloException("Orden no encontrada con ID: " + idOrdenRetiro);
 	        }
-	        if (pedido == null) {
-	            throw new ObjetoNuloException("Pedido no encontrado con ID: " + idPedido);
-	        }
 
-	        // Validar que el pedido pertenezca a la orden
-	        // Asignamos la orden al pedido (en memoria) para que las validaciones de negocio funcionen
-	        pedido.asignarOrden(orden);
-	        
 	        // Logica de negocio
 	        ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
 	        Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
-	        visita.setPedidoRelacionado(pedido); // Enlaza la visita al pedido específico
+	        visita.setPedidoRelacionado(pedido);
 
 	        // Escritura
-	        
-	        // Insertar la visita
 	        visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 
-	        // Actualizar el estado del pedido
+	        // Actualizar estado del pedido según resultado
 	        if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
 	            pedido.marcarCompletado();
 	        } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
@@ -573,52 +567,42 @@ public class PersistenceApi implements IApi {
 	        }
 	        pedidoDao.update(pedido, conn);
 
-	        // Actualizar el estado de la orden (el modelo se actualiza solo por la llamada anterior)
+	        // Actualizar estado de la orden
 	        ordenDao.update(orden, conn);
 
-	        // Si salió bien, se comittea la transaccion
-	        conn.commit();
+	        conn.commit(); // commit si todo salió bien
 
 	    } catch (SQLException e) {
-	        // SI ALGO FALLÓ (SQLException, ReglaNegocioException, etc.)
-	        try {
-	            if (conn != null) {
-	                System.err.println("Error en la transacción. Iniciando rollback...");
-	                conn.rollback(); // Se deshacen todos los cambios
-	            }
-	        } catch (SQLException e2) {
-	            // Error crítico: no se pudo hacer rollback
-	            e2.printStackTrace();
-	        }
-	        // Relanzar el error para que la capa superior (GUI) se entere
-	        throw new RuntimeException("Error de base de datos al registrar la visita: " + e.getMessage(), e);
-	    
-	    } catch (ReglaNegocioException | ObjetoNuloException | CampoVacioException e) {
-	        // Fallo de validación de negocio
-	        try {
-	            if (conn != null) {
-	                conn.rollback(); // Deshacer por si acaso
-	            }
-	        } catch (SQLException e2) {
-	            e2.printStackTrace();
-	        }
-	        // Relanzar la excepción de negocio para que la GUI la muestre
-	        throw e; 
-	    
-	    } catch (Exception e) {
-	        // Captura genérica para otros errores (ej. IllegalArgumentException de fromString)
-	         try {
-	            if (conn != null) {
+	        if (conn != null) {
+	            try {
 	                conn.rollback();
+	            } catch (SQLException e2) {
+	                e2.printStackTrace();
 	            }
-	        } catch (SQLException e2) {
-	            e2.printStackTrace();
 	        }
-	        // Relanzar como un error no controlado
+	        throw new RuntimeException("Error de base de datos al registrar la visita: " + e.getMessage(), e);
+
+	    } catch (ReglaNegocioException | ObjetoNuloException | CampoVacioException e) {
+	        if (conn != null) {
+	            try {
+	                conn.rollback();
+	            } catch (SQLException e2) {
+	                e2.printStackTrace();
+	            }
+	        }
+	        throw e;
+
+	    } catch (Exception e) {
+	        if (conn != null) {
+	            try {
+	                conn.rollback();
+	            } catch (SQLException e2) {
+	                e2.printStackTrace();
+	            }
+	        }
 	        throw new RuntimeException("Error inesperado al registrar visita: " + e.getMessage(), e);
 
 	    } finally {
-	        // SIEMPRE devolver el AutoCommit a true y cerrar la conexión
 	        if (conn != null) {
 	            try {
 	                conn.setAutoCommit(true);
@@ -626,9 +610,10 @@ public class PersistenceApi implements IApi {
 	                e.printStackTrace();
 	            }
 	        }
-	        ConnectionManager.disconnect(); // Esto cierra la conexión
+	        ConnectionManager.disconnect();
 	    }
 	}
+
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() { // listado de voluntarios
 		Connection conn = null;
