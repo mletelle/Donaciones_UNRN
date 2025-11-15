@@ -84,20 +84,20 @@ public class MemoryApi implements IApi {
 			// PEDIDO 1 (Donante Juan Perez)
 			List<Bien> bienes1 = new ArrayList<>();
 			bienes1.add(new Bien(1, 10, 2, vehiculoCamioneta)); 
-			this.pedidos.add(new PedidosDonacion(LocalDateTime.now(), new ArrayList<>(bienes1), "Camioneta", "Pedido 1: Sin observaciones", donante1));
+			this.pedidos.add(new PedidosDonacion(LocalDateTime.now(), new ArrayList<>(bienes1), "Camioneta", donante1));
 
 			// PEDIDO 2 (Donante Maria Gomez)
 			List<Bien> bienes2 = new ArrayList<>();
 			bienes2.add(new Bien(2, 5, 1, vehiculoCamion)); 
 			bienes2.add(new Bien(3, 1, 3, vehiculoCamion));
 			LocalDateTime fecha2 = LocalDateTime.now().minusDays(1); 
-			this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camion", "Pedido 2: Mueble grande", donante2));
+			this.pedidos.add(new PedidosDonacion(fecha2, new ArrayList<>(bienes2), "Camion", donante2));
 
 			// PEDIDO 3 (Donante Juan Perez)
 			List<Bien> bienes3 = new ArrayList<>();
 			bienes3.add(new Bien(4, 15, 2, vehiculoAuto)); 
 			LocalDateTime fecha3 = LocalDateTime.now().minusDays(2); 
-			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), "Auto", "Pedido 3: Cajas pequeñas", donante1));
+			this.pedidos.add(new PedidosDonacion(fecha3, new ArrayList<>(bienes3), "Auto", donante1));
 			
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			e.printStackTrace();
@@ -215,7 +215,7 @@ public class MemoryApi implements IApi {
 	    LocalDateTime fechaLocalDateTime = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
 
 		// crea el pedido directamente 
-	    PedidosDonacion pedido = new PedidosDonacion(fechaLocalDateTime, bienes, pedidoDTO.getTipoVehiculo(), pedidoDTO.getObservaciones(), donante);
+	    PedidosDonacion pedido = new PedidosDonacion(fechaLocalDateTime, bienes, pedidoDTO.getTipoVehiculo(), donante);
 	    this.pedidos.add(pedido);
 	}
 
@@ -253,13 +253,34 @@ public class MemoryApi implements IApi {
 					pedido.obtenerId(),
 					formattedDate, // usar la fecha formateada como string
 					pedido.describirTipoVehiculo(),
-					pedido.obtenerObservaciones(),
 					pedido.obtenerDonante().obtenerDni(),
 					nombreDonante // nombre completo del donante
 				));
 			}
 		}
 		return pendientes; // devuelve lista
+	}
+
+	@Override
+	public List<PedidoDonacionDTO> obtenerTodosPedidos() {
+		List<PedidoDonacionDTO> todos = new ArrayList<>();
+
+		for (PedidosDonacion pedido : pedidos) {
+			DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			String formattedDate = pedido.obtenerFecha().format(formatter2);
+
+			String nombreDonante = pedido.obtenerDonante().obtenerNombre() + " " + pedido.obtenerDonante().obtenerApellido();
+
+			todos.add(new PedidoDonacionDTO(
+				pedido.obtenerId(),
+				formattedDate,
+				pedido.describirTipoVehiculo(),
+				pedido.obtenerDonante().obtenerDni(),
+				nombreDonante,
+				pedido.obtenerEstado()
+			));
+		}
+		return todos;
 	}
 
 	@Override
@@ -279,6 +300,22 @@ public class MemoryApi implements IApi {
 	}
 	return ordenesFiltradas;
 	}
+
+	@Override
+	public List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro() {
+		List<OrdenRetiroDTO> todasOrdenes = new ArrayList<>();
+		for (OrdenRetiro orden : ordenes) {
+			List<VisitaDTO> visitasDTO = new ArrayList<>();
+			for (Visita visita : orden.obtenerVisitas()) {
+				visitasDTO.add(new VisitaDTO(visita.obtenerFechaFormateada(), visita.obtenerObservacion()));
+			}
+			String donante = orden.obtenerDonante() != null ? orden.obtenerDonante().getNombre() : "Donante Desconocido";
+			String vehiculo = orden.obtenerVehiculo() != null ? orden.obtenerVehiculo().getDescripcion() : "Vehiculo Desconocido";
+			String voluntario = orden.obtenerVoluntarioPrincipal() != null ? orden.obtenerVoluntarioPrincipal().obtenerNombre() : "Voluntario Desconocido";
+			todasOrdenes.add(new OrdenRetiroDTO(orden.obtenerId(), orden.obtenerEstadoOrden().toString(), orden.obtenerFechaCreacion(), visitasDTO, donante, vehiculo, voluntario));
+		}
+		return todasOrdenes;
+	}
 	
 	@Override
 	public List<VoluntarioDTO> obtenerVoluntarios() {
@@ -286,7 +323,7 @@ public class MemoryApi implements IApi {
 		// filtra usuarios ACTIVOS con rol VOLUNTARIO ( 2)
 		for (Usuario usuario : this.usuarios) {
 			if (usuario.getRol().getCodigo() == 2 && usuario.isActivo()) {
-				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido()));
+				voluntariosDTO.add(new VoluntarioDTO(usuario.obtenerDni(), usuario.obtenerNombre(), usuario.obtenerApellido(), usuario.getUsuario()));
 			}
 		}
 		return voluntariosDTO;
@@ -296,28 +333,30 @@ public class MemoryApi implements IApi {
 	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String nombreVoluntario) {
 		List<OrdenRetiroDTO> ordenesAsignadas = new ArrayList<>();
 		
-		// normalizar el nombre del voluntario para la comparacion
-		String nombreBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
+		// el parametro es el username del voluntario (ej: "clopez", "bgoro")
+		String usernameBuscado = nombreVoluntario != null ? nombreVoluntario.trim() : "";
 		
 		// FILTRAR SOLO las ordenes asignadas al voluntario especificado
 		for (OrdenRetiro orden : this.ordenes) {
-			Usuario voluntarioAsignado = orden.getVoluntario(); // MODIFICADO: ahora es Usuario
+			Usuario voluntarioAsignado = orden.getVoluntario();
 			
 			// validar que la orden tenga un voluntario asignado
 			if (voluntarioAsignado != null) {
-				String nombreAsignado = voluntarioAsignado.obtenerNombre().trim(); // MODIFICADO: usar obtenerNombre()
+				String usernameAsignado = voluntarioAsignado.getUsuario().trim();
 				
-				// comparar nombres (case-insensitive y sin espacios)
-				if (nombreAsignado.equalsIgnoreCase(nombreBuscado)) {
+				// comparar usernames (case-insensitive)
+				if (usernameAsignado.equalsIgnoreCase(usernameBuscado)) {
 					int idOrden = orden.getId();
+					String nombreCompleto = voluntarioAsignado.getNombre() + " " + voluntarioAsignado.getApellido();
+					
 					ordenesAsignadas.add(new OrdenRetiroDTO(
 						idOrden,
 						orden.obtenerEstadoOrden().toString(), // Enum a String
 						orden.getFechaCreacion(),
-						null, // visita no incluidas aqui
+						null, // visitas no incluidas aqui
 						orden.getDonante() != null ? orden.getDonante().getNombre() : "Sin Donante",
 						orden.getVehiculo() != null ? orden.getVehiculo().getPatente() : "Sin Vehiculo",
-						nombreAsignado
+						nombreCompleto
 					));
 				}
 			}
@@ -359,7 +398,7 @@ public class MemoryApi implements IApi {
 						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
 						
 						// DEBUG
-						System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
+						// System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
 					} else {
 						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
 					}
@@ -387,49 +426,68 @@ public class MemoryApi implements IApi {
         return "Donante Desconocido";
     }
 
-	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
-		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
-		if (orden == null) {
-			throw new ObjetoNuloException("Orden de retiro no encontrada.");
-		}
+	    
+	    // --- 1. Validaciones de Objeto Nulo y Existencia ---
+	    OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
+	    if (orden == null) {
+	        throw new ObjetoNuloException("Orden de retiro no encontrada.");
+	    }
 
-		PedidosDonacion pedido = orden.obtenerPedidoPorId(idPedido);
-		if (pedido == null) {
-			throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
-		}
+	    PedidosDonacion pedido = orden.obtenerPedidoPorId(idPedido);
+	    if (pedido == null) {
+	        throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
+	    }
+	    
+	    // --- 2. Validaciones de DTO (Campos Vacíos y Nulos) ---
+	    if (visitaDTO.getFechaHora() == null) {
+	        throw new CampoVacioException("La fecha de la visita no puede ser nula.");
+	    }
+	    if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
+	        throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacío.");
+	    }
+	    if (visitaDTO.getObservacion() == null || visitaDTO.getObservacion().trim().isEmpty()) {
+	        throw new CampoVacioException("Las observaciones de la visita no pueden ser nulas o vacías.");
+	    }
+	    
+	    // --- 3. Validaciones de Reglas de Negocio (Movidas al Back-end) ---
+	    
+	    // Regla 1: La visita no puede ser en el futuro
+	    if (visitaDTO.getFechaHora().isAfter(LocalDateTime.now())) {
+	        throw new ReglaNegocioException("La fecha y hora de la visita no pueden ser posteriores al momento actual.");
+	    }
+	    
+	    // Conversión de String del DTO al Enum
+	    ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
 
-		if (visitaDTO.getFechaHora() == null) {
-			throw new CampoVacioException("La fecha de la visita no puede ser nula.");
-		}
-		if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
-			throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacio.");
-		}
+	    // --- 4. Creación de la Entidad y Lógica de Dominio ---
+	    
+	    // Creación de la entidad Visita
+	    LocalDateTime fechaVisita = visitaDTO.getFechaHora();
+	    Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
 
-		//  String del DTO al Enum
-		ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
+	    // Establecer la relación entre la visita y el pedido
+	    visita.setPedidoRelacionado(pedido);
 
-		// entidad Visita
-		LocalDateTime fechaVisita = visitaDTO.getFechaHora();
-		Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
+	    // Sumar la visita a la orden (el agregado de la visita debe ocurrir antes de actualizar el estado)
+	    orden.agregarVisita(visita);
 
-		// establecer la relacion entre la visita y el pedido
-		visita.setPedidoRelacionado(pedido);
+	    // Actualiza el estado del pedido según el resultado de visita
+	    // Nota: Es mejor mover esta lógica de actualización del estado a un método dentro de la entidad 'PedidosDonacion'
+	    // para que sea más coherente con el modelo de dominio.
+	    if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+	        pedido.marcarCompletado();
+	    } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+	        pedido.marcarEnEjecucion();
+	    }
 
-		// sumar la visita a la orden
-		orden.agregarVisita(visita);
-
-		// actualiza el estado del pedido segun el resultado de visita
-		if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
-			pedido.marcarCompletado();
-		} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
-			pedido.marcarEnEjecucion();
-		}
-
-		// llamada a marcarCompletado() o marcarEnEjecucion() 
-		// automatic notifica a la orden para que actualice su estado
+	    // Se asume que marcarCompletado() o marcarEnEjecucion() notifica automáticamente a la orden
+	    // para que actualice su propio estado (ej. si todos los pedidos están completos, la orden se completa).
+	    
+	    // Si fuera necesario guardar los cambios en la base de datos (persistencia), la llamada al repositorio iría aquí.
+	    // Ejemplo: ordenRetiroRepository.actualizar(orden);
 	}
-
+	
 	private Rol buscarRol(Integer codigo) {
 		for (Rol rol : roles) {
 			if (rol.getCodigo().equals(codigo))

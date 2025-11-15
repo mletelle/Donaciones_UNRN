@@ -12,9 +12,17 @@ public class Bien {
 	private static final int TIPO_MOBILIARIO = 3;
 	private static final int TIPO_HIGIENE = 4;
 
-	private static final int CATEGORIA_BAJA = 1;
-	private static final int CATEGORIA_MEDIA = 2;
-	private static final int CATEGORIA_ALTA = 3;
+	// constantes categoria (tipo de bien)
+	private static final int CATEGORIA_ROPA = 1;
+	private static final int CATEGORIA_MUEBLES = 2;
+	private static final int CATEGORIA_ALIMENTOS = 3;
+	private static final int CATEGORIA_ELECTRODOMESTICOS = 4;
+	private static final int CATEGORIA_HERRAMIENTAS = 5;
+	private static final int CATEGORIA_JUGUETES = 6;
+	private static final int CATEGORIA_LIBROS = 7;
+	private static final int CATEGORIA_MEDICAMENTOS = 8;
+	private static final int CATEGORIA_HIGIENE = 9;
+	private static final int CATEGORIA_OTROS = 10;
     
     //atributos
     private int tipo;
@@ -31,19 +39,12 @@ public class Bien {
         if (cantidad <= 0) {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
         }
-        if (categoria < CATEGORIA_BAJA || categoria > CATEGORIA_ALTA) {
+        if (categoria < CATEGORIA_ROPA || categoria > CATEGORIA_OTROS) {
             throw new CampoVacioException("La categoria es invalida.");
         }
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.categoria = categoria;
-    }
-    
-    public Bien(String tipo, int cantidad, String cat) throws CampoVacioException {
-        this(cantidad, cantidad, cat.equalsIgnoreCase("baja") ? CATEGORIA_BAJA : cat.equalsIgnoreCase("media") ? CATEGORIA_MEDIA : CATEGORIA_ALTA);
-        if (tipo == null || tipo.isEmpty()) {
-            throw new CampoVacioException("El tipo no puede estar vacio.");
-        }
     }
 
     public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
@@ -123,14 +124,26 @@ public class Bien {
   
     private String describirCategoria() {
         switch (categoria) {
-            case CATEGORIA_BAJA:
-                return "BAJA";
-            case CATEGORIA_MEDIA:
-                return "MEDIA";
-            case CATEGORIA_ALTA:
-                return "ALTA";
+            case CATEGORIA_ROPA:
+                return "Ropa";
+            case CATEGORIA_MUEBLES:
+                return "Muebles";
+            case CATEGORIA_ALIMENTOS:
+                return "Alimentos";
+            case CATEGORIA_ELECTRODOMESTICOS:
+                return "Electrodomesticos";
+            case CATEGORIA_HERRAMIENTAS:
+                return "Herramientas";
+            case CATEGORIA_JUGUETES:
+                return "Juguetes";
+            case CATEGORIA_LIBROS:
+                return "Libros";
+            case CATEGORIA_MEDICAMENTOS:
+                return "Medicamentos";
+            case CATEGORIA_HIGIENE:
+                return "Higiene";
             default:
-                return "";
+                return "Otros";
         }
     }
     

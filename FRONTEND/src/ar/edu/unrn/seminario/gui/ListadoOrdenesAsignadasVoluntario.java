@@ -12,6 +12,10 @@ import java.util.List;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+// Importaciones de excepciones propias
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
 
 public class ListadoOrdenesAsignadasVoluntario extends JFrame {
 
@@ -24,7 +28,7 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
         this.api = api;
         this.voluntarioActual = voluntarioActual;
 
-        setTitle("ordenes Asignadas");
+        setTitle("Órdenes Asignadas");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -41,13 +45,21 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
         btnGestionar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int filaSeleccionada = tablaOrdenes.getSelectedRow();
-                if (filaSeleccionada != -1) {
+                try {
+                    int filaSeleccionada = tablaOrdenes.getSelectedRow();
+                    
+                    // --- USO DE CAMPOVACIOEXCEPTION (Validar selección de fila) ---
+                    if (filaSeleccionada == -1) {
+                        throw new CampoVacioException("Seleccione una orden de retiro de la lista para gestionar.");
+                    }
+                    // ---------------------------------------------------------------
+                    
                     int idOrden = (int) modeloTabla.getValueAt(filaSeleccionada, 0);
-                    // referencia para que GestionarOrdenVoluntario pueda notificar cuando haya cambios
+                    
+                    // Abrir la ventana de gestión, pasando la referencia de esta ventana
                     GestionarOrdenVoluntario ventanaGestionar = new GestionarOrdenVoluntario(api, idOrden, ListadoOrdenesAsignadasVoluntario.this);
                     
-                    //  listener para refrescar cuando se cierre la ventana
+                    // listener para refrescar cuando se cierre la ventana de gestión
                     ventanaGestionar.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosed(WindowEvent e) {
@@ -57,8 +69,13 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
                     });
                     
                     ventanaGestionar.setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(ListadoOrdenesAsignadasVoluntario.this, "Seleccione una orden para gestionar.", "Error", JOptionPane.ERROR_MESSAGE);
+                    
+                } catch (CampoVacioException ex) {
+                    // Manejo de la excepción custom para falta de selección
+                    JOptionPane.showMessageDialog(ListadoOrdenesAsignadasVoluntario.this, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+                } catch (Exception ex) {
+                    // Manejo de cualquier otro error inesperado
+                    JOptionPane.showMessageDialog(ListadoOrdenesAsignadasVoluntario.this, "Error al gestionar la orden: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -73,13 +90,31 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
     // metodo para cargar ordenes
     private void cargarOrdenesAsignadas() {
         modeloTabla.setRowCount(0); // Limpiar la tabla
-        List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getNombre());
-        for (OrdenRetiroDTO orden : ordenes) {
-            modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstado(), orden.getDescripcion()});
+        
+        try {
+            // Asumimos que voluntarioActual no es nulo, o la llamada fallaría antes
+            List<OrdenRetiroDTO> ordenes = api.obtenerOrdenesAsignadas(voluntarioActual.getUsuario());
+            
+            // --- USO DE OBJETONULOEXCEPTION (Si la API retorna null) ---
+            if (ordenes == null) {
+                throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de órdenes.");
+            }
+            // -----------------------------------------------------------
+            
+            for (OrdenRetiroDTO orden : ordenes) {
+                // Se asume que getFechaCreacion() y getEstado() son Strings o tienen toString() adecuado
+                modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstado(), orden.getDescripcion()});
+            }
+        } catch (ObjetoNuloException ex) {
+            // Manejo de la excepción custom para datos nulos
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+             // Manejo de otros errores de la API
+            JOptionPane.showMessageDialog(this, "Error al obtener órdenes asignadas: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
         }
     }
     
-    //  metodo para refrescar la tabla desde otras ventanas
+    // metodo para refrescar la tabla desde otras ventanas
     public void refrescarTabla() {
         cargarOrdenesAsignadas();
         tablaOrdenes.repaint();
