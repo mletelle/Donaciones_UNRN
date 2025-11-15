@@ -538,7 +538,7 @@ public class PersistenceApi implements IApi {
 	        conn = ConnectionManager.getConnection();
 	        conn.setAutoCommit(false); // inicio de transacción
 
-	        // ✅ Traer pedido y validar pertenencia a la orden en una sola consulta
+	        // Traer pedido y validar pertenencia a la orden en una sola consulta
 	        PedidosDonacion pedido = pedidoDao.findByIdAndOrden(idPedido, idOrdenRetiro, conn);
 	        if (pedido == null) {
 	            throw new ObjetoNuloException("Pedido " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
@@ -550,7 +550,7 @@ public class PersistenceApi implements IApi {
 	            throw new ObjetoNuloException("Orden no encontrada con ID: " + idOrdenRetiro);
 	        }
 
-	        // Lógica de negocio
+	        // Logica de negocio
 	        ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
 	        Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
 	        visita.setPedidoRelacionado(pedido);

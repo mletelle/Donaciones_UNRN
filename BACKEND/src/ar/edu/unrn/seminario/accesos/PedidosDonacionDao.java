@@ -20,6 +20,6 @@ public interface PedidosDonacionDao {
 
     List<PedidosDonacion> findByOrden(int idOrden, Connection conn) throws SQLException;
 
-    // ✅ Nuevo método optimizado para validar pertenencia de pedido a orden
+    // Nuevo método optimizado para validar pertenencia de pedido a ordennnn
     PedidosDonacion findByIdAndOrden(int idPedido, int idOrdenRetiro, Connection conn) throws SQLException;
 }
