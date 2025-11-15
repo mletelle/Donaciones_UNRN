@@ -81,25 +81,25 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 	}
 
 	@Override
-	public PedidosDonacion findById(int idPedido, Connection conn) throws SQLException {
-		PedidosDonacion pedido = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		try {
-			statement = conn.prepareStatement(
-					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE id = ?");
-			statement.setInt(1, idPedido);
-			rs = statement.executeQuery();
-			
-			if (rs.next()) {
-				pedido = mapearResultadoPedido(rs, conn);
-			}
-		} finally {
-			if (rs != null) rs.close();
-			if (statement != null) statement.close();
-		}
-		return pedido;
+	public PedidosDonacion findByIdAndOrden(int idPedido, int idOrdenRetiro, Connection conn) throws SQLException {
+	    PreparedStatement statement = null;
+	    ResultSet rs = null;
+	    try {
+	        statement = conn.prepareStatement(
+	            "SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro " +
+	            "FROM pedidos_donacion WHERE id = ? AND id_orden_retiro = ?");
+	        statement.setInt(1, idPedido);
+	        statement.setInt(2, idOrdenRetiro);
+	        rs = statement.executeQuery();
+
+	        if (rs.next()) {
+	            return mapearResultadoPedido(rs, conn);
+	        }
+	        return null;
+	    } finally {
+	        if (rs != null) rs.close();
+	        if (statement != null) statement.close();
+	    }
 	}
 
 	@Override
