@@ -6,9 +6,13 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
- 
+// Importaciones de excepciones propias
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+
+
 public class ListadoOrdenesRetiro extends JFrame {
 
     private JTable tablaOrdenes;
@@ -24,7 +28,7 @@ public class ListadoOrdenesRetiro extends JFrame {
         initUI();
         cargarDatos();
     }
- 
+
     private void initUI() {
         tablaOrdenes = new JTable();
         tablaOrdenes.setModel(new DefaultTableModel(
@@ -42,14 +46,29 @@ public class ListadoOrdenesRetiro extends JFrame {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
 
-        List<OrdenRetiroDTO> ordenes = api.obtenerTodasOrdenesRetiro();
-        for (OrdenRetiroDTO orden : ordenes) {
-            String estadoTexto = orden.getEstado(); // ahora getEstado() devuelve String directamente
-            String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehiculo Desconocido";
-            String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
+        try {
+            List<OrdenRetiroDTO> ordenes = api.obtenerTodasOrdenesRetiro();
+            
+            // --- USO DE OBJETONULOEXCEPTION (Si la API retorna null) ---
+            if (ordenes == null) {
+                throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de órdenes.");
+            }
+            // -----------------------------------------------------------
 
-            model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 
+            for (OrdenRetiroDTO orden : ordenes) {
+                // Se mantienen los chequeos de nulidad para asegurar la visualización
+                String estadoTexto = orden.getEstado() != null ? orden.getEstado() : "N/A"; 
+                String vehiculo = orden.getVehiculo() != null ? orden.getVehiculo() : "Vehiculo Desconocido";
+                String voluntario = orden.getVoluntario() != null ? orden.getVoluntario() : "Voluntario Desconocido";
+
+                model.addRow(new Object[] {estadoTexto, orden.getFechaCreacion(), vehiculo, voluntario}); 
+            }
+        } catch (ObjetoNuloException ex) {
+            // Manejo de la excepción custom para datos nulos
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+             // Manejo de otros errores de la API
+            JOptionPane.showMessageDialog(this, "Error al obtener las órdenes de retiro: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
 }

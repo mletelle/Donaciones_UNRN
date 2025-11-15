@@ -426,49 +426,68 @@ public class MemoryApi implements IApi {
         return "Donante Desconocido";
     }
 
-	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
-		OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
-		if (orden == null) {
-			throw new ObjetoNuloException("Orden de retiro no encontrada.");
-		}
+	    
+	    // --- 1. Validaciones de Objeto Nulo y Existencia ---
+	    OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
+	    if (orden == null) {
+	        throw new ObjetoNuloException("Orden de retiro no encontrada.");
+	    }
 
-		PedidosDonacion pedido = orden.obtenerPedidoPorId(idPedido);
-		if (pedido == null) {
-			throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
-		}
+	    PedidosDonacion pedido = orden.obtenerPedidoPorId(idPedido);
+	    if (pedido == null) {
+	        throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
+	    }
+	    
+	    // --- 2. Validaciones de DTO (Campos Vacíos y Nulos) ---
+	    if (visitaDTO.getFechaHora() == null) {
+	        throw new CampoVacioException("La fecha de la visita no puede ser nula.");
+	    }
+	    if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
+	        throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacío.");
+	    }
+	    if (visitaDTO.getObservacion() == null || visitaDTO.getObservacion().trim().isEmpty()) {
+	        throw new CampoVacioException("Las observaciones de la visita no pueden ser nulas o vacías.");
+	    }
+	    
+	    // --- 3. Validaciones de Reglas de Negocio (Movidas al Back-end) ---
+	    
+	    // Regla 1: La visita no puede ser en el futuro
+	    if (visitaDTO.getFechaHora().isAfter(LocalDateTime.now())) {
+	        throw new ReglaNegocioException("La fecha y hora de la visita no pueden ser posteriores al momento actual.");
+	    }
+	    
+	    // Conversión de String del DTO al Enum
+	    ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
 
-		if (visitaDTO.getFechaHora() == null) {
-			throw new CampoVacioException("La fecha de la visita no puede ser nula.");
-		}
-		if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
-			throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacio.");
-		}
+	    // --- 4. Creación de la Entidad y Lógica de Dominio ---
+	    
+	    // Creación de la entidad Visita
+	    LocalDateTime fechaVisita = visitaDTO.getFechaHora();
+	    Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
 
-		//  String del DTO al Enum
-		ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
+	    // Establecer la relación entre la visita y el pedido
+	    visita.setPedidoRelacionado(pedido);
 
-		// entidad Visita
-		LocalDateTime fechaVisita = visitaDTO.getFechaHora();
-		Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
+	    // Sumar la visita a la orden (el agregado de la visita debe ocurrir antes de actualizar el estado)
+	    orden.agregarVisita(visita);
 
-		// establecer la relacion entre la visita y el pedido
-		visita.setPedidoRelacionado(pedido);
+	    // Actualiza el estado del pedido según el resultado de visita
+	    // Nota: Es mejor mover esta lógica de actualización del estado a un método dentro de la entidad 'PedidosDonacion'
+	    // para que sea más coherente con el modelo de dominio.
+	    if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+	        pedido.marcarCompletado();
+	    } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+	        pedido.marcarEnEjecucion();
+	    }
 
-		// sumar la visita a la orden
-		orden.agregarVisita(visita);
-
-		// actualiza el estado del pedido segun el resultado de visita
-		if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
-			pedido.marcarCompletado();
-		} else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
-			pedido.marcarEnEjecucion();
-		}
-
-		// llamada a marcarCompletado() o marcarEnEjecucion() 
-		// automatic notifica a la orden para que actualice su estado
+	    // Se asume que marcarCompletado() o marcarEnEjecucion() notifica automáticamente a la orden
+	    // para que actualice su propio estado (ej. si todos los pedidos están completos, la orden se completa).
+	    
+	    // Si fuera necesario guardar los cambios en la base de datos (persistencia), la llamada al repositorio iría aquí.
+	    // Ejemplo: ordenRetiroRepository.actualizar(orden);
 	}
-
+	
 	private Rol buscarRol(Integer codigo) {
 		for (Rol rol : roles) {
 			if (rol.getCodigo().equals(codigo))

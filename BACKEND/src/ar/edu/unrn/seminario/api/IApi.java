@@ -1,6 +1,8 @@
 package ar.edu.unrn.seminario.api;
 
 import java.util.List;
+
+// Importaciones de DTOs
 import ar.edu.unrn.seminario.dto.RolDTO;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
@@ -8,59 +10,78 @@ import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+
+// Importaciones de Excepciones (COMMONS)
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
+import ar.edu.unrn.seminario.exception.UsuarioInvalidoException;
 
 public interface IApi {
 
-	void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException;
+    // --- USUARIOS Y ROLES ---
 
-	UsuarioDTO obtenerUsuario(String username);
+    // Actualizado para AltaUsuario.java
+    void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) 
+            throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException;
 
-	void eliminarUsuario(String username);
-	
-	List<RolDTO> obtenerRoles();
+    UsuarioDTO obtenerUsuario(String username);
 
-	List<RolDTO> obtenerRolesActivos();
+    void eliminarUsuario(String username);
+    
+    List<RolDTO> obtenerRoles();
 
-	void guardarRol(Integer codigo, String descripcion, boolean estado) throws CampoVacioException;
+    List<RolDTO> obtenerRolesActivos();
 
-	RolDTO obtenerRolPorCodigo(Integer codigo);
+    void guardarRol(Integer codigo, String descripcion, boolean estado) throws CampoVacioException;
 
-	void activarRol(Integer codigo);
+    RolDTO obtenerRolPorCodigo(Integer codigo);
 
-	void desactivarRol(Integer codigo);
+    void activarRol(Integer codigo);
 
-	List<UsuarioDTO> obtenerUsuarios();
+    void desactivarRol(Integer codigo);
 
-	void activarUsuario(String username);
+    List<UsuarioDTO> obtenerUsuarios();
 
-	void desactivarUsuario(String username);
+    void activarUsuario(String username);
 
-	void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException;
+    void desactivarUsuario(String username);
 
-	List<DonanteDTO> obtenerDonantes();
+    // --- DONACIONES Y PEDIDOS ---
 
-	List<PedidoDonacionDTO> obtenerPedidosPendientes();
+    // Actualizado para RegistrarPedidoDonacion.java
+    void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException;
 
-	List<PedidoDonacionDTO> obtenerTodosPedidos();
+    List<DonanteDTO> obtenerDonantes();
 
-	List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
+    List<PedidoDonacionDTO> obtenerPedidosPendientes();
 
-	List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
+    List<PedidoDonacionDTO> obtenerTodosPedidos();
 
-	List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro();
+    List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
 
-	void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
+    String obtenerNombreDonantePorId(int idPedido);
 
-	List<VoluntarioDTO> obtenerVoluntarios();
+    // --- ORDENES DE RETIRO ---
 
-	void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
+    // Actualizado para CrearOrdenRetiro (referenciado en VentanaPrincipal)
+    void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) 
+            throws ReglaNegocioException, ObjetoNuloException;
+            
+    List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
 
-	List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
+    List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro();
+    
+    List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 
-	List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
+    // --- VISITAS Y VOLUNTARIOS ---
 
-	String obtenerNombreDonantePorId(int idPedido);
+    // Actualizado para RegistrarVisitaDialog.java
+    void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) 
+            throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
+
+    List<VoluntarioDTO> obtenerVoluntarios();
+
+    List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
+
 }
