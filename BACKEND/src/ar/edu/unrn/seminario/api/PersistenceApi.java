@@ -1,6 +1,7 @@
 package ar.edu.unrn.seminario.api;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -529,8 +530,6 @@ public class PersistenceApi implements IApi {
 		return dtos;
 	}
 
-	// Archivo: mletelle/donaciones_unrn/Donaciones_UNRN-ra/BACKEND/src/ar/edu/unrn/seminario/api/PersistenceApi.java
-
 	@Override
 	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO)
 	        throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
@@ -652,83 +651,101 @@ Este metodo al fin anda, ya no carga nulls.
 El problema era que no estaba manejando bien las transacciones 
 Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en la base de datos.
 */ 
-	@Override
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
-			throws ReglaNegocioException, ObjetoNuloException {
-		Connection conn = null;
-		try {
-			conn = ConnectionManager.getConnection();
-			conn.setAutoCommit(false);
-			
-			List<PedidosDonacion> pedidos = new ArrayList<>(); // cargar pedidos por ids
-			for (Integer idPedido : idsPedidos) {
-				PedidosDonacion p = pedidoDao.findById(idPedido, conn);
-				if (p != null) {
-					pedidos.add(p);
-				}
-			}
-			
-			if (pedidos.isEmpty()) {
-				throw new ObjetoNuloException("No se encontraron pedidos");
-			}
-			
-			Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn); // buscar vehiculo disponible
-			if (vehiculo == null) {
-				throw new ReglaNegocioException("No hay vehiculos disponibles del tipo: " + tipoVehiculo);
-			}
-			
-			List<Usuario> voluntarios = usuarioDao.findByRol(2, conn); // rol voluntario = 2
-			Usuario voluntario = null;
-			for (Usuario v : voluntarios) { // buscar voluntario por dni
-				if (v.getDni() == idVoluntario) {
-					voluntario = v;
-					break;
-				}
-			}
-			
-			if (voluntario == null) {
-				throw new ObjetoNuloException("Voluntario no encontrado");
-			}
-			
-			OrdenRetiro orden = new OrdenRetiro(pedidos, null); // crear nueva orden
-			orden.asignarVehiculo(vehiculo);
-			orden.asignarVoluntario(voluntario);
-			
-			int idOrdenGenerado = ordenDao.create(orden, conn);
-			orden.setId(idOrdenGenerado);
-			
-			for (PedidosDonacion pedido : pedidos) { // actualizar cada pedido con la orden asignada
-				pedido.asignarOrden(orden);
-				pedidoDao.update(pedido, conn);
-			}
-			
-			conn.commit();
-		} catch (SQLException e) {
-			try {
-				if (conn != null) conn.rollback();
-			} catch (SQLException e2) {
-				e2.printStackTrace();
-			}
-			throw new RuntimeException("Error creando orden de retiro", e); 
-		} catch (Exception e) {
-			try {
-				if (conn != null) conn.rollback();
-			} catch (SQLException e2) {
-				e2.printStackTrace();
-			}
-			throw e;
-		} finally {
-			if (conn != null) {
-				try {
-					conn.setAutoCommit(true);
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-			ConnectionManager.disconnect();
-		}
-	}
+	        throws ReglaNegocioException, ObjetoNuloException {
+	    
+	    Connection conn = null;
+	    try {
+	        conn = ConnectionManager.getConnection();
+	        conn.setAutoCommit(false); // Inicia la transacción
 
+	        // Un solo SELECT para todos los pedidos
+	        List<PedidosDonacion> pedidos = pedidoDao.findByIds(idsPedidos, conn);
+	        
+	        if (pedidos == null || pedidos.isEmpty() || pedidos.size() != idsPedidos.size()) {
+	            throw new ObjetoNuloException("No se encontraron todos los pedidos solicitados. Verifique los IDs.");
+	        }
+	        
+	        // Validar que los pedidos estén pendientes
+	        for (PedidosDonacion p : pedidos) {
+	            if (p.obtenerOrden() != null) {
+	                throw new ReglaNegocioException("El pedido " + p.getId() + " ya pertenece a otra orden.");
+	            }
+	        }
+
+	        Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn);
+	        if (vehiculo == null) {
+	            throw new ReglaNegocioException("No hay vehiculos disponibles del tipo: " + tipoVehiculo);
+	        }
+
+	        // Un solo SELECT para el voluntario específico
+	        Usuario voluntario = usuarioDao.findByDni(idVoluntario, conn);
+
+	        if (voluntario == null) {
+	            throw new ObjetoNuloException("Voluntario no encontrado con DNI: " + idVoluntario);
+	        }
+	        
+	        if (voluntario.getRol().getCodigo() != 2) { 
+	            throw new ReglaNegocioException("El DNI " + idVoluntario + " no pertenece a un voluntario.");
+	        }
+
+	        // Crear la entidad OrdenRetiro
+	        OrdenRetiro orden = new OrdenRetiro(pedidos, null);
+	        orden.asignarVehiculo(vehiculo);
+	        orden.asignarVoluntario(voluntario);
+
+	        // Crear la orden en la BD para obtener su ID
+	        int idOrdenGenerado = ordenDao.create(orden, conn);
+	        orden.setId(idOrdenGenerado);
+
+	        // Un solo BATCH UPDATE para todos los pedidos
+	        // Usamos try para asegurar que el PreparedStatement se cierre
+	        String sqlUpdate = "UPDATE pedidos_donacion SET estado = ?, id_orden_retiro = ? WHERE id = ?";
+	        try (PreparedStatement updateStmt = conn.prepareStatement(sqlUpdate)) {
+	            
+	            for (PedidosDonacion pedido : pedidos) {
+	                pedido.asignarOrden(orden); // Asigna la orden en el objeto Java
+	                
+	                // Setea los parámetros para el batch
+	                updateStmt.setString(1, pedido.obtenerEstado()); // Sigue "PENDIENTE"
+	                updateStmt.setInt(2, idOrdenGenerado);
+	                updateStmt.setInt(3, pedido.getId());
+	                
+	                // Agrega la operación al lote
+	                updateStmt.addBatch();
+	            }
+	            
+	            // Ejecuta todas las operaciones de UPDATE en una sola llamada
+	            updateStmt.executeBatch();
+	        }
+
+	        conn.commit(); // Confirma la transacción
+	        
+	    } catch (SQLException e) {
+	        try {
+	            if (conn != null) conn.rollback();
+	        } catch (SQLException e2) {
+	            e2.printStackTrace();
+	        }
+	        throw new RuntimeException("Error creando orden de retiro", e);
+	    } catch (Exception e) { // Captura ReglaNegocioException y ObjetoNuloException
+	        try {
+	            if (conn != null) conn.rollback();
+	        } catch (SQLException e2) {
+	            e2.printStackTrace();
+	        }
+	        throw e; // Relanza la excepción original (ReglaNegocio, ObjetoNulo, etc.)
+	    } finally {
+	        if (conn != null) {
+	            try {
+	                conn.setAutoCommit(true);
+	            } catch (SQLException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        ConnectionManager.disconnect();
+	    }
+	}
 	@Override
 	public List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario) { // ordenes asignadas a un voluntario, filtrado por estado y voluntario
 		Connection conn = null;

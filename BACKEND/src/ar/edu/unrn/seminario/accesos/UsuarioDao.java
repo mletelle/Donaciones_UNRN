@@ -18,4 +18,6 @@ public interface UsuarioDao {
 	
 	List<Usuario> findByRol(int codigoRol, Connection conn) throws SQLException;
 
+	// agregado
+	Usuario findByDni(int dni, Connection conn) throws SQLException;
 }
