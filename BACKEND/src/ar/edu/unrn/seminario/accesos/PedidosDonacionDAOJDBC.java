@@ -264,7 +264,6 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 	    return pedidos;
 	}
 
-	}
 	
 
 	@Override
