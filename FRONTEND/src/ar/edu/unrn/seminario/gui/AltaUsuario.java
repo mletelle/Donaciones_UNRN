@@ -43,7 +43,7 @@ public class AltaUsuario extends JFrame {
     // Atributos
     private List<RolDTO> roles = new ArrayList<>();
     
-    // Código de Rol DONANTE
+    // Código de Rol DONANTE	
     private static final int CODIGO_ROL_DONANTE = 3;
 
     public AltaUsuario(IApi api) {
@@ -227,7 +227,6 @@ public class AltaUsuario extends JFrame {
                     dispose();
                     
                 } catch (UsuarioInvalidoException ex) {
-                    // Ahora este catch funcionará si actualizaste la IApi
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Registro", JOptionPane.ERROR_MESSAGE);
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "DNI debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -235,8 +234,8 @@ public class AltaUsuario extends JFrame {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
                 } catch (ObjetoNuloException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    //catch (Exception ex) {
+                    // JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             }

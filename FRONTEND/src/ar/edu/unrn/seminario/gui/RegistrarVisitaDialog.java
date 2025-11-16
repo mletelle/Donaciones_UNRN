@@ -197,17 +197,13 @@ public class RegistrarVisitaDialog extends JDialog {
             SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
                 @Override
                 protected String doInBackground() throws Exception {
-                    // Obtener nombre del donante (puede lanzar excepciones)
-                    String nombreDonante = api.obtenerNombreDonantePorId(idPedido); 
+                    // La GUI solo envía los datos que tiene
                     
-                    if (nombreDonante == null) {
-                        // --- USO DE OBJETONULOEXCEPTION (Lógica interna) ---
-                        throw new ObjetoNuloException("No se pudo obtener el nombre del donante para el pedido ID: " + idPedido);
-                    }
-
-                    VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
+                    // Usar un constructor de VisitaDTO que no pida el nombre
+                    // (O modificar el constructor VisitaDTO para que acepte null)
+                    VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, null); 
                     
-                    // Llamada a la API (puede lanzar ReglaNegocioException, ObjetoNuloException, etc.)
+                    // La API es responsable de su lógica
                     api.registrarVisita(idOrden, idPedido, visita);
                     
                     return "OK";
