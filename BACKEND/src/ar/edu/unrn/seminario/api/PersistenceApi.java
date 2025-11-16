@@ -33,6 +33,7 @@ import ar.edu.unrn.seminario.dto.BienDTO;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
+import ar.edu.unrn.seminario.exception.UsuarioInvalidoException;
 import ar.edu.unrn.seminario.modelo.Bien;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
@@ -64,7 +65,8 @@ public class PersistenceApi implements IApi {
 
 	@Override
 	public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
-			String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
+			String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
+		
 		Connection conn = null;
 		try {
 			conn = ConnectionManager.getConnection();
@@ -79,20 +81,29 @@ public class PersistenceApi implements IApi {
 			usuarioDao.create(usuario, conn); // crear el usuario
 			
 			conn.commit();
-		} catch (SQLException e) { // captura errores SQL
+		} catch (SQLException e) { 
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace(); // log error
 			}
-			throw new RuntimeException("Error registrando usuario", e); 
-		} catch (Exception e) { // captura otros errores
+			
+			// Si el error es por DNI duplicado, lanzamos NUESTRA excepción de negocio.
+			if (e.getMessage().contains("dni_UNIQUE") || e.getMessage().contains("Duplicate entry")) {
+				// ESTA LÍNEA HACE QUE EL CATCH SEA ALCANZABLE
+                throw new UsuarioInvalidoException("Ya existe un usuario con el DNI " + dni);
+			}
+
+			throw new RuntimeException("Error SQL registrando usuario", e); 
+		
+		} catch (CampoVacioException | ObjetoNuloException e) {
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
 			throw e;
+			
 		} finally { // asegura restaurar auto-commit y desconectar
 			if (conn != null) {
 				try {
@@ -312,8 +323,17 @@ public class PersistenceApi implements IApi {
 			}
 			
 			// crear PedidoDonacion
-			PedidosDonacion pedido = new PedidosDonacion(
-					LocalDateTime.now(),
+			// Parsear la fecha que VIENE DEL DTO
+            java.time.format.DateTimeFormatter formatter = 
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            
+            java.time.LocalDate fechaParsed = 
+                java.time.LocalDate.parse(pedidoDTO.getFecha(), formatter);
+            
+            LocalDateTime fechaDelDTO = fechaParsed.atStartOfDay();
+            
+            PedidosDonacion pedido = new PedidosDonacion(
+					fechaDelDTO, // <-- AHORA USA LA FECHA DEL DTO
 					bienes,
 					pedidoDTO.getTipoVehiculo(),
 					donante);
