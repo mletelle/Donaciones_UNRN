@@ -85,17 +85,16 @@ public class PersistenceApi implements IApi {
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
-				e2.printStackTrace(); // log error
+				e2.printStackTrace();
 			}
 			
-			// Si el error es por DNI duplicado, lanzamos NUESTRA excepción de negocio.
+			// si el error es por dni duplicado, lanzamos nuestra excepcion de negocio
 			if (e.getMessage().contains("dni_UNIQUE") || e.getMessage().contains("Duplicate entry")) {
-				// ESTA LÍNEA HACE QUE EL CATCH SEA ALCANZABLE
                 throw new UsuarioInvalidoException("Ya existe un usuario con el DNI " + dni);
 			}
 
-			throw new RuntimeException("Error SQL registrando usuario", e); 
-		
+			throw new RuntimeException("Error SQL registrando usuario", e);
+			
 		} catch (CampoVacioException | ObjetoNuloException e) {
 			try {
 				if (conn != null) conn.rollback();
@@ -103,6 +102,7 @@ public class PersistenceApi implements IApi {
 				e2.printStackTrace();
 			}
 			throw e;
+
 			
 		} finally { // asegura restaurar auto-commit y desconectar
 			if (conn != null) {
@@ -351,13 +351,15 @@ public class PersistenceApi implements IApi {
 				e2.printStackTrace();
 			}
 			throw new RuntimeException("Error registrando pedido", e);
-		} catch (Exception e) { // captura otros errores
+			
+		} catch (CampoVacioException | ObjetoNuloException e) {
 			try {
 				if (conn != null) conn.rollback();
 			} catch (SQLException e2) {
 				e2.printStackTrace();
 			}
 			throw e;
+			
 		} finally {
 			if (conn != null) {
 				try {
@@ -551,46 +553,46 @@ public class PersistenceApi implements IApi {
 	}
 	
 	@Override
-	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO)
+	public void registrarVisita(int idOrdenRetiro, int idPedido, java.time.LocalDateTime fechaHora, String resultado, String observacion)
 	        throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 
 	    Connection conn = null;
 	    try {
 	        conn = ConnectionManager.getConnection();
-	        conn.setAutoCommit(false); // inicio de transacción
+	        conn.setAutoCommit(false);
 
-	        // Traer pedido y validar pertenencia a la orden en una sola consulta
+	        // traer pedido y validar pertenencia a la orden en una sola consulta
 	        PedidosDonacion pedido = pedidoDao.findByIdAndOrden(idPedido, idOrdenRetiro, conn);
 	        if (pedido == null) {
 	            throw new ObjetoNuloException("Pedido " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
 	        }
 
-	        // La orden ya está referenciada en el pedido (con su ID)
+	        // la orden ya esta referenciada en el pedido (con su ID)
 	        OrdenRetiro orden = pedido.obtenerOrden();
 	        if (orden == null) {
 	            throw new ObjetoNuloException("Orden no encontrada con ID: " + idOrdenRetiro);
 	        }
 
-	        // Logica de negocio
-	        ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
-	        Visita visita = new Visita(visitaDTO.getFechaHora(), resultado, visitaDTO.getObservacion());
+	        // logica de negocio - construccion de la entidad desde datos primitivos
+	        ResultadoVisita resultadoEnum = ResultadoVisita.fromString(resultado);
+	        Visita visita = new Visita(fechaHora, resultadoEnum, observacion);
 	        visita.setPedidoRelacionado(pedido);
 
-	        // Escritura
+	        // escritura
 	        visitaDao.create(visita, idOrdenRetiro, idPedido, conn);
 
-	        // Actualizar estado del pedido según resultado
-	        if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+	        // actualizar estado del pedido segun resultado
+	        if (resultadoEnum == ResultadoVisita.RECOLECCION_EXITOSA || resultadoEnum == ResultadoVisita.CANCELADO) {
 	            pedido.marcarCompletado();
-	        } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+	        } else if (resultadoEnum == ResultadoVisita.RECOLECCION_PARCIAL || resultadoEnum == ResultadoVisita.DONANTE_AUSENTE) {
 	            pedido.marcarEnEjecucion();
 	        }
 	        pedidoDao.update(pedido, conn);
 
-	        // Actualizar estado de la orden
+	        // actualizar estado de la orden
 	        ordenDao.update(orden, conn);
 
-	        conn.commit(); // commit si todo salió bien
+	        conn.commit();
 
 	    } catch (SQLException e) {
 	        if (conn != null) {
@@ -611,16 +613,6 @@ public class PersistenceApi implements IApi {
 	            }
 	        }
 	        throw e;
-
-	    } catch (Exception e) {
-	        if (conn != null) {
-	            try {
-	                conn.rollback();
-	            } catch (SQLException e2) {
-	                e2.printStackTrace();
-	            }
-	        }
-	        throw new RuntimeException("Error inesperado al registrar visita: " + e.getMessage(), e);
 
 	    } finally {
 	        if (conn != null) {
@@ -724,7 +716,7 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	            updateStmt.executeBatch();
 	        }
 
-	        conn.commit(); // Confirma la transacción
+	        conn.commit();
 	        
 	    } catch (SQLException e) {
 	        try {
@@ -732,14 +724,14 @@ Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en 
 	        } catch (SQLException e2) {
 	            e2.printStackTrace();
 	        }
-	        throw new RuntimeException("Error creando orden de retiro", e);
-	    } catch (Exception e) { // Captura ReglaNegocioException y ObjetoNuloException
+	        throw new RuntimeException("Error SQL al crear orden de retiro", e);
+	    } catch (ReglaNegocioException | ObjetoNuloException e) {
 	        try {
 	            if (conn != null) conn.rollback();
 	        } catch (SQLException e2) {
 	            e2.printStackTrace();
 	        }
-	        throw e; // Relanza la excepción original (ReglaNegocio, ObjetoNulo, etc.)
+	        throw e;
 	    } finally {
 	        if (conn != null) {
 	            try {

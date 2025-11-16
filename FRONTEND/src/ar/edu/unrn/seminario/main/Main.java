@@ -1,4 +1,4 @@
-package ar.edu.unrn.seminario.main;
+/*package ar.edu.unrn.seminario.main;
 
 import java.awt.EventQueue;
 
@@ -15,7 +15,7 @@ public class Main {
 			public void run() {
 				try {
 
-					// IApi api = new MemoryApi();
+					IApi api = new MemoryApi();
 					IApi api = new PersistenceApi();
 					VentanaPrincipal frame = new VentanaPrincipal(api);
 
@@ -28,3 +28,4 @@ public class Main {
 	}
 
 }
+*/

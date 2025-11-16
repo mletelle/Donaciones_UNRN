@@ -14,7 +14,8 @@ import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
-import ar.edu.unrn.seminario.exception.ObjetoNuloException; 
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException; 
 
 
 public class CrearOrdenRetiro extends JDialog {
@@ -149,12 +150,9 @@ public class CrearOrdenRetiro extends JDialog {
             cargarPedidosPendientes();
             dispose();
             
-        } catch (CampoVacioException | ObjetoNuloException ex) {
-            // Manejo de tus excepciones custom
+        } catch (ReglaNegocioException | ObjetoNuloException | CampoVacioException ex) {
+            // Manejo de excepciones de negocio
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Asignación", JOptionPane.WARNING_MESSAGE);
-        } catch (Exception e) {
-            // Manejo de cualquier otra excepción (ej. errores lanzados por la API, como duplicados, etc.)
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Error de Creación de Orden", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

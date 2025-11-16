@@ -48,18 +48,15 @@ public class GestionarOrdenVoluntario extends JFrame {
 
         JButton btnRegistrarVisita = new JButton("Registrar Visita");
         
-        // Accion del boton "Registrar Visita"
         btnRegistrarVisita.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     int filaSeleccionada = tablaPedidos.getSelectedRow();
                     
-                    // --- USO DE CAMPOVACIOEXCEPTION (Validar selección de fila) ---
                     if (filaSeleccionada == -1) {
                         throw new CampoVacioException("Seleccione un pedido de la lista para registrar la visita.");
                     }
-                    // ------------------------------------------------------------------
                     
                     int idPedido = (int) modeloTabla.getValueAt(filaSeleccionada, 0);
                     
@@ -71,9 +68,6 @@ public class GestionarOrdenVoluntario extends JFrame {
                 } catch (CampoVacioException ex) {
                     // Manejo de la excepción custom para falta de selección
                     JOptionPane.showMessageDialog(GestionarOrdenVoluntario.this, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
-                } catch (Exception ex) {
-                    // Manejo de cualquier otro error inesperado
-                    JOptionPane.showMessageDialog(GestionarOrdenVoluntario.this, "Error al procesar la selección: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -91,7 +85,6 @@ public class GestionarOrdenVoluntario extends JFrame {
     }
 
     // Metodos
-    // metodo para cargar pedidos
     private void cargarPedidos() {
         // limpiar la tabla antes de cargar
         modeloTabla.setRowCount(0);
@@ -99,21 +92,15 @@ public class GestionarOrdenVoluntario extends JFrame {
         try {
             List<PedidoDonacionDTO> pedidos = api.obtenerPedidosDeOrden(idOrden);
             
-            // --- USO DE OBJETONULOEXCEPTION (Si la API retorna null) ---
             if (pedidos == null) {
                 throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de pedidos.");
             }
-            // -----------------------------------------------------------
             
             for (PedidoDonacionDTO pedido : pedidos) {
                 modeloTabla.addRow(new Object[]{pedido.getId(), pedido.getDonante(), pedido.getDireccion(), pedido.getEstado()});
             }
         } catch (ObjetoNuloException ex) {
-            // Manejo de la excepción custom
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Datos", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) {
-             // Manejo de otros errores de la API
-            JOptionPane.showMessageDialog(this, "Error al obtener pedidos: " + ex.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
         }
     }
     

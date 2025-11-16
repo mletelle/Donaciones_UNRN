@@ -123,13 +123,10 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
 
-        // Accion del boton "Cargar pedido de donacion"
         btnAceptar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    // 1. Validar la lista de bienes
                     if (bienes.isEmpty()) {
-                        // --- USO DE CAMPOVACIOEXCEPTION (Validar bienes) ---
                         throw new CampoVacioException("Debe agregar al menos un bien a la donación para registrar el pedido.");
                     }
                     
@@ -137,30 +134,25 @@ public class RegistrarPedidoDonacion extends JDialog {
                     String tipoVehiculo = (String) tipoVehiculoComboBox.getSelectedItem();
                     int idDonanteSeleccionado;
 
-                    // 2. Determinar el ID del donante
                     if (donanteComboBox.isEnabled()) {
                         DonanteDTO donanteSeleccionado = (DonanteDTO) donanteComboBox.getSelectedItem();
                         
-                        // --- USO DE OBJETONULOEXCEPTION (Validar selección de donante) ---
                         if (donanteSeleccionado == null) {
                             throw new ObjetoNuloException("Debe seleccionar un donante de la lista.");
                         }
                         idDonanteSeleccionado = donanteSeleccionado.getId();
                     } else {
-                        // Usar el ID precargado 
                         if (donanteId == -1) {
                              throw new ObjetoNuloException("Error interno: No se pudo determinar el ID del donante precargado.");
                         }
                         idDonanteSeleccionado = donanteId;
                     }
 
-                    // 3. Parseo y validación de Fecha
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate fechaParsed;
                     try {
                         fechaParsed = LocalDate.parse(fechaStr, formatter);
                     } catch (DateTimeParseException ex) {
-                         // Lanza la excepción si el formato es incorrecto
                         throw new DateTimeParseException("Formato de fecha inválido. Use dd/MM/yyyy.", fechaStr, 0);
                     }
                     
@@ -168,7 +160,6 @@ public class RegistrarPedidoDonacion extends JDialog {
                     LocalDateTime fechaCompleta = fechaParsed.atStartOfDay();
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
 
-                    // 4. Creación y Registro
                     PedidoDonacionDTO pedido = new PedidoDonacionDTO(fechaFormateadaParaDTO, bienes, tipoVehiculo, idDonanteSeleccionado);
                     api.registrarPedidoDonacion(pedido);
 
@@ -180,10 +171,7 @@ public class RegistrarPedidoDonacion extends JDialog {
                 } catch (ObjetoNuloException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
                 } catch (DateTimeParseException ex) {
-                    // Captura la excepción de fecha relanzada
                     JOptionPane.showMessageDialog(null, "Formato de fecha inválido. Use dd/MM/yyyy.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Ocurrió un error al registrar el pedido: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -259,10 +247,6 @@ public class RegistrarPedidoDonacion extends JDialog {
             // Manejo de la excepción custom
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
             // Deshabilita el combo si falla la carga
-            donanteComboBox.setEnabled(false); 
-        } catch (Exception ex) {
-            // Manejo de errores de conexión/API
-            JOptionPane.showMessageDialog(this, "Error al obtener la lista de donantes: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
             donanteComboBox.setEnabled(false);
         }
     }

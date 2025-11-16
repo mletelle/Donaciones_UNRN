@@ -77,7 +77,7 @@ public interface IApi {
     //  VISITAS Y VOLUNTARIOS 
 
     // Actualizado para RegistrarVisitaDialog.java
-    void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) 
+    void registrarVisita(int idOrdenRetiro, int idPedido, java.time.LocalDateTime fechaHora, String resultado, String observacion) 
             throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
 
     List<VoluntarioDTO> obtenerVoluntarios();

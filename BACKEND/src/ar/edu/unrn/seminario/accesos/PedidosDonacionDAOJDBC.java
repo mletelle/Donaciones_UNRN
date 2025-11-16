@@ -111,7 +111,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement = conn.createStatement();
 			rs = statement.executeQuery(
 					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE'");
+					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE' AND id_orden_retiro IS NULL");
 			
 			while (rs.next()) {
 				try {

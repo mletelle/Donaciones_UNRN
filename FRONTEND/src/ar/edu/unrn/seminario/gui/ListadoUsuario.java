@@ -59,7 +59,6 @@ public class ListadoUsuario extends JFrame {
 
         scrollPane.setViewportView(table);
 
-        // --- 1. INICIALIZAR LOS BOTONES PRIMERO ---
         activarButton = new JButton("Activar");
         
         activarButton.addActionListener(new ActionListener() {
@@ -88,8 +87,6 @@ public class ListadoUsuario extends JFrame {
 
                     } catch (CampoVacioException ex) {
                         JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Error al activar el usuario: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -123,8 +120,6 @@ public class ListadoUsuario extends JFrame {
 
                     } catch (CampoVacioException ex) {
                         JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Error al desactivar el usuario: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -179,8 +174,6 @@ public class ListadoUsuario extends JFrame {
             }
         } catch (ObjetoNuloException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al obtener usuarios: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
         } finally {
             habilitarBotones(false);
         }
