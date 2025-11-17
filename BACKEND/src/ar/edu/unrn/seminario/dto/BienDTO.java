@@ -19,7 +19,6 @@ public class BienDTO {
     public static final int TIPO_NUEVO = 1;
     public static final int TIPO_USADO = 2;
 
-    // Atributos
     private int id;
     private int tipo;
     private int cantidad;
@@ -28,7 +27,6 @@ public class BienDTO {
     private LocalDate fechaVencimiento;
     private int peso;
 
-    // Constructores
     public BienDTO(int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento) {
         this.tipo = tipo;
         this.cantidad = cantidad;
@@ -37,7 +35,6 @@ public class BienDTO {
         this.fechaVencimiento = fechaVencimiento;
     }
 
-    // Getters
     public String getDescripcion() {
         return descripcion;
     }
@@ -66,7 +63,6 @@ public class BienDTO {
         return peso;
     }
     
-    // Setters
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }

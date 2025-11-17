@@ -40,7 +40,6 @@ public class AltaUsuario extends JFrame {
     private JLabel direccionLabel;
     private JTextField direccionTextField;
 
-    // Atributos
     private List<RolDTO> roles = new ArrayList<>();
     
     // Código de Rol DONANTE	
@@ -168,32 +167,32 @@ public class AltaUsuario extends JFrame {
                     
                     String usuario = usuarioTextField.getText();
                     if (usuario == null || usuario.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo Usuario no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'Usuario' no puede estar vacío.");
                     }
                     
                     String contrasena = contrasenaTextField.getText();
                     if (contrasena == null || contrasena.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo Contraseña no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'Contraseña' no puede estar vacío.");
                     }
                     
                     String nombre = nombreTextField.getText();
                     if (nombre == null || nombre.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo Nombre no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'Nombre' no puede estar vacío.");
                     }
                     
                     String apellido = apellidoTextField.getText();
                     if (apellido == null || apellido.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo Apellido no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'Apellido' no puede estar vacío.");
                     }
                     
                     String dniText = dniTextField.getText();
                     if (dniText == null || dniText.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo DNI no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'DNI' no puede estar vacío.");
                     }
                     
                     String email = emailTextField.getText();
                     if (email == null || email.trim().isEmpty()) {
-                        throw new CampoVacioException("El campo Email no puede estar vacío.");
+                        throw new CampoVacioException("El campo 'Email' no puede estar vacío.");
                     }
                     
                     String direccion = null;
@@ -201,7 +200,7 @@ public class AltaUsuario extends JFrame {
                     if (rol.getCodigo() == CODIGO_ROL_DONANTE) {
                         direccion = direccionTextField.getText();
                         if (direccion == null || direccion.trim().isEmpty()) {
-                            throw new CampoVacioException("El campo Dirección es obligatorio para un DONANTE.");
+                            throw new CampoVacioException("El campo 'Dirección' es obligatorio para un DONANTE.");
                         }
                     }
 
@@ -230,8 +229,8 @@ public class AltaUsuario extends JFrame {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
                 } catch (ObjetoNuloException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
-                    //catch (Exception ex) {
-                    // JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             }

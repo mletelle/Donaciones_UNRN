@@ -38,7 +38,6 @@ public class ListadoPedidosDonacion extends JFrame {
         cargarPedidos(api);
     }
 
-    // Metodos
     private void cargarPedidos(IApi api) {
         tableModel.setRowCount(0);
         

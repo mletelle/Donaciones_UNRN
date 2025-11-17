@@ -20,7 +20,8 @@ import javax.swing.table.DefaultTableModel;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
-import ar.edu.unrn.seminario.exception.ObjetoNuloException; 
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException; 
 
 public class ListadoUsuario extends JFrame {
 
@@ -61,6 +62,7 @@ public class ListadoUsuario extends JFrame {
 
         activarButton = new JButton("Activar");
         
+        // accion del boton "activar"
         activarButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int filaSeleccionada = table.getSelectedRow();
@@ -75,7 +77,20 @@ public class ListadoUsuario extends JFrame {
                 
                 if (opcionSeleccionada == JOptionPane.YES_OPTION) {
                     try {
-                        String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
+                    	if (filaSeleccionada == -1) {
+                            throw new CampoVacioException("Debe seleccionar un usuario.");
+                        }
+                        Object estadoObj = table.getModel().getValueAt(filaSeleccionada, 3);
+                        if (estadoObj == null) {
+                            throw new ObjetoNuloException("El estado del usuario es nulo.");
+                        }
+                        
+                        String estado = estadoObj.toString().trim();
+                        if ("Activo".equalsIgnoreCase(estado)) {
+                            throw new ReglaNegocioException("El usuario seleccionado ya se encuentra activo.");
+                        }
+                    	
+                    	String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
                         if (username == null || username.trim().isEmpty()) {
                             throw new CampoVacioException("El nombre de usuario seleccionado es inválido o nulo.");
@@ -87,6 +102,10 @@ public class ListadoUsuario extends JFrame {
 
                     } catch (CampoVacioException ex) {
                         JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+                    } catch (ReglaNegocioException | ObjetoNuloException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                         JOptionPane.showMessageDialog(null, "Error inesperado de la API: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -94,13 +113,9 @@ public class ListadoUsuario extends JFrame {
 
         desactivarButton = new JButton("Desactivar");
         
+        // accion del boton "desactivar"
         desactivarButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int filaSeleccionada = table.getSelectedRow();
-                if (filaSeleccionada == -1) {
-                    JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
 
                 int reply = JOptionPane.showConfirmDialog(null,
                         "¿Está seguro que desea cambiar el estado del Usuario?", "Confirmar cambio de estado.",
@@ -108,6 +123,23 @@ public class ListadoUsuario extends JFrame {
                 
                 if (reply == JOptionPane.YES_OPTION) {
                     try {
+                        int filaSeleccionada = table.getSelectedRow();
+                        
+                        if (filaSeleccionada == -1) {
+                            JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+
+                        Object estadoObj = table.getModel().getValueAt(filaSeleccionada, 3); 
+                        if (estadoObj == null) {
+                            throw new ObjetoNuloException("El estado del usuario es nulo.");
+                        }
+                        
+                        String estado = estadoObj.toString().trim();
+                        if ("Inactivo".equalsIgnoreCase(estado)) {
+                            throw new ReglaNegocioException("El usuario seleccionado ya se encuentra inactivo.");
+                        }
+                        
                         String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
                         if (username == null || username.trim().isEmpty()) {
@@ -120,6 +152,10 @@ public class ListadoUsuario extends JFrame {
 
                     } catch (CampoVacioException ex) {
                         JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+                    } catch (ReglaNegocioException | ObjetoNuloException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                         JOptionPane.showMessageDialog(null, "Error inesperado de la API: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -147,7 +183,6 @@ public class ListadoUsuario extends JFrame {
         actualizarTabla(); 
     }
 
-    // Metodos
     private void habilitarBotones(boolean b) {
         // Se agregan chequeos de nulidad por seguridad extra, aunque moviendo actualizarTabla al final ya no debería fallar
         if (activarButton != null) {

@@ -70,7 +70,7 @@ public interface IApi {
             
     List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
 
-    List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro();
+    List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro() throws ReglaNegocioException;
     
     List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 

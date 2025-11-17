@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 import ar.edu.unrn.seminario.dto.BienDTO;
 // Importa las 3 excepciones custom
 import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.CantidadInvalidaException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.FechaVencimientoInvalidaException;
 
@@ -128,6 +129,11 @@ public class AgregarBienDialog extends JDialog {
                 String categoria = (String) categoriaComboBox.getSelectedItem();
                 
                 int cantidad = Integer.parseInt(cantidadText); 
+                
+                if (cantidad <= 0) {
+                    throw new CantidadInvalidaException("La cantidad debe ser un número positivo (mayor a cero).");
+                }
+                
                 String estado = (String) estadoComboBox.getSelectedItem();
 
                 int categoriaId = mapearCategoriaAId(categoria);
@@ -164,6 +170,8 @@ public class AgregarBienDialog extends JDialog {
             } catch (ObjetoNuloException ex) {
                  // Manejo de la excepción custom para objeto nulo 
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Creación", JOptionPane.ERROR_MESSAGE);
+            } catch (CantidadInvalidaException ex) { 
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Validación, cantidad incorrecta", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -186,7 +194,6 @@ public class AgregarBienDialog extends JDialog {
         }
     }
     
-    // Getters
     public BienDTO getBien() {
         return bien;
     }

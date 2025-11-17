@@ -53,7 +53,7 @@ public class GestionarOrdenVoluntario extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     int filaSeleccionada = tablaPedidos.getSelectedRow();
-                    
+                
                     if (filaSeleccionada == -1) {
                         throw new CampoVacioException("Seleccione un pedido de la lista para registrar la visita.");
                     }
@@ -84,25 +84,54 @@ public class GestionarOrdenVoluntario extends JFrame {
         this.ventanaPadre = ventanaPadre;
     }
 
-    // Metodos
+
     private void cargarPedidos() {
-        // limpiar la tabla antes de cargar
         modeloTabla.setRowCount(0);
 
         try {
             List<PedidoDonacionDTO> pedidos = api.obtenerPedidosDeOrden(idOrden);
-            
+
+            System.out.println("[DEBUG] idOrden=" + idOrden + " | pedidos.size=" + (pedidos == null ? "null" : pedidos.size()));
+
             if (pedidos == null) {
                 throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de pedidos.");
             }
-            
-            for (PedidoDonacionDTO pedido : pedidos) {
-                modeloTabla.addRow(new Object[]{pedido.getId(), pedido.getDonante(), pedido.getDireccion(), pedido.getEstado()});
+
+            if (pedidos.isEmpty()) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "No hay ordenes asignadas para este Voluntario.",
+                        "Sin datos",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    this.dispose();
+                });
+                return;
             }
+
+            for (PedidoDonacionDTO pedido : pedidos) {
+                modeloTabla.addRow(new Object[]{
+                    pedido.getId(),
+                    pedido.getDonante(),
+                    pedido.getDireccion(),
+                    pedido.getEstado()
+                });
+            }
+
         } catch (ObjetoNuloException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Datos", JOptionPane.ERROR_MESSAGE);
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(
+                    this,
+                    ex.getMessage(),
+                    "Error de Datos",
+                    JOptionPane.ERROR_MESSAGE
+                );
+                this.dispose();
+            });
         }
     }
+
     
     // metodo para recargar los datos desde el dialogo hijo
     public void recargarDatos() {

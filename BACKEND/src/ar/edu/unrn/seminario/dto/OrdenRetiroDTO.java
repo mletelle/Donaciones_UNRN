@@ -21,7 +21,7 @@ public class OrdenRetiroDTO {
     public OrdenRetiroDTO(int id, String estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
         this.id = id;
         this.estado = estado;
-        this.fechaCreacion = Timestamp.valueOf(fechaCreacion); //revisar
+        this.fechaCreacion = Timestamp.valueOf(fechaCreacion); 
         this.visitas = visitas;
         this.donante = donante;
         this.vehiculo = vehiculo;

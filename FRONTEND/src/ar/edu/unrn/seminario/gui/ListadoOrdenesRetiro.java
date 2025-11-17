@@ -11,6 +11,7 @@ import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 
 public class ListadoOrdenesRetiro extends JFrame {
@@ -40,7 +41,6 @@ public class ListadoOrdenesRetiro extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    // Metodos
     private void cargarDatos() {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
@@ -63,6 +63,10 @@ public class ListadoOrdenesRetiro extends JFrame {
         } catch (ObjetoNuloException ex) {
             // Manejo de la excepción custom para datos nulos
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
+        } catch (ReglaNegocioException ex) {
+            JOptionPane.showMessageDialog(this, "Error de negocio al cargar: " + ex.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error inesperado al cargar datos: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

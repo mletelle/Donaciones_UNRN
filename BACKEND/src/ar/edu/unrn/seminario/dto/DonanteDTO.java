@@ -2,19 +2,16 @@ package ar.edu.unrn.seminario.dto;
 
 public class DonanteDTO {
     
-	// Atributos
 	private int id;
     private String nombre;
     private String apellido;
 
-    // Constructores
     public DonanteDTO(int id, String nombre, String apellido) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
     }
 
-    // Getters
     public int getId() {
         return id;
     }
@@ -28,7 +25,6 @@ public class DonanteDTO {
         return apellido;
     }
 
-    // Setters
     public void setId(int id) {
         this.id = id;
     }

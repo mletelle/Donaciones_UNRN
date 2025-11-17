@@ -10,14 +10,12 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Visita {
    
-	// Atributos
 	private Date fechaDeVisita;
     private ResultadoVisita resultado;
     private String observacion;
     private ArrayList<Bien> bienesRetirados;
     private PedidosDonacion pedidoRelacionado; // referencia al pedido de esta visita
     
-    // Constructores
     public Visita(LocalDateTime fechaHora, ResultadoVisita resultado, String obs) throws CampoVacioException, ObjetoNuloException {
         if (fechaHora == null) {
             throw new ObjetoNuloException("La fecha no puede ser nula");
@@ -49,7 +47,6 @@ public class Visita {
     // solo tiene sentido dentro de Visita
     private static final java.text.SimpleDateFormat fecha = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-    // getters
     public String obtenerFechaFormateada() {
         return fecha.format(fechaDeVisita);
     }
@@ -76,7 +73,6 @@ public class Visita {
  		return this.pedidoRelacionado;
  	}
     
-    // Metodos
 	public void realizar() {
 		this.resultado = ResultadoVisita.RECOLECCION_EXITOSA;
 	}
@@ -85,7 +81,6 @@ public class Visita {
 		this.resultado = ResultadoVisita.CANCELADO;
 	}
 	
-	// Setters
 	// establecer el pedido relacionado con esta visita
 	public void setPedidoRelacionado(PedidosDonacion pedido) {
 		this.pedidoRelacionado = pedido;

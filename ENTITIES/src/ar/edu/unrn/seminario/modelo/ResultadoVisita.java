@@ -8,10 +8,8 @@ public enum ResultadoVisita {
 	DONANTE_AUSENTE("Donante Ausente"),
 	CANCELADO("Cancelado");
 
-	// Atributos
 	private String descripcion;
 	
-	// Constructores
 	ResultadoVisita(String descripcion) {
 		this.descripcion = descripcion;
 	}

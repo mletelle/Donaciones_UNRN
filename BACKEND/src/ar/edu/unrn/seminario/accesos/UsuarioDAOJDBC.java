@@ -165,7 +165,6 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rs.getString("apellido"), 
 							rs.getInt("dni"),
 							rs.getString("direccion"));
-					// no hay necesidad de verificar activo ya que filtramos en SQL
 					usuarios.add(usuario);
 				} catch (Exception e) {
 					System.err.println("Error buscando Usuario: " + e.getMessage());
