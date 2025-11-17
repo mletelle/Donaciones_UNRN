@@ -7,7 +7,6 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Usuario {
 	
-	// Atributos
 	private String usuario;
 	private String contrasena;
 	private String nombre;
@@ -18,7 +17,7 @@ public class Usuario {
 	//  Atributos absorbidos de Persona
 	private String apellido;
 	private int dni;
-	private String direccion; // SIMPLIFICADO: solo String en lugar de objeto Ubicacion
+	private String direccion; // solo String en lugar de objeto Ubicacion
 	
 	// Atributos para roles específicos
 	private ArrayList<PedidosDonacion> pedidos; // Para Donante
@@ -165,7 +164,6 @@ public class Usuario {
 		this.direccion = direccion;
 	}
 
-	// Metodos
 	// metodo para activar
 	public void activar() {
 		if (!isActivo())
@@ -200,9 +198,21 @@ public class Usuario {
 		return this.dni == other.dni;
 	}
 
-	@Override
-	public String toString() {
-		return nombre + " " + apellido + " (DNI " + dni + ")";
+		public String toString() {
+			return nombre + " " + apellido + " (DNI " + dni + ")";
+		}
+
+		public Ubicacion getUbicacionEntidad() {
+			// Si el usuario no tiene dirección (ej. Admin, Voluntario), retorna null
+			if (this.direccion == null || this.direccion.isEmpty()) {
+				// Esto es válido, pero la API debe manejarlo (lo hace)
+				return null; 
+			}
+			
+			// Crea un objeto Ubicacion "dummy" usando la dirección de string.
+			// Asume valores vacíos para zona/barrio y 0.0 para coords,
+			// ya que el modelo Usuario (actualmente) no los almacena por separado.
+			return new Ubicacion(this.direccion, "N/A", "N/A", 0.0, 0.0);
+		}
 	}
 
-}

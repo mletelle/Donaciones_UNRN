@@ -7,6 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import ar.edu.unrn.seminario.dto.BienDTO;
+// Importa las 3 excepciones custom
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.CantidadInvalidaException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.FechaVencimientoInvalidaException;
 
 public class AgregarBienDialog extends JDialog {
@@ -19,7 +23,7 @@ public class AgregarBienDialog extends JDialog {
     private JButton cancelarButton;
 
     private BienDTO bien;
-    private JTextField descripcionTextField; 
+    private JTextField descripcionTextField;
 
     public AgregarBienDialog(Window owner) {
         super(owner, "Agregar Bien", ModalityType.APPLICATION_MODAL);
@@ -72,7 +76,7 @@ public class AgregarBienDialog extends JDialog {
         fechaVencimientoTextField.setEnabled(false);
         formPanel.add(fechaVencimientoTextField, gbc);
 
-        // Descripcin
+        // Descripcion
         gbc.gridx = 0;
         gbc.gridy = 4;
         formPanel.add(new JLabel("Descripcion:"), gbc);
@@ -105,33 +109,69 @@ public class AgregarBienDialog extends JDialog {
         // accion del boton "Aceptar"
         aceptarButton.addActionListener(event -> {
             try {
+                String cantidadText = cantidadTextField.getText();
+                String descripcion = descripcionTextField.getText();
+                String fechaVencimientoText = fechaVencimientoTextField.getText();
+
+                if (cantidadText == null || cantidadText.trim().isEmpty()) {
+                    throw new CampoVacioException("El campo Cantidad no puede estar vacío.");
+                }
+
+                if (descripcion == null || descripcion.trim().isEmpty()) {
+                    throw new CampoVacioException("El campo Descripción no puede estar vacío.");
+                }
+
+                // fecha de vencimiento obligatoria solo para alimentos
+                if (fechaVencimientoTextField.isEnabled() && (fechaVencimientoText == null || fechaVencimientoText.trim().isEmpty())) {
+                    throw new CampoVacioException("La fecha de vencimiento es obligatoria para Alimentos.");
+                }
+                
                 String categoria = (String) categoriaComboBox.getSelectedItem();
-                int cantidad = Integer.parseInt(cantidadTextField.getText());
+                
+                int cantidad = Integer.parseInt(cantidadText); 
+                
+                if (cantidad <= 0) {
+                    throw new CantidadInvalidaException("La cantidad debe ser un número positivo (mayor a cero).");
+                }
+                
                 String estado = (String) estadoComboBox.getSelectedItem();
 
                 int categoriaId = mapearCategoriaAId(categoria);
                 int estadoId = "Nuevo".equals(estado) ? BienDTO.TIPO_NUEVO : BienDTO.TIPO_USADO;
 
                 LocalDate fechaVencimiento = null;
-                if (fechaVencimientoTextField.isEnabled() && !fechaVencimientoTextField.getText().isEmpty()) {
+                if (fechaVencimientoTextField.isEnabled() && !fechaVencimientoText.isEmpty()) {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                    fechaVencimiento = LocalDate.parse(fechaVencimientoTextField.getText(), formatter);
+                    fechaVencimiento = LocalDate.parse(fechaVencimientoText, formatter);
 
                     if (!fechaVencimiento.isAfter(LocalDate.now())) {
                         throw new FechaVencimientoInvalidaException("La fecha de vencimiento debe ser posterior a la fecha actual.");
                     }
                 }
 
-                bien = new BienDTO(estadoId, cantidad, categoriaId, descripcionTextField.getText(), fechaVencimiento);
+                bien = new BienDTO(estadoId, cantidad, categoriaId, descripcion, fechaVencimiento);
+                if (bien == null) {
+                    throw new ObjetoNuloException("Error interno: No se pudo crear el objeto Bien.");
+                }
+
                 dispose();
+            } catch (CampoVacioException ex) {
+                // Manejo de la excepción custom para campos vacíos.
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Cantidad debe ser un numero.", "Error", JOptionPane.ERROR_MESSAGE);
+                // Manejo si la 'cantidad' no es un número.
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Cantidad debe ser un número válido.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Fecha de vencimiento invalida.", "Error", JOptionPane.ERROR_MESSAGE);
+                // Manejo si la fecha tiene un formato incorrecto.
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Fecha de vencimiento inválida (formato esperado: dd/MM/yyyy).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
             } catch (FechaVencimientoInvalidaException ex) {
+                // Manejo de la excepción custom para fecha lógica.
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Fecha", JOptionPane.ERROR_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (ObjetoNuloException ex) {
+                 // Manejo de la excepción custom para objeto nulo 
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Creación", JOptionPane.ERROR_MESSAGE);
+            } catch (CantidadInvalidaException ex) { 
+                JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Validación, cantidad incorrecta", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -154,7 +194,6 @@ public class AgregarBienDialog extends JDialog {
         }
     }
     
-    // Getters
     public BienDTO getBien() {
         return bien;
     }

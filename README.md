@@ -35,8 +35,8 @@ cantidad de bienes donados y la logística de recolección. En cada visita se
 registrará la fecha y hora de realización, la cantidad y tipo de bienes
 recogidos, y cualquier observación relevante. Esto permitirá un control
 detallado del proceso de donación, del cual se podría tener la siguiente
-información:
-![alt text](image.png)
+información
+
 
 El sistema también permitirá el registro de personas o instituciones
 beneficiarias que recibirán las donaciones recolectadas. Para cada

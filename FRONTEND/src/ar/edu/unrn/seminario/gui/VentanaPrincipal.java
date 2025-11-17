@@ -121,7 +121,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(mntmRegistrarPedido);
-		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro Pendientes"); // revisar, habria que levantar todas y despues filtrar con combobox
+		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro");
 		listadoOrdenesMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ListadoOrdenesRetiro listadoOrdenes = new ListadoOrdenesRetiro(api);
@@ -130,7 +130,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(listadoOrdenesMenuItem);
-		listadoPedidosMenuItem = new JMenuItem("Listado Pedidos de Donacion Pendientes");//los no asignados a una orden de retiro
+		listadoPedidosMenuItem = new JMenuItem("Listado Pedidos de Donacion");
 		listadoPedidosMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ListadoPedidosDonacion listadoPedidos = new ListadoPedidosDonacion(api);
@@ -239,7 +239,7 @@ public class VentanaPrincipal extends JFrame {
 				voluntarioLabel.setVisible(esVoluntario);
 
 				// Depuracion
-				System.out.println("Rol actual: " + rolActual);
+				//System.out.println("Rol actual: " + rolActual);
 
 				// actualizar lista de voluntarios dinamicamente
 				if (esVoluntario) {
@@ -257,7 +257,6 @@ public class VentanaPrincipal extends JFrame {
 		});
 	}
 
-	// Metodos
 	public void actualizarUIporRol() {
 	    // segun el rol
 	    usuarioMenu.setVisible("ADMINISTRADOR".equals(rolActual));

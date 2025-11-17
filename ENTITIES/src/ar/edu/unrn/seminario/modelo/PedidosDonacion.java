@@ -10,7 +10,6 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
-	// Variables 
 	private static int secuencia = 0;//para usarlo de id
 
 	// Constantes catalogo
@@ -18,19 +17,17 @@ public class PedidosDonacion {
 	private static final int VEHICULO_CAMIONETA = 2;
 	private static final int VEHICULO_CAMION = 3;
 
-	// Atributos
 	private int id;
 	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
 	private int tipoVehiculo;
-	private String observaciones;
 	private Usuario donante; //  ahora es Usuario, antes donante
 	private OrdenRetiro ordenRetiro; // 1 a 1
 	private EstadoPedido estadoPedido; //  guardar el estado del pedido
 
 	// Constructores
 	// con todos los atributos
-	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, Usuario d) throws CampoVacioException, ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
 		}
@@ -44,21 +41,20 @@ public class PedidosDonacion {
 		this.fecha = fecha;
 		this.bienes = bienes;
 		this.tipoVehiculo = tipoVehiculo;
-		this.observaciones = observaciones;
 		this.donante = d;
 		this.estadoPedido = EstadoPedido.PENDIENTE; // inicializar en PENDIENTE
 	}
 	
-	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, String observaciones, Usuario d) throws CampoVacioException, ObjetoNuloException {
-		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, observaciones, d);
+	public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, String tipo, Usuario d) throws CampoVacioException, ObjetoNuloException {
+		this(fecha, bienes, tipo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION, d);
 	}
 
 	// constructor para LocalDateTime
-	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, String observaciones, Usuario donante) throws CampoVacioException, ObjetoNuloException {
-		this(fecha, new ArrayList<>(bienes), tipoVehiculo, observaciones, donante);
+	public PedidosDonacion(LocalDateTime fecha, List<Bien> bienes, String tipoVehiculo, Usuario donante) throws CampoVacioException, ObjetoNuloException {
+		this(fecha, new ArrayList<>(bienes), tipoVehiculo, donante);
 	}
 	// corregido, ahora si funciona. el problema era que no inicializaba la lista 
-	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, String observaciones, Usuario donante) throws ObjetoNuloException {
+	public PedidosDonacion(LocalDateTime fecha, String tipoVehiculo, Usuario donante) throws ObjetoNuloException {
 		if (fecha == null) {
 			throw new ObjetoNuloException("La fecha no puede ser nula.");
 		}
@@ -68,12 +64,10 @@ public class PedidosDonacion {
 		this.fecha = fecha;
 		this.bienes = new ArrayList<>();
 		this.tipoVehiculo = tipoVehiculo.equalsIgnoreCase("auto") ? VEHICULO_AUTO : tipoVehiculo.equalsIgnoreCase("camioneta") ? VEHICULO_CAMIONETA : VEHICULO_CAMION;
-		this.observaciones = observaciones;
 		this.donante = donante;
 		this.estadoPedido = EstadoPedido.PENDIENTE;
 	}
 	
-	// getters
 	public int obtenerId() {
 		return id;
 	}
@@ -95,10 +89,6 @@ public class PedidosDonacion {
 		return ordenRetiro;
 	}
 
-	public String obtenerObservaciones() {
-		return this.observaciones;
-	}
-
 	public String obtenerUbicacion() {
 		return this.donante != null ? this.donante.obtenerDireccion() : "Ubicacion no disponible";
 	}
@@ -113,7 +103,7 @@ public class PedidosDonacion {
 
 	// devuelve el estado del pedido como String (para la GUI)
 	public String obtenerEstado() {
-		return this.estadoPedido.toString();
+		return this.estadoPedido.name();
 	}
 
 	// devuelve el estado del pedido como Enum
@@ -124,18 +114,27 @@ public class PedidosDonacion {
 	public String obtenerDireccion() {
 		return donante != null ? donante.obtenerDireccion() : "Direccion no disponible";
 	}
+	
+	// setter para el id (usado por jdbc al cargar desde bd)
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	// setter para el estado (usado por jdbc al cargar desde bd)
+	public void setEstado(EstadoPedido estado) {
+		this.estadoPedido = estado;
+	}
 
 	// relacion con la orden
 	public void asignarOrden(OrdenRetiro o) {
 		this.ordenRetiro = o;
 	}
 
-	// Metodos
 	// metodos para cambiar el estado
 	public void marcarEnEjecucion() throws ReglaNegocioException {
 		// validar transicion de estado
 		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
-			throw new ReglaNegocioException("No se puede cambiar a 'En Ejecucion' un pedido que ya esta Completado");
+			throw new ReglaNegocioException("No se puede cambiar a 'En Ejecucion' un pedido que ya esta completado");
 		}
 		this.estadoPedido = EstadoPedido.EN_EJECUCION;
 		// notificar al padre para que actualice su estado automaticamente
@@ -149,7 +148,7 @@ public class PedidosDonacion {
 		// no hay restriccion para marcar como completado (puede ir desde PENDIENTE o EN_EJECUCION)
 		// pero validamos que no este ya completado (aunque es redundante, por consistencia)
 		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
-			throw new ReglaNegocioException("El pedido ya esta Completado");
+			throw new ReglaNegocioException("El pedido ya esta completado");
 		}
 		this.estadoPedido = EstadoPedido.COMPLETADO;
 		// notifica al padre para que actualice

@@ -12,7 +12,6 @@ public class OrdenRetiro {
     // variables
     private static int secuencia = 0;//para el id
 
-    // atributos
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
     private EstadoOrden estado;
     private Ubicacion destino;
@@ -22,7 +21,6 @@ public class OrdenRetiro {
     private int id;
     private Vehiculo vehiculo;
 
-    // Constructores
     public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
         if (pedidos == null || pedidos.isEmpty()) {
             throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
@@ -38,8 +36,35 @@ public class OrdenRetiro {
             pedido.asignarOrden(this);
         }
     }
+    
+    // constructor jdbc - permite crear orden temporal con solo id para mantener referencias
+    public OrdenRetiro(int id) {
+        this.id = id;
+        this.pedidos = new ArrayList<>();
+        this.voluntarios = new ArrayList<>();
+        this.visitas = new ArrayList<>();
+        this.estado = EstadoOrden.PENDIENTE;
+    }
 
-    // Getters
+    // Constructor para JDBC (Hidratación)
+    public OrdenRetiro(int id, LocalDateTime fechaGeneracion, EstadoOrden estado, Ubicacion dest, List<PedidosDonacion> pedidos) throws ObjetoNuloException {
+        if (pedidos == null) {
+             throw new ObjetoNuloException("La lista de pedidos no puede ser nula.");
+        }
+        this.id = id; // Asigna ID de la BD
+        this.fechaGeneracion = fechaGeneracion;
+        this.estado = estado;
+        this.destino = dest;
+        this.pedidos = new ArrayList<>(pedidos);
+        this.voluntarios = new ArrayList<Usuario>();
+        this.visitas = new ArrayList<Visita>();
+        
+        // Asignar esta orden a los pedidos hijos
+        for (PedidosDonacion pedido : this.pedidos) {
+            pedido.asignarOrden(this);
+        }
+    }
+
     public String obtenerNombreEstado() {
         return describirEstado();
     }
@@ -113,6 +138,14 @@ public class OrdenRetiro {
       }
       
       // Setters
+      public void setId(int id) {
+          this.id = id;
+      }
+      
+      public void setEstado(EstadoOrden estado) {
+          this.estado = estado;
+      }
+      
       public void asignarVehiculo(Vehiculo vehiculo) {
           this.vehiculo = vehiculo;
       }
@@ -124,24 +157,27 @@ public class OrdenRetiro {
           }
           this.voluntarios.add(voluntario);
       }
+      
+
     
-    // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos
     public void actualizarEstadoAutomatico() {
         if (this.pedidos == null || this.pedidos.isEmpty()) {
-            return; // si hay pedidos, no se actualiza
+            return; // si no hay pedidos, no se actualiza
         }
         
         boolean todosCompletados = true;
-        boolean algunoEnEjecucion = false;
+        boolean algunoNoPendiente = false;
         
         for (PedidosDonacion pedido : this.pedidos) {
             EstadoPedido estadoPedido = pedido.obtenerEstadoPedido();
+            
             if (estadoPedido != EstadoPedido.COMPLETADO) {
                 todosCompletados = false;
             }
-            if (estadoPedido == EstadoPedido.EN_EJECUCION) {
-                algunoEnEjecucion = true;
+            
+            if (estadoPedido != EstadoPedido.PENDIENTE) {
+                algunoNoPendiente = true;
             }
         }
         
@@ -149,11 +185,14 @@ public class OrdenRetiro {
         if (todosCompletados) {
             this.estado = EstadoOrden.COMPLETADO;
         }
-        // si al menos uno esta en ejecucion, o si hay visitas registradas
-        else if (algunoEnEjecucion || !this.visitas.isEmpty()) {
+        // si al menos uno no esta pendiente (en ejecucion o completado), la orden esta en ejecucion
+        else if (algunoNoPendiente) {
             this.estado = EstadoOrden.EN_EJECUCION;
         }
-        // si no, permanece en PENDIENTE
+        // si todos estan pendientes, la orden permanece pendiente
+        else {
+            this.estado = EstadoOrden.PENDIENTE;
+        }
     }
 
     // metodo para marcar como completado
@@ -191,11 +230,14 @@ public class OrdenRetiro {
     
     // metodo de ayuda para el toString
     public String describirEstado() {
-        return this.estado.toString();
+        return this.estado.name();
     }
   
 	public boolean equals(OrdenRetiro obj) {
-        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidos.equals(obj.pedidos));
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        final OrdenRetiro other = (OrdenRetiro) obj;
+        return this.id == other.id; // Comparar por ID
     }
     
 }

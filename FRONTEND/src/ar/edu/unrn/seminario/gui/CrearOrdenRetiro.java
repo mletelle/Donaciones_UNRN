@@ -12,6 +12,11 @@ import javax.swing.table.DefaultTableModel;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+// Importaciones de excepciones propias
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException; 
+
 
 public class CrearOrdenRetiro extends JDialog {
 
@@ -63,6 +68,7 @@ public class CrearOrdenRetiro extends JDialog {
 
         add(panelAsignacion, BorderLayout.SOUTH);
 
+        // Agregamos el manejo de excepciones personalizado al listener
         btnAsignarCrearOrden.addActionListener(e -> asignarYCrearOrden());
         btnCancelar.addActionListener(e -> dispose());
 
@@ -70,22 +76,26 @@ public class CrearOrdenRetiro extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    // Metodos
-    // meotodo para cargar pedidos pendientes
+    // Metodo para cargar pedidos pendientes
     private void cargarPedidosPendientes() {
         pedidosTableModel.setRowCount(0);
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
-        for (PedidoDonacionDTO pedido : pedidos) {
-            pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonante(), pedido.getTipoVehiculo() });
+        if (pedidos != null) {
+            for (PedidoDonacionDTO pedido : pedidos) {
+                pedidosTableModel.addRow(new Object[] { false, pedido.getId(), pedido.getFecha(), pedido.getDonante(), pedido.getTipoVehiculo() });
+            }
         }
     }
 
-    // metodo para cargar voluntarios
+    // Metodo para cargar voluntarios
     private void cargarVoluntarios() {
         List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios();
-        for (VoluntarioDTO voluntario : voluntarios) {
-            voluntarioComboBox.addItem(voluntario);
+        if (voluntarios != null) {
+            for (VoluntarioDTO voluntario : voluntarios) {
+                voluntarioComboBox.addItem(voluntario);
+            }
         }
+        
         voluntarioComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public java.awt.Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -99,38 +109,77 @@ public class CrearOrdenRetiro extends JDialog {
         });
     }
 
-    // metodo para asignar y crear una orden de retiro
+    // Metodo para asignar y crear una orden de retiro
     private void asignarYCrearOrden() {
         List<Integer> idsPedidosSeleccionados = new ArrayList<>();
 
-        for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
-            Boolean isSelected = (Boolean) pedidosTableModel.getValueAt(i, 0);
-            if (isSelected != null && isSelected) {
-                idsPedidosSeleccionados.add((Integer) pedidosTableModel.getValueAt(i, 1));
-            }
-        }
-
-        if (idsPedidosSeleccionados.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Debe seleccionar al menos un pedido.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        VoluntarioDTO voluntarioSeleccionado = (VoluntarioDTO) voluntarioComboBox.getSelectedItem();
-        if (voluntarioSeleccionado == null) {
-            JOptionPane.showMessageDialog(this, "Debe seleccionar un voluntario.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        String tipoVehiculoSeleccionado = (String) tipoVehiculoComboBox.getSelectedItem();
-
         try {
+            for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
+                Boolean isSelected = (Boolean) pedidosTableModel.getValueAt(i, 0);
+                if (isSelected != null && isSelected) {
+                    idsPedidosSeleccionados.add((Integer) pedidosTableModel.getValueAt(i, 1));
+                }
+            }
+
+            if (idsPedidosSeleccionados.isEmpty()) {
+                throw new CampoVacioException("Debe seleccionar al menos un pedido para crear la orden de retiro.");
+            }
+
+            VoluntarioDTO voluntarioSeleccionado = (VoluntarioDTO) voluntarioComboBox.getSelectedItem();
+
+            if (voluntarioSeleccionado == null) {
+                throw new ObjetoNuloException("Debe seleccionar un voluntario para asignar la orden.");
+            }
+
+            String tipoVehiculoSeleccionado = (String) tipoVehiculoComboBox.getSelectedItem();
+            
+            // logica de vehiculo
+            for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
+                Boolean isSelected = (Boolean) pedidosTableModel.getValueAt(i, 0);
+                if (isSelected != null && isSelected) {
+                    String vehiculoRequerido = (String) pedidosTableModel.getValueAt(i, 4); 
+                    
+                    if (!esVehiculoSuficiente(tipoVehiculoSeleccionado, vehiculoRequerido)) {
+                        Integer pedidoId = (Integer) pedidosTableModel.getValueAt(i, 1);
+                        throw new ReglaNegocioException(
+                            "El vehículo '" + tipoVehiculoSeleccionado + "' no es suficiente para el Pedido ID " + pedidoId + 
+                            ", que requiere un/a '" + vehiculoRequerido + "'."
+                        );
+                    }
+                }
+            }
+            
+            // Llamada a la API
             api.crearOrdenRetiro(idsPedidosSeleccionados, voluntarioSeleccionado.getId(), tipoVehiculoSeleccionado);
-            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "exito", JOptionPane.INFORMATION_MESSAGE);
+            
+            JOptionPane.showMessageDialog(this, "Orden creada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Recargar datos y cerrar
             cargarPedidosPendientes();
             dispose();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            
+        } catch (ReglaNegocioException | ObjetoNuloException | CampoVacioException ex) {
+            // Manejo de excepciones de negocio
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Asignación", JOptionPane.WARNING_MESSAGE);
         }
+        
+    }
+    
+    // metodo para que use una logica de vehiculo si quiere seleccionar otro distinto al del pedido
+    private boolean esVehiculoSuficiente (String vehiculoElegido, String vehiculoRequerido) {
+        if ("Camion".equalsIgnoreCase(vehiculoElegido)) {
+            return true; // Un camión puede con todo
+        }
+        
+        if ("Camioneta".equalsIgnoreCase(vehiculoElegido)) {
+            return "Camioneta".equalsIgnoreCase(vehiculoRequerido) || "Auto".equalsIgnoreCase(vehiculoRequerido);
+        }
+
+        if ("Auto".equalsIgnoreCase(vehiculoElegido)) {
+            return "Auto".equalsIgnoreCase(vehiculoRequerido);
+        }
+        
+        return false; 
     }
     
 }

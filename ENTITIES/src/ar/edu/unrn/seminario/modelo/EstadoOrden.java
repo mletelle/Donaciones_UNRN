@@ -7,10 +7,8 @@ public enum EstadoOrden {
 	EN_EJECUCION("En Ejecucion"),
 	COMPLETADO("Completado");
 
-	// Atributos
 	private String descripcion;
 	
-	// Constructores
 	EstadoOrden(String descripcion) {
 		this.descripcion = descripcion;
 	}
@@ -18,6 +16,19 @@ public enum EstadoOrden {
 	@Override
 	public String toString() {
 		return descripcion;
+	}
+	
+	public static EstadoOrden fromString(String texto) {
+		if (texto == null || texto.isEmpty()) {
+			throw new IllegalArgumentException("El estado no puede ser nulo o vacio");
+		}
+		String textoNormalizado = texto.trim().toUpperCase();
+		for (EstadoOrden e : EstadoOrden.values()) {
+			if (e.name().equals(textoNormalizado)) {
+				return e;
+			}
+		}
+		throw new IllegalArgumentException("Estado de orden desconocido: " + texto);
 	}
 	
 } 

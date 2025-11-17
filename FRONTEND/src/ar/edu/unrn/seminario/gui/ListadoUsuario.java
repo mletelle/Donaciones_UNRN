@@ -19,124 +19,198 @@ import javax.swing.table.DefaultTableModel;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
+import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException; 
 
 public class ListadoUsuario extends JFrame {
 
-	private JPanel contentPane;
-	private JTable table;
-	DefaultTableModel modelo;
-	IApi api;
-	JButton activarButton;
-	JButton desactivarButton;
+    private JPanel contentPane;
+    private JTable table;
+    DefaultTableModel modelo;
+    IApi api;
+    JButton activarButton;
+    JButton desactivarButton;
 
-	public ListadoUsuario(IApi api) {
-		this.api = api;
+    public ListadoUsuario(IApi api) {
+        this.api = api;
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		contentPane.setLayout(new BorderLayout(0, 0));
-		setContentPane(contentPane);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        contentPane.setLayout(new BorderLayout(0, 0));
+        setContentPane(contentPane);
 
-		JScrollPane scrollPane = new JScrollPane();
-		contentPane.add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane();
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
-		table = new JTable();
-		String[] titulos = { "USUARIO", "NOMBRE", "EMAIL", "ESTADO", "ROL" };
+        table = new JTable();
+        String[] titulos = { "USUARIO", "NOMBRE", "EMAIL", "ESTADO", "ROL" };
 
-		table.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent arg0) {
-				habilitarBotones(true);
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent arg0) {
+                habilitarBotones(true);
+            }
+        });
+        
+        modelo = new DefaultTableModel(new Object[][] {}, titulos);
+        table.setModel(modelo);
 
-			}
-		});
-		modelo = new DefaultTableModel(new Object[][] {}, titulos);
+        scrollPane.setViewportView(table);
 
-		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		for (UsuarioDTO u : usuarios) {
-			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
-		}
+        activarButton = new JButton("Activar");
+        
+        // accion del boton "activar"
+        activarButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int filaSeleccionada = table.getSelectedRow();
+                if (filaSeleccionada == -1) {
+                    JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
 
-		table.setModel(modelo);
+                int opcionSeleccionada = JOptionPane.showConfirmDialog(null,
+                        "¿Está seguro que desea cambiar el estado del Usuario?", "Confirmar cambio de estado.",
+                        JOptionPane.YES_NO_OPTION);
+                
+                if (opcionSeleccionada == JOptionPane.YES_OPTION) {
+                    try {
+                    	if (filaSeleccionada == -1) {
+                            throw new CampoVacioException("Debe seleccionar un usuario.");
+                        }
+                        Object estadoObj = table.getModel().getValueAt(filaSeleccionada, 3);
+                        if (estadoObj == null) {
+                            throw new ObjetoNuloException("El estado del usuario es nulo.");
+                        }
+                        
+                        String estado = estadoObj.toString().trim();
+                        if ("Activo".equalsIgnoreCase(estado)) {
+                            throw new ReglaNegocioException("El usuario seleccionado ya se encuentra activo.");
+                        }
+                    	
+                    	String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
-		scrollPane.setViewportView(table);
+                        if (username == null || username.trim().isEmpty()) {
+                            throw new CampoVacioException("El nombre de usuario seleccionado es inválido o nulo.");
+                        }
+                        
+                        api.activarUsuario(username);
+                        JOptionPane.showMessageDialog(null, "Usuario activado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                        actualizarTabla();
 
-		activarButton = new JButton("Activar");
-		
-		// accion del boton "Activar"
-		activarButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int opcionSeleccionada = JOptionPane.showConfirmDialog(null,
-						"Estas seguro que queres cambiar el estado del Usuario?", "Confirmar cambio de estado.",
-						JOptionPane.YES_NO_OPTION);
-				if (opcionSeleccionada == JOptionPane.YES_OPTION) {
-					String username = (String) table.getModel().getValueAt(table.getSelectedRow(), 0);
+                    } catch (CampoVacioException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+                    } catch (ReglaNegocioException | ObjetoNuloException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                         JOptionPane.showMessageDialog(null, "Error inesperado de la API: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
 
-					api.activarUsuario(username);
-					actualizarTabla();
+        desactivarButton = new JButton("Desactivar");
+        
+        // accion del boton "desactivar"
+        desactivarButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
 
-				}
-			}
-		});
+                int reply = JOptionPane.showConfirmDialog(null,
+                        "¿Está seguro que desea cambiar el estado del Usuario?", "Confirmar cambio de estado.",
+                        JOptionPane.YES_NO_OPTION);
+                
+                if (reply == JOptionPane.YES_OPTION) {
+                    try {
+                        int filaSeleccionada = table.getSelectedRow();
+                        
+                        if (filaSeleccionada == -1) {
+                            JOptionPane.showMessageDialog(null, "Debe seleccionar un usuario.", "Error", JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
 
-		desactivarButton = new JButton("Desactivar");
-		
-		// Accion del boton "Desacivar"
-		desactivarButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int reply = JOptionPane.showConfirmDialog(null,
-						"Estas seguro que queres cambiar el estado del Usuario?", "Confirmar cambio de estado.",
-						JOptionPane.YES_NO_OPTION);
-				if (reply == JOptionPane.YES_OPTION) {
-					String username = (String) table.getModel().getValueAt(table.getSelectedRow(), 0);
+                        Object estadoObj = table.getModel().getValueAt(filaSeleccionada, 3); 
+                        if (estadoObj == null) {
+                            throw new ObjetoNuloException("El estado del usuario es nulo.");
+                        }
+                        
+                        String estado = estadoObj.toString().trim();
+                        if ("Inactivo".equalsIgnoreCase(estado)) {
+                            throw new ReglaNegocioException("El usuario seleccionado ya se encuentra inactivo.");
+                        }
+                        
+                        String username = (String) table.getModel().getValueAt(filaSeleccionada, 0);
 
-					api.desactivarUsuario(username);
-					actualizarTabla();
+                        if (username == null || username.trim().isEmpty()) {
+                            throw new CampoVacioException("El nombre de usuario seleccionado es inválido o nulo.");
+                        }
 
-				}
-			}
-		});
+                        api.desactivarUsuario(username);
+                        JOptionPane.showMessageDialog(null, "Usuario desactivado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                        actualizarTabla();
 
-		JButton cerrarButton = new JButton("Cerrar");
-		
-		// Accion del boton "Cerrar"
-		cerrarButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				setVisible(false);
-				dispose();
-			}
-		});
+                    } catch (CampoVacioException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
+                    } catch (ReglaNegocioException | ObjetoNuloException ex) {
+                        JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
+                    } catch (Exception ex) {
+                         JOptionPane.showMessageDialog(null, "Error inesperado de la API: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
 
-		JPanel pnlBotonesOperaciones = new JPanel();
-		pnlBotonesOperaciones.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		contentPane.add(pnlBotonesOperaciones, BorderLayout.SOUTH);
-		pnlBotonesOperaciones.add(desactivarButton);
-		pnlBotonesOperaciones.add(activarButton);
-		pnlBotonesOperaciones.add(cerrarButton);
+        JButton cerrarButton = new JButton("Cerrar");
+        cerrarButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                dispose();
+            }
+        });
 
-		// desabilita botones que requieren tener una fila seleccionada
-		habilitarBotones(false);
-	}
+        JPanel pnlBotonesOperaciones = new JPanel();
+        pnlBotonesOperaciones.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        contentPane.add(pnlBotonesOperaciones, BorderLayout.SOUTH);
+        pnlBotonesOperaciones.add(desactivarButton);
+        pnlBotonesOperaciones.add(activarButton);
+        pnlBotonesOperaciones.add(cerrarButton);
 
-	// Metodos
-	// metodo para habilitar botones
-	private void habilitarBotones(boolean b) {
-		activarButton.setEnabled(b);
-		desactivarButton.setEnabled(b);
+        // --- 2. CONFIGURAR ESTADO INICIAL ---
+        habilitarBotones(false);
+        
+        // --- 3. CARGAR DATOS AL FINAL (Cuando todo ya existe) ---
+        actualizarTabla(); 
+    }
 
-	}
+    private void habilitarBotones(boolean b) {
+        // Se agregan chequeos de nulidad por seguridad extra, aunque moviendo actualizarTabla al final ya no debería fallar
+        if (activarButton != null) {
+            activarButton.setEnabled(b);
+        }
+        if (desactivarButton != null) {
+            desactivarButton.setEnabled(b);
+        }
+    }
 
-	// metodo para actualizar tabla
-	private void actualizarTabla() {
-		DefaultTableModel modelo = (DefaultTableModel) table.getModel();
-		List<UsuarioDTO> usuarios = api.obtenerUsuarios();
-		modelo.setRowCount(0);
+    private void actualizarTabla() {
+        DefaultTableModel modelo = (DefaultTableModel) table.getModel();
+        modelo.setRowCount(0); 
 
-		for (UsuarioDTO u : usuarios) {
-			modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
-		}
-	}
+        try {
+            List<UsuarioDTO> usuarios = api.obtenerUsuarios();
 
+            if (usuarios == null) {
+                throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de usuarios.");
+            }
+
+            for (UsuarioDTO u : usuarios) {
+                modelo.addRow(new Object[] { u.getUsername(), u.getNombre(), u.getEmail(), u.getEstado(), u.getRol() });
+            }
+        } catch (ObjetoNuloException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            habilitarBotones(false);
+        }
+    }
 }

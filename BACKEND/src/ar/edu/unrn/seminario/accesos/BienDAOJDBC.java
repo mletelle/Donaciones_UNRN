@@ -27,14 +27,17 @@ public class BienDAOJDBC implements BienDao {
 				if (bien.getFecVec() != null) {
 					statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
 				} else {
-					statement.setNull(6, java.sql.Types.DATE);// no anda si no uso esto, antes daba error, tan dificil era signar un null?
+					statement.setNull(6, java.sql.Types.DATE);
 				}
-				
-				statement.executeUpdate();
+				// AGREGA LA CONSULTA AL LOTE (NO LA EJECUTA)
+				statement.addBatch();
+				// statement.executeUpdate();
+				// Iba a la base de datos 
 			}
+			// EJECUTA TODAS LAS CONSULTAS DEL LOTE EN UNA SOLA LLAMADA A LA BD
+			statement.executeBatch();
 		} finally {
 			if (statement != null) statement.close();
 		}
 	}
-
 }

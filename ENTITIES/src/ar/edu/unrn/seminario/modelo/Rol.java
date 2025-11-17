@@ -4,12 +4,10 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Rol {
 	
-	// Atributos
 	private Integer codigo;
 	private String nombre;
 	private boolean activo;
 
-	// Constructores
 	public Rol() {
 
 	}
@@ -26,7 +24,6 @@ public class Rol {
 		this.nombre = nombre;
 	}
 
-	// Getters
 	public Integer getCodigo() {
 		return codigo;
 	}
@@ -39,7 +36,6 @@ public class Rol {
 		return activo;
 	}
 
-	// Setters
 	public void setCodigo(Integer codigo) {
 		this.codigo = codigo;
 	}
@@ -52,7 +48,6 @@ public class Rol {
 		this.activo = activo;
 	}
 
-	// Metodos
 	// metodo para activar
 	public void activar() {
 		this.activo = true;

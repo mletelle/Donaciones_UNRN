@@ -3,10 +3,6 @@ USE `seminario_2025_1`;
 -- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)
 --
 -- Host: 127.0.0.1    Database: seminario_2025_1
--- Chicos hay que tener las mismas credenciales, o cada uno modifique su conectionamnager, hay que crear el usuario y otorgarle permisos
--- CREATE USER 'seminario'@'localhost' IDENTIFIED BY 'Seminario_Pass_123!';
--- GRANT ALL PRIVILEGES ON seminario_2025_1.* TO 'seminario'@'localhost';
--- FLUSH PRIVILEGES;
 -- ------------------------------------------------------
 -- Server version	8.0.43-0ubuntu0.24.04.2
 
@@ -39,7 +35,7 @@ CREATE TABLE `bienes` (
   PRIMARY KEY (`id`),
   KEY `fk_bien_pedido_idx` (`id_pedido_donacion`),
   CONSTRAINT `fk_bien_pedido` FOREIGN KEY (`id_pedido_donacion`) REFERENCES `pedidos_donacion` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +44,7 @@ CREATE TABLE `bienes` (
 
 LOCK TABLES `bienes` WRITE;
 /*!40000 ALTER TABLE `bienes` DISABLE KEYS */;
-INSERT INTO `bienes` VALUES (1,1,2,1,2,'Mesa de luz',NULL),(2,1,2,2,2,'Sillas de madera',NULL),(3,2,1,10,2,'Bolsa de ropa variada',NULL),(4,3,3,20,1,'Latas de conserva','2026-12-31'),(5,3,3,5,1,'Paquetes de arroz','2026-06-30');
+INSERT INTO `bienes` VALUES (17,13,1,1,1,'Remera',NULL),(18,13,1,2,2,'Pantalon',NULL),(19,14,2,1,1,'Alacena',NULL),(20,14,5,4,1,'Clavos',NULL),(21,15,3,12,1,'Latas','2025-11-16');
 /*!40000 ALTER TABLE `bienes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -70,7 +66,7 @@ CREATE TABLE `ordenes_retiro` (
   KEY `fk_orden_vehiculo_idx` (`patente_vehiculo`),
   CONSTRAINT `fk_orden_usuario` FOREIGN KEY (`usuario_voluntario`) REFERENCES `usuarios` (`usuario`) ON UPDATE CASCADE,
   CONSTRAINT `fk_orden_vehiculo` FOREIGN KEY (`patente_vehiculo`) REFERENCES `vehiculos` (`patente`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -79,7 +75,7 @@ CREATE TABLE `ordenes_retiro` (
 
 LOCK TABLES `ordenes_retiro` WRITE;
 /*!40000 ALTER TABLE `ordenes_retiro` DISABLE KEYS */;
-INSERT INTO `ordenes_retiro` VALUES (1,'2025-11-11 11:24:53','EN_EJECUCION','bgoro','AD 456 EF');
+INSERT INTO `ordenes_retiro` VALUES (11,'2025-11-16 20:45:47','PENDIENTE','bgoro','AE 123 CD'),(12,'2025-11-16 20:45:53','PENDIENTE','bgoro','AE 123 CD');
 /*!40000 ALTER TABLE `ordenes_retiro` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -94,7 +90,6 @@ CREATE TABLE `pedidos_donacion` (
   `id` int NOT NULL AUTO_INCREMENT,
   `fecha` datetime NOT NULL,
   `tipo_vehiculo` varchar(20) NOT NULL,
-  `observaciones` text,
   `usuario_donante` varchar(45) NOT NULL,
   `estado` varchar(20) NOT NULL,
   `id_orden_retiro` int DEFAULT NULL,
@@ -103,7 +98,7 @@ CREATE TABLE `pedidos_donacion` (
   KEY `fk_pedido_orden_idx` (`id_orden_retiro`),
   CONSTRAINT `fk_pedido_orden` FOREIGN KEY (`id_orden_retiro`) REFERENCES `ordenes_retiro` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`usuario_donante`) REFERENCES `usuarios` (`usuario`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -112,7 +107,7 @@ CREATE TABLE `pedidos_donacion` (
 
 LOCK TABLES `pedidos_donacion` WRITE;
 /*!40000 ALTER TABLE `pedidos_donacion` DISABLE KEYS */;
-INSERT INTO `pedidos_donacion` VALUES (1,'2025-11-09 11:25:28','Camioneta','Pedido 1: Muebles varios','rargel','EN_EJECUCION',1),(2,'2025-11-10 11:25:28','Auto','Pedido 2: Ropa y cajas chicas','lperise','EN_EJECUCION',1),(3,'2025-11-11 11:25:28','Auto','Pedido 3: Alimentos no perecederos','rargel','PENDIENTE',NULL);
+INSERT INTO `pedidos_donacion` VALUES (13,'2025-11-16 00:00:00','AUTO','lperise','EN_EJECUCION',12),(14,'2025-11-16 00:00:00','CAMIONETA','rargel','PENDIENTE',11),(15,'2025-11-16 00:00:00','AUTO','lperise','PENDIENTE',11);
 /*!40000 ALTER TABLE `pedidos_donacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -171,7 +166,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES ('admin',1,'1234','Admin','Sistema','admin@unrn.edu.ar',1,'11111111',NULL),('bgoro',2,'pass','Bruno','Goro','bgoro@unrn.edu.ar',1,'22222222',NULL),('ldifabio',2,'pass','Lucas','Difabio','ldifabio@unrn.edu.ar',1,'44444444',NULL),('lperise',3,'pass','Lautaro','Perise','lperise@unrn.edu.ar',1,'66666666','Avenida Siempre Viva 742, Sur'),('mcamba',2,'pass','Mauro','Camba','amartinez@unrn.edu.ar',1,'33333333',NULL),('rargel',3,'pass','Ramiro','Argel','rargel@unrn.edu.ar',1,'55555555','Calle Falsa 123, Centro');
+INSERT INTO `usuarios` VALUES ('admin',1,'1234','Admin','Sistema','admin@unrn.edu.ar',1,'11111111',NULL),('bgoro',2,'pass','Bruno','Goro','bgoro@unrn.edu.ar',1,'22222222',NULL),('ldifabio',2,'pass','Lucas','Difabio','ldifabio@unrn.edu.ar',1,'44444444',NULL),('lperise',3,'pass','Lautaro','Perise','lperise@unrn.edu.ar',1,'66666666','Avenida Siempre Viva 742'),('mcamba',2,'pass','Mauro','Camba','mcamba@unrn.edu.ar',0,'33333333',NULL),('rargel',3,'pass','Ramiro','Argel','rargel@unrn.edu.ar',1,'55555555','Calle Falsa 123');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -220,7 +215,7 @@ CREATE TABLE `visitas` (
   KEY `fk_visita_pedido_idx` (`id_pedido_donacion`),
   CONSTRAINT `fk_visita_orden` FOREIGN KEY (`id_orden_retiro`) REFERENCES `ordenes_retiro` (`id`),
   CONSTRAINT `fk_visita_pedido` FOREIGN KEY (`id_pedido_donacion`) REFERENCES `pedidos_donacion` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -229,7 +224,7 @@ CREATE TABLE `visitas` (
 
 LOCK TABLES `visitas` WRITE;
 /*!40000 ALTER TABLE `visitas` DISABLE KEYS */;
-INSERT INTO `visitas` VALUES (1,1,1,'2025-11-12 07:25:55','Recoleccion Exitosa','Se retiraron todos los muebles. Donante muy amable.'),(2,1,2,'2025-11-12 09:25:55','Donante Ausente','No se encontraba en el domicilio, se dejo nota.');
+INSERT INTO `visitas` VALUES (19,12,13,'2025-11-16 20:46:56','Donante Ausente','No estaba, despues vuelvo');
 /*!40000 ALTER TABLE `visitas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -242,5 +237,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-12 11:33:52
-
+-- Dump completed on 2025-11-16 20:49:26

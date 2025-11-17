@@ -2,13 +2,11 @@ package ar.edu.unrn.seminario.modelo;
 
 public class Ubicacion {
     
-    // atributos
     private String direccion;
     private String zona;
     private String barrio;
     private Coordenada coordenada;
 
-    // Constructores
     // constructor que recibe ya el objeto coordenada
     public Ubicacion(String direccion, String zona, String barrio, Coordenada coord) {
         this.direccion = direccion;
@@ -21,7 +19,6 @@ public class Ubicacion {
         this(direccion, zona, barrio, new Coordenada(latitud, longitud));
     }
 
-    // getters
     public String obtenerDireccion() {
         return direccion;
     }

@@ -2,15 +2,13 @@ package ar.edu.unrn.seminario.modelo;
 
 public class Beneficiario {
 	
-	// Atributos
 	private String nombre;
 	private String apellido;
 	private int DNI;
 	private Ubicacion ubicacion;
 	private String contacto;
 	private OrdenEntrega ordenActual;
-	
-	// Constructores
+		// Constructores
 	public Beneficiario(String nmbre, String ape, int DNI, Ubicacion ubicacion) {
 		this.nombre = nmbre;
 		this.apellido = ape;
@@ -18,7 +16,6 @@ public class Beneficiario {
 		this.ubicacion = ubicacion;
 	}
 	
-	// Getters
 	public String getNombre() {
 		return nombre;
 	}
@@ -43,7 +40,6 @@ public class Beneficiario {
 		return ordenActual;
 	}
 
-	// Setters
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
@@ -68,7 +64,6 @@ public class Beneficiario {
 		this.ordenActual = ordenActual;
 	}
 
-	// Metodos
 	public void cambiarUbicacion(Ubicacion u) {
 		setUbicacion(u);
 	}
