@@ -7,7 +7,6 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Usuario {
 	
-	// Atributos
 	private String usuario;
 	private String contrasena;
 	private String nombre;
@@ -18,7 +17,7 @@ public class Usuario {
 	//  Atributos absorbidos de Persona
 	private String apellido;
 	private int dni;
-	private String direccion; // SIMPLIFICADO: solo String en lugar de objeto Ubicacion
+	private String direccion; // solo String en lugar de objeto Ubicacion
 	
 	// Atributos para roles específicos
 	private ArrayList<PedidosDonacion> pedidos; // Para Donante
@@ -165,7 +164,6 @@ public class Usuario {
 		this.direccion = direccion;
 	}
 
-	// Metodos
 	// metodo para activar
 	public void activar() {
 		if (!isActivo())

@@ -2,18 +2,15 @@ package ar.edu.unrn.seminario.modelo;
 
 public class Coordenada {
 
-	// Atributos
     private double latitud;
     private double longitud;
     
     
-    // Constructores
     public Coordenada(double latitud, double longitud) {
         this.latitud = latitud;
         this.longitud = longitud;
     }
   
-    //getters
     public double obtenerLatitud() {
         return latitud;
     }

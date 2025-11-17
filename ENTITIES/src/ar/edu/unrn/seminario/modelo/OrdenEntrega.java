@@ -14,7 +14,6 @@ public class OrdenEntrega {
     private static final int ESTADO_COMPLETADO = 3;
     private static final int ESTADO_CANCELADO = 4;
 
-    // atributos
     private int id;
     private Date fechaGeneracion = new Date();
     private int estado;
@@ -28,7 +27,6 @@ public class OrdenEntrega {
     private Date fechaEjecucion = new Date();
     private Date fechaProgramada = new Date();
 
-    // constructores
     public OrdenEntrega(PedidosDonacion pedido, Ubicacion destino) {
         this.id = ++secuencia;
         this.estado = ESTADO_PENDIENTE;
@@ -39,7 +37,6 @@ public class OrdenEntrega {
         /// pedido.asignarOrden(this);
     }
     
-    // Getters
     public Usuario obtenerVoluntario() { 
     	return this.voluntario;
     }
@@ -56,13 +53,11 @@ public class OrdenEntrega {
 		return estado == ESTADO_COMPLETADO;
 	}
     
-    // Setters
     private void asignarRecursos(Usuario v, Vehiculo vehiculo) { 
     	this.v = vehiculo;
     	asignarVoluntario(v);
     }
 
-    // metodos
     // asignacion de voluntario
     public void asignarVoluntario(Usuario v) { 
         voluntario = v;

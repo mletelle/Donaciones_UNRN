@@ -183,7 +183,6 @@ public class ListadoUsuario extends JFrame {
         actualizarTabla(); 
     }
 
-    // Metodos
     private void habilitarBotones(boolean b) {
         // Se agregan chequeos de nulidad por seguridad extra, aunque moviendo actualizarTabla al final ya no debería fallar
         if (activarButton != null) {

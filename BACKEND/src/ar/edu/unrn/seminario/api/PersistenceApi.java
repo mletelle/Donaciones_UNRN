@@ -155,7 +155,6 @@ public class PersistenceApi implements IApi {
 
 	@Override
 	public void eliminarUsuario(String username) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -198,7 +197,6 @@ public class PersistenceApi implements IApi {
 
 	@Override
 	public void guardarRol(Integer codigo, String descripcion, boolean estado) throws CampoVacioException {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -220,12 +218,10 @@ public class PersistenceApi implements IApi {
 
 	@Override
 	public void activarRol(Integer codigo) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void desactivarRol(Integer codigo) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -643,11 +639,6 @@ public class PersistenceApi implements IApi {
 		}
 		return dtos;
 	}
-/*
-Este metodo al fin anda, ya no carga nulls.
-El problema era que no estaba manejando bien las transacciones 
-Cargaba como null el vehiculo y el voluntario porque no estaba buscando bien en la base de datos.
-*/ 
 	public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
 	        throws ReglaNegocioException, ObjetoNuloException {
 	    

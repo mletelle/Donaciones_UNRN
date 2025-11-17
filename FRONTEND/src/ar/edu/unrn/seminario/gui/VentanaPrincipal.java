@@ -257,7 +257,6 @@ public class VentanaPrincipal extends JFrame {
 		});
 	}
 
-	// Metodos
 	public void actualizarUIporRol() {
 	    // segun el rol
 	    usuarioMenu.setVisible("ADMINISTRADOR".equals(rolActual));

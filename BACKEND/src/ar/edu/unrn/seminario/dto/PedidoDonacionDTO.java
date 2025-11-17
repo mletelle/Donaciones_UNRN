@@ -4,7 +4,6 @@ import java.util.List;
 
 public class PedidoDonacionDTO {
     
-	// Atributos
 	private int id;
     private String fecha;
     private List<BienDTO> bienes;
@@ -14,7 +13,6 @@ public class PedidoDonacionDTO {
     private String direccion;
     private String estado;
 
-    // Constructores
     public PedidoDonacionDTO(String fecha, List<BienDTO> bienes, String tipoVehiculo, int donanteId) {
         this.fecha = fecha;
         this.bienes = bienes;
@@ -48,7 +46,6 @@ public class PedidoDonacionDTO {
         this.estado = estado;
     }
 
-    // Getters
     public int getId() {
         return id;
     }
@@ -77,7 +74,6 @@ public class PedidoDonacionDTO {
         return direccion;
     }
     
-    // Setters
     public String getEstado() {
         return estado;
     }

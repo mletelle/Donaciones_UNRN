@@ -2,7 +2,6 @@ package ar.edu.unrn.seminario.dto;
 
 public class UsuarioDTO {
 	
-	// Atributos
 	private String username;
 	private String password;
 	private String nombre;
@@ -11,7 +10,6 @@ public class UsuarioDTO {
 	private boolean activo;
 	private String estado;
 
-	// Constructores
 	public UsuarioDTO(String username, String password, String nombre, String email, String rol, boolean activo,
 			String estado) {
 		super();
@@ -24,7 +22,6 @@ public class UsuarioDTO {
 		this.estado = estado;
 	}
 
-	// Getters
 	public String getUsername() {
 		return username;
 	}
@@ -53,7 +50,6 @@ public class UsuarioDTO {
 		return estado;
 	}
 
-	// Setters
 	public void setUsername(String username) {
 		this.username = username;
 	}

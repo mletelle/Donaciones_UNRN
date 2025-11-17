@@ -28,14 +28,12 @@ import ar.edu.unrn.seminario.modelo.ResultadoVisita;
 
 public class MemoryApi implements IApi {
 
-	// Atributos
 	private ArrayList<Rol> roles = new ArrayList<>();
 	private ArrayList<Usuario> usuarios = new ArrayList<>();
 	private List<PedidosDonacion> pedidos = new ArrayList<>();
 	private List<OrdenRetiro> ordenes = new ArrayList<>();
 	private ArrayList<Vehiculo> vehiculosDisponibles = new ArrayList<>(); // lista para autos fijos
 
-	// Constructores
 	public MemoryApi() throws CampoVacioException {
 		this.roles.add(new Rol(1, "ADMIN"));
 		this.roles.add(new Rol(2, "VOLUNTARIO"));
@@ -47,7 +45,6 @@ public class MemoryApi implements IApi {
 		inicializarPedidos(); // crea pedidos, sin asignar ordenes
 	}
 
-	// Metodos
 	private void inicializarUsuarios() {
 		try {
 			// ADMIN (sin direccinn)
@@ -133,8 +130,6 @@ public class MemoryApi implements IApi {
 
 	@Override
 	public void eliminarUsuario(String username) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -219,7 +214,6 @@ public class MemoryApi implements IApi {
 	    this.pedidos.add(pedido);
 	}
 
-	// Getters
 	@Override
 	public List<DonanteDTO> obtenerDonantes() {
 		List<DonanteDTO> donanteDTOs = new ArrayList<>();
@@ -397,8 +391,6 @@ public class MemoryApi implements IApi {
 						Usuario donante = visita.getPedidoRelacionado().getDonante(); // MODIFICADO: ahora es Usuario
 						nombreDonante = donante.obtenerNombre() + " " + donante.obtenerApellido();
 						
-						// DEBUG
-						// System.out.println("DEBUG. Visita: " + visita.obtenerObservacion() +" Donante: " + nombreDonante);
 					} else {
 						System.out.println("DEBUG Visita SIN pedido relacionado: " + visita.obtenerObservacion());
 					}
@@ -561,7 +553,7 @@ public class MemoryApi implements IApi {
 		this.ordenes.add(nuevaOrden);
 	}
 
-	private List<String> convertirBienesAStrings(List<Bien> bienes) {//no manejamos logica de bienes, quedo de antes
+	private List<String> convertirBienesAStrings(List<Bien> bienes) {//no manejamos logica de bienes
         List<String> bienesStr = new ArrayList<>();
         for (Bien bien : bienes) {
             bienesStr.add(bien.toString()); 

@@ -146,7 +146,6 @@ public class RegistrarVisitaDialog extends JDialog {
         add(panelPrincipal);
     }
 
-    // Metodos
     public RegistrarVisitaDialog(IApi api, int idOrden, int idPedido) {
         this(api, idOrden); 
         this.idPedido = idPedido;

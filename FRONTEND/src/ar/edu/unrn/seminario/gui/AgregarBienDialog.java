@@ -194,7 +194,6 @@ public class AgregarBienDialog extends JDialog {
         }
     }
     
-    // Getters
     public BienDTO getBien() {
         return bien;
     }

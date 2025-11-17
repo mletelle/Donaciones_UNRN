@@ -7,10 +7,8 @@ public enum EstadoOrden {
 	EN_EJECUCION("En Ejecucion"),
 	COMPLETADO("Completado");
 
-	// Atributos
 	private String descripcion;
 	
-	// Constructores
 	EstadoOrden(String descripcion) {
 		this.descripcion = descripcion;
 	}

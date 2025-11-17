@@ -76,11 +76,9 @@ public class CrearOrdenRetiro extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    // Metodos
     // Metodo para cargar pedidos pendientes
     private void cargarPedidosPendientes() {
         pedidosTableModel.setRowCount(0);
-        // Podríamos usar ObjetoNuloException si api.obtenerPedidosPendientes() retorna null
         List<PedidoDonacionDTO> pedidos = api.obtenerPedidosPendientes();
         if (pedidos != null) {
             for (PedidoDonacionDTO pedido : pedidos) {
@@ -91,7 +89,6 @@ public class CrearOrdenRetiro extends JDialog {
 
     // Metodo para cargar voluntarios
     private void cargarVoluntarios() {
-        // Podríamos usar ObjetoNuloException si api.obtenerVoluntarios() retorna null
         List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios();
         if (voluntarios != null) {
             for (VoluntarioDTO voluntario : voluntarios) {

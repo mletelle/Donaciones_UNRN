@@ -2,12 +2,10 @@ package ar.edu.unrn.seminario.dto;
 
 public class RolDTO {
 	
-	// Atributos
 	private Integer codigo;
 	private String nombre;
 	private boolean activo;
 
-	// Constructores
 	public RolDTO(Integer codigo, String nombre) {
 		super();
 		this.codigo = codigo;
@@ -21,7 +19,6 @@ public class RolDTO {
 		this.activo = activo;
 	}
 
-	// Getters
 	public Integer getCodigo() {
 		return codigo;
 	}

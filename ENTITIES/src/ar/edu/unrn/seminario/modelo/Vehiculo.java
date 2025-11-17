@@ -2,7 +2,6 @@ package ar.edu.unrn.seminario.modelo;
 
 public class Vehiculo {
 	
-	// Atributos
 	private String patente;
 	private String estado;
 	private String tipoVeh;
@@ -15,7 +14,6 @@ public class Vehiculo {
 		
 	}
 		
-	/// Getters 
 	public String getPatente() {
 		return patente;
 	}
@@ -36,7 +34,6 @@ public class Vehiculo {
         return "Tipo: " + tipoVeh + ", Patente: " + patente + ", Estado: " + estado + ", Capacidad: " + capacidad;
     }
     
-	// Setters
 	public void cambiarEstado(String nuevoEstado) {
 		estado = nuevoEstado;
 	}
@@ -57,9 +54,8 @@ public class Vehiculo {
 		this.capacidad = capacidad;
 	}
 	
-    // Metodos
  	public void mantenimiento() {
- 		// Sin implementacion
+ 		// Sin implementacion de momento
  	}
  	
 }

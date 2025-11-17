@@ -24,7 +24,6 @@ public class Bien {
 	private static final int CATEGORIA_HIGIENE = 9;
 	private static final int CATEGORIA_OTROS = 10;
     
-    //atributos
     private int tipo;
     private int cantidad;
     private int categoria;
@@ -34,7 +33,6 @@ public class Bien {
     private String estado;
     private Vehiculo vehiculo;
     
-    //constructores 
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
         if (cantidad <= 0) {
             throw new CampoVacioException("La cantidad debe ser mayor a cero.");
@@ -52,7 +50,6 @@ public class Bien {
         this.vehiculo = vehiculo;
     }
     
-    // Getters 
     public int obtenerTipo() {
         return tipo;
     }
@@ -85,7 +82,6 @@ public class Bien {
         return vehiculo;
     }
     
-	// Setters
 	public void setFecVec(Date fecVec) {
 		this.fecVec = fecVec;
 	}

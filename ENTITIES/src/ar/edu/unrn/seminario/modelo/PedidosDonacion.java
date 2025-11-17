@@ -10,7 +10,6 @@ import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class PedidosDonacion {
 
-	// Variables 
 	private static int secuencia = 0;//para usarlo de id
 
 	// Constantes catalogo
@@ -18,7 +17,6 @@ public class PedidosDonacion {
 	private static final int VEHICULO_CAMIONETA = 2;
 	private static final int VEHICULO_CAMION = 3;
 
-	// Atributos
 	private int id;
 	private LocalDateTime fecha;
 	private ArrayList<Bien> bienes;
@@ -70,7 +68,6 @@ public class PedidosDonacion {
 		this.estadoPedido = EstadoPedido.PENDIENTE;
 	}
 	
-	// getters
 	public int obtenerId() {
 		return id;
 	}
@@ -133,12 +130,11 @@ public class PedidosDonacion {
 		this.ordenRetiro = o;
 	}
 
-	// Metodos
 	// metodos para cambiar el estado
 	public void marcarEnEjecucion() throws ReglaNegocioException {
 		// validar transicion de estado
 		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
-			throw new ReglaNegocioException("No se puede cambiar a 'En Ejecucion' un pedido que ya esta Completado");
+			throw new ReglaNegocioException("No se puede cambiar a 'En Ejecucion' un pedido que ya esta completado");
 		}
 		this.estadoPedido = EstadoPedido.EN_EJECUCION;
 		// notificar al padre para que actualice su estado automaticamente
@@ -152,7 +148,7 @@ public class PedidosDonacion {
 		// no hay restriccion para marcar como completado (puede ir desde PENDIENTE o EN_EJECUCION)
 		// pero validamos que no este ya completado (aunque es redundante, por consistencia)
 		if (this.estadoPedido == EstadoPedido.COMPLETADO) {
-			throw new ReglaNegocioException("El pedido ya esta Completado");
+			throw new ReglaNegocioException("El pedido ya esta completado");
 		}
 		this.estadoPedido = EstadoPedido.COMPLETADO;
 		// notifica al padre para que actualice

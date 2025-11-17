@@ -12,7 +12,6 @@ public class OrdenRetiro {
     // variables
     private static int secuencia = 0;//para el id
 
-    // atributos
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
     private EstadoOrden estado;
     private Ubicacion destino;
@@ -22,7 +21,6 @@ public class OrdenRetiro {
     private int id;
     private Vehiculo vehiculo;
 
-    // Constructores
     public OrdenRetiro(List<PedidosDonacion> pedidos, Ubicacion dest) throws ObjetoNuloException {
         if (pedidos == null || pedidos.isEmpty()) {
             throw new ObjetoNuloException("La lista de pedidos no puede ser nula o vacia.");
@@ -67,7 +65,6 @@ public class OrdenRetiro {
         }
     }
 
-    // Getters
     public String obtenerNombreEstado() {
         return describirEstado();
     }
@@ -163,7 +160,6 @@ public class OrdenRetiro {
       
 
     
-    // metodos
     //  para actualizar el estado automaticamente basado en los pedidos hijos
     public void actualizarEstadoAutomatico() {
         if (this.pedidos == null || this.pedidos.isEmpty()) {

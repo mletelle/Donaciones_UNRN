@@ -41,7 +41,6 @@ public class ListadoOrdenesRetiro extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    // Metodos
     private void cargarDatos() {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
