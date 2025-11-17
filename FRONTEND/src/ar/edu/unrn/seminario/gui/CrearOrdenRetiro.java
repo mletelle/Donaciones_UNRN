@@ -120,27 +120,38 @@ public class CrearOrdenRetiro extends JDialog {
             for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
                 Boolean isSelected = (Boolean) pedidosTableModel.getValueAt(i, 0);
                 if (isSelected != null && isSelected) {
-                    // Se asume que la columna 1 (ID) es un Integer
                     idsPedidosSeleccionados.add((Integer) pedidosTableModel.getValueAt(i, 1));
                 }
             }
 
-            // --- USO DE CAMPOVACIOEXCEPTION (Para validar selección en la tabla) ---
             if (idsPedidosSeleccionados.isEmpty()) {
                 throw new CampoVacioException("Debe seleccionar al menos un pedido para crear la orden de retiro.");
             }
-            // ----------------------------------------------------------------------
 
             VoluntarioDTO voluntarioSeleccionado = (VoluntarioDTO) voluntarioComboBox.getSelectedItem();
 
-            // --- USO DE OBJETONULOEXCEPTION (Para validar la selección del JComboBox) ---
             if (voluntarioSeleccionado == null) {
                 throw new ObjetoNuloException("Debe seleccionar un voluntario para asignar la orden.");
             }
-            // --------------------------------------------------------------------------
 
             String tipoVehiculoSeleccionado = (String) tipoVehiculoComboBox.getSelectedItem();
-
+            
+            // logica de vehiculo
+            for (int i = 0; i < pedidosTableModel.getRowCount(); i++) {
+                Boolean isSelected = (Boolean) pedidosTableModel.getValueAt(i, 0);
+                if (isSelected != null && isSelected) {
+                    String vehiculoRequerido = (String) pedidosTableModel.getValueAt(i, 4); 
+                    
+                    if (!esVehiculoSuficiente(tipoVehiculoSeleccionado, vehiculoRequerido)) {
+                        Integer pedidoId = (Integer) pedidosTableModel.getValueAt(i, 1);
+                        throw new ReglaNegocioException(
+                            "El vehículo '" + tipoVehiculoSeleccionado + "' no es suficiente para el Pedido ID " + pedidoId + 
+                            ", que requiere un/a '" + vehiculoRequerido + "'."
+                        );
+                    }
+                }
+            }
+            
             // Llamada a la API
             api.crearOrdenRetiro(idsPedidosSeleccionados, voluntarioSeleccionado.getId(), tipoVehiculoSeleccionado);
             
@@ -154,5 +165,24 @@ public class CrearOrdenRetiro extends JDialog {
             // Manejo de excepciones de negocio
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Asignación", JOptionPane.WARNING_MESSAGE);
         }
+        
     }
+    
+    // metodo para que use una logica de vehiculo si quiere seleccionar otro distinto al del pedido
+    private boolean esVehiculoSuficiente (String vehiculoElegido, String vehiculoRequerido) {
+        if ("Camion".equalsIgnoreCase(vehiculoElegido)) {
+            return true; // Un camión puede con todo
+        }
+        
+        if ("Camioneta".equalsIgnoreCase(vehiculoElegido)) {
+            return "Camioneta".equalsIgnoreCase(vehiculoRequerido) || "Auto".equalsIgnoreCase(vehiculoRequerido);
+        }
+
+        if ("Auto".equalsIgnoreCase(vehiculoElegido)) {
+            return "Auto".equalsIgnoreCase(vehiculoRequerido);
+        }
+        
+        return false; 
+    }
+    
 }

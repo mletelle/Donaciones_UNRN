@@ -33,7 +33,8 @@ import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.DonanteDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
-import ar.edu.unrn.seminario.exception.ObjetoNuloException; 
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException; 
 
 public class RegistrarPedidoDonacion extends JDialog {
 
@@ -156,6 +157,10 @@ public class RegistrarPedidoDonacion extends JDialog {
                         throw new DateTimeParseException("Formato de fecha inválido. Use dd/MM/yyyy.", fechaStr, 0);
                     }
                     
+                    if (fechaParsed.isBefore(LocalDate.now())) {
+                        throw new ReglaNegocioException("La fecha del pedido no puede ser anterior a la fecha actual.");
+                    }
+                    
                     // Se usa la fecha completa (LocalDate + hora inicial)
                     LocalDateTime fechaCompleta = fechaParsed.atStartOfDay();
                     String fechaFormateadaParaDTO = fechaCompleta.format(formatter);
@@ -172,6 +177,8 @@ public class RegistrarPedidoDonacion extends JDialog {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Selección", JOptionPane.WARNING_MESSAGE);
                 } catch (DateTimeParseException ex) {
                     JOptionPane.showMessageDialog(null, "Formato de fecha inválido. Use dd/MM/yyyy.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+                } catch (ReglaNegocioException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Regla de Negocio", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });

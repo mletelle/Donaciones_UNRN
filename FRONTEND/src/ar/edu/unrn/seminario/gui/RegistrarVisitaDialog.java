@@ -184,6 +184,10 @@ public class RegistrarVisitaDialog extends JDialog {
             // Intentar parsear fecha/hora (Puede lanzar DateTimeParseException)
             LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
             
+            if (fechaHora.isAfter(LocalDateTime.now())) {
+                throw new ReglaNegocioException("La fecha y hora de la visita no pueden ser en el futuro.");
+            }
+            
             SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
                 @Override
                 protected String doInBackground() throws Exception {
@@ -232,6 +236,9 @@ public class RegistrarVisitaDialog extends JDialog {
             btnGuardar.setEnabled(true);
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato válido (YYYY-MM-DD y HH:MM).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            btnGuardar.setEnabled(true);
+        } catch (ReglaNegocioException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Regla de Negocio", JOptionPane.WARNING_MESSAGE);
             btnGuardar.setEnabled(true);
         }
     }
