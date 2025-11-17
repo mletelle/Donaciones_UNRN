@@ -35,7 +35,7 @@ CREATE TABLE `bienes` (
   PRIMARY KEY (`id`),
   KEY `fk_bien_pedido_idx` (`id_pedido_donacion`),
   CONSTRAINT `fk_bien_pedido` FOREIGN KEY (`id_pedido_donacion`) REFERENCES `pedidos_donacion` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,7 +44,7 @@ CREATE TABLE `bienes` (
 
 LOCK TABLES `bienes` WRITE;
 /*!40000 ALTER TABLE `bienes` DISABLE KEYS */;
-INSERT INTO `bienes` VALUES (9,7,1,1,1,'','2025-11-12'),(10,8,6,1,1,'','2025-11-12');
+INSERT INTO `bienes` VALUES (17,13,1,1,1,'Remera',NULL),(18,13,1,2,2,'Pantalon',NULL),(19,14,2,1,1,'Alacena',NULL),(20,14,5,4,1,'Clavos',NULL),(21,15,3,12,1,'Latas','2025-11-16');
 /*!40000 ALTER TABLE `bienes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -66,7 +66,7 @@ CREATE TABLE `ordenes_retiro` (
   KEY `fk_orden_vehiculo_idx` (`patente_vehiculo`),
   CONSTRAINT `fk_orden_usuario` FOREIGN KEY (`usuario_voluntario`) REFERENCES `usuarios` (`usuario`) ON UPDATE CASCADE,
   CONSTRAINT `fk_orden_vehiculo` FOREIGN KEY (`patente_vehiculo`) REFERENCES `vehiculos` (`patente`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -75,7 +75,7 @@ CREATE TABLE `ordenes_retiro` (
 
 LOCK TABLES `ordenes_retiro` WRITE;
 /*!40000 ALTER TABLE `ordenes_retiro` DISABLE KEYS */;
-INSERT INTO `ordenes_retiro` VALUES (6,'2025-11-12 22:48:40','EN_EJECUCION','mcamba','AE 123 CD');
+INSERT INTO `ordenes_retiro` VALUES (11,'2025-11-16 20:45:47','PENDIENTE','bgoro','AE 123 CD'),(12,'2025-11-16 20:45:53','PENDIENTE','bgoro','AE 123 CD');
 /*!40000 ALTER TABLE `ordenes_retiro` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -98,7 +98,7 @@ CREATE TABLE `pedidos_donacion` (
   KEY `fk_pedido_orden_idx` (`id_orden_retiro`),
   CONSTRAINT `fk_pedido_orden` FOREIGN KEY (`id_orden_retiro`) REFERENCES `ordenes_retiro` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`usuario_donante`) REFERENCES `usuarios` (`usuario`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -107,7 +107,7 @@ CREATE TABLE `pedidos_donacion` (
 
 LOCK TABLES `pedidos_donacion` WRITE;
 /*!40000 ALTER TABLE `pedidos_donacion` DISABLE KEYS */;
-INSERT INTO `pedidos_donacion` VALUES (7,'2025-11-12 22:48:03','AUTO','lperise','COMPLETADO',6),(8,'2025-11-12 22:48:26','CAMION','rargel','COMPLETADO',6);
+INSERT INTO `pedidos_donacion` VALUES (13,'2025-11-16 00:00:00','AUTO','lperise','EN_EJECUCION',12),(14,'2025-11-16 00:00:00','CAMIONETA','rargel','PENDIENTE',11),(15,'2025-11-16 00:00:00','AUTO','lperise','PENDIENTE',11);
 /*!40000 ALTER TABLE `pedidos_donacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -166,7 +166,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES ('admin',1,'1234','Admin','Sistema','admin@unrn.edu.ar',1,'11111111',NULL),('bgoro',2,'pass','Bruno','Goro','bgoro@unrn.edu.ar',1,'22222222',NULL),('ldifabio',2,'pass','Lucas','Difabio','ldifabio@unrn.edu.ar',1,'44444444',NULL),('lperise',3,'pass','Lautaro','Perise','lperise@unrn.edu.ar',1,'66666666','Avenida Siempre Viva 742'),('mcamba',2,'pass','Mauro','Camba','mcamba@unrn.edu.ar',1,'33333333',NULL),('rargel',3,'pass','Ramiro','Argel','rargel@unrn.edu.ar',1,'55555555','Calle Falsa 123');
+INSERT INTO `usuarios` VALUES ('admin',1,'1234','Admin','Sistema','admin@unrn.edu.ar',1,'11111111',NULL),('bgoro',2,'pass','Bruno','Goro','bgoro@unrn.edu.ar',1,'22222222',NULL),('ldifabio',2,'pass','Lucas','Difabio','ldifabio@unrn.edu.ar',1,'44444444',NULL),('lperise',3,'pass','Lautaro','Perise','lperise@unrn.edu.ar',1,'66666666','Avenida Siempre Viva 742'),('mcamba',2,'pass','Mauro','Camba','mcamba@unrn.edu.ar',0,'33333333',NULL),('rargel',3,'pass','Ramiro','Argel','rargel@unrn.edu.ar',1,'55555555','Calle Falsa 123');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -215,7 +215,7 @@ CREATE TABLE `visitas` (
   KEY `fk_visita_pedido_idx` (`id_pedido_donacion`),
   CONSTRAINT `fk_visita_orden` FOREIGN KEY (`id_orden_retiro`) REFERENCES `ordenes_retiro` (`id`),
   CONSTRAINT `fk_visita_pedido` FOREIGN KEY (`id_pedido_donacion`) REFERENCES `pedidos_donacion` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -224,7 +224,7 @@ CREATE TABLE `visitas` (
 
 LOCK TABLES `visitas` WRITE;
 /*!40000 ALTER TABLE `visitas` DISABLE KEYS */;
-INSERT INTO `visitas` VALUES (7,6,7,'2025-11-12 22:49:08','Donante Ausente','1'),(8,6,7,'2025-11-12 22:49:19','Recoleccion Exitosa','2'),(9,6,8,'2025-11-12 22:49:28','Recoleccion Exitosa','3');
+INSERT INTO `visitas` VALUES (19,12,13,'2025-11-16 20:46:56','Donante Ausente','No estaba, despues vuelvo');
 /*!40000 ALTER TABLE `visitas` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -237,4 +237,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-12 22:51:58
+-- Dump completed on 2025-11-16 20:49:26

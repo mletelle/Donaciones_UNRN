@@ -81,25 +81,25 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 	}
 
 	@Override
-	public PedidosDonacion findById(int idPedido, Connection conn) throws SQLException {
-		PedidosDonacion pedido = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		try {
-			statement = conn.prepareStatement(
-					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE id = ?");
-			statement.setInt(1, idPedido);
-			rs = statement.executeQuery();
-			
-			if (rs.next()) {
-				pedido = mapearResultadoPedido(rs, conn);
-			}
-		} finally {
-			if (rs != null) rs.close();
-			if (statement != null) statement.close();
-		}
-		return pedido;
+	public PedidosDonacion findByIdAndOrden(int idPedido, int idOrdenRetiro, Connection conn) throws SQLException {
+	    PreparedStatement statement = null;
+	    ResultSet rs = null;
+	    try {
+	        statement = conn.prepareStatement(
+	            "SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro " +
+	            "FROM pedidos_donacion WHERE id = ? AND id_orden_retiro = ?");
+	        statement.setInt(1, idPedido);
+	        statement.setInt(2, idOrdenRetiro);
+	        rs = statement.executeQuery();
+
+	        if (rs.next()) {
+	            return mapearResultadoPedido(rs, conn);
+	        }
+	        return null;
+	    } finally {
+	        if (rs != null) rs.close();
+	        if (statement != null) statement.close();
+	    }
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 			statement = conn.createStatement();
 			rs = statement.executeQuery(
 					"SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
-					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE'");
+					+ "FROM pedidos_donacion WHERE estado = 'PENDIENTE' AND id_orden_retiro IS NULL");
 			
 			while (rs.next()) {
 				try {
@@ -213,6 +213,63 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
 		} catch (Exception e) {
 			throw new SQLException("Error al mapear PedidosDonacion: " + e.getMessage(), e);
 		}
+	}
+	
+
+	@Override
+	public List<PedidosDonacion> findByIds(List<Integer> ids, Connection conn) throws SQLException {
+	    List<PedidosDonacion> pedidos = new ArrayList<>();
+	    if (ids == null || ids.isEmpty()) {
+	        return pedidos; // Devolver lista vacía si no hay IDs
+	    }
+
+	    PreparedStatement statement = null;
+	    ResultSet rs = null;
+	    
+	    // construccion del string (?, ?, ?)
+	    StringBuilder placeholders = new StringBuilder();
+	    for (int i = 0; i < ids.size(); i++) {
+	        placeholders.append("?");
+	        if (i < ids.size() - 1) {
+	            placeholders.append(", ");
+	        }
+	    }
+
+	    // creacion de consulta
+	    String sql = "SELECT id, fecha, tipo_vehiculo, usuario_donante, estado, id_orden_retiro "
+	               + "FROM pedidos_donacion WHERE id IN (" + placeholders.toString() + ")";
+
+	    try {
+	        statement = conn.prepareStatement(sql);
+	        // setteo de parametros
+	        for (int i = 0; i < ids.size(); i++) {
+	            statement.setInt(i + 1, ids.get(i)); // Los parámetros JDBC son 1-indexados
+	        }
+
+	        // Ejecutar y mapear
+	        rs = statement.executeQuery();
+	        while (rs.next()) {
+	            try {
+	                PedidosDonacion pedido = mapearResultadoPedido(rs, conn);
+	                pedidos.add(pedido);
+	            } catch (Exception e) {
+	                System.err.println("Error al mapear PedidosDonacion: " + e.getMessage());
+	            }
+	        }
+	    } finally {
+	        if (rs != null) rs.close();
+	        if (statement != null) statement.close();
+	    }
+	    
+	    return pedidos;
+	}
+
+	
+
+	@Override
+	public PedidosDonacion findById(int idPedido, Connection conn) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

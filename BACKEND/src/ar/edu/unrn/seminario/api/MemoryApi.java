@@ -426,9 +426,9 @@ public class MemoryApi implements IApi {
         return "Donante Desconocido";
     }
 
-	public void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+	public void registrarVisita(int idOrdenRetiro, int idPedido, java.time.LocalDateTime fechaHora, String resultado, String observacion) 
+			throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 	    
-	    // --- 1. Validaciones de Objeto Nulo y Existencia ---
 	    OrdenRetiro orden = buscarOrdenPorId(idOrdenRetiro);
 	    if (orden == null) {
 	        throw new ObjetoNuloException("Orden de retiro no encontrada.");
@@ -439,53 +439,37 @@ public class MemoryApi implements IApi {
 	        throw new ReglaNegocioException("El pedido con ID " + idPedido + " no pertenece a la orden " + idOrdenRetiro);
 	    }
 	    
-	    // --- 2. Validaciones de DTO (Campos Vacíos y Nulos) ---
-	    if (visitaDTO.getFechaHora() == null) {
+	    if (fechaHora == null) {
 	        throw new CampoVacioException("La fecha de la visita no puede ser nula.");
 	    }
-	    if (visitaDTO.getResultado() == null || visitaDTO.getResultado().isEmpty()) {
+	    if (resultado == null || resultado.isEmpty()) {
 	        throw new CampoVacioException("El resultado de la visita no puede ser nulo o vacío.");
 	    }
-	    if (visitaDTO.getObservacion() == null || visitaDTO.getObservacion().trim().isEmpty()) {
+	    if (observacion == null || observacion.trim().isEmpty()) {
 	        throw new CampoVacioException("Las observaciones de la visita no pueden ser nulas o vacías.");
 	    }
 	    
-	    // --- 3. Validaciones de Reglas de Negocio (Movidas al Back-end) ---
-	    
-	    // Regla 1: La visita no puede ser en el futuro
-	    if (visitaDTO.getFechaHora().isAfter(LocalDateTime.now())) {
+	    // la visita no puede ser en el futuro
+	    if (fechaHora.isAfter(LocalDateTime.now())) {
 	        throw new ReglaNegocioException("La fecha y hora de la visita no pueden ser posteriores al momento actual.");
 	    }
 	    
-	    // Conversión de String del DTO al Enum
-	    ResultadoVisita resultado = ResultadoVisita.fromString(visitaDTO.getResultado());
-
-	    // --- 4. Creación de la Entidad y Lógica de Dominio ---
-	    
-	    // Creación de la entidad Visita
-	    LocalDateTime fechaVisita = visitaDTO.getFechaHora();
-	    Visita visita = new Visita(fechaVisita, resultado, visitaDTO.getObservacion());
-
-	    // Establecer la relación entre la visita y el pedido
+	    ResultadoVisita resultadoEnum = ResultadoVisita.fromString(resultado);
+	    Visita visita = new Visita(fechaHora, resultadoEnum, observacion);
 	    visita.setPedidoRelacionado(pedido);
 
-	    // Sumar la visita a la orden (el agregado de la visita debe ocurrir antes de actualizar el estado)
+	    // sumar la visita a la orden (el agregado de la visita debe ocurrir antes de actualizar el estado)
 	    orden.agregarVisita(visita);
 
-	    // Actualiza el estado del pedido según el resultado de visita
-	    // Nota: Es mejor mover esta lógica de actualización del estado a un método dentro de la entidad 'PedidosDonacion'
-	    // para que sea más coherente con el modelo de dominio.
-	    if (resultado == ResultadoVisita.RECOLECCION_EXITOSA || resultado == ResultadoVisita.CANCELADO) {
+	    if (resultadoEnum == ResultadoVisita.RECOLECCION_EXITOSA || resultadoEnum == ResultadoVisita.CANCELADO) {
 	        pedido.marcarCompletado();
-	    } else if (resultado == ResultadoVisita.RECOLECCION_PARCIAL || resultado == ResultadoVisita.DONANTE_AUSENTE) {
+	    } else if (resultadoEnum == ResultadoVisita.RECOLECCION_PARCIAL || resultadoEnum == ResultadoVisita.DONANTE_AUSENTE) {
 	        pedido.marcarEnEjecucion();
 	    }
 
 	    // Se asume que marcarCompletado() o marcarEnEjecucion() notifica automáticamente a la orden
 	    // para que actualice su propio estado (ej. si todos los pedidos están completos, la orden se completa).
 	    
-	    // Si fuera necesario guardar los cambios en la base de datos (persistencia), la llamada al repositorio iría aquí.
-	    // Ejemplo: ordenRetiroRepository.actualizar(orden);
 	}
 	
 	private Rol buscarRol(Integer codigo) {

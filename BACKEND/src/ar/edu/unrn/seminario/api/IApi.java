@@ -62,7 +62,7 @@ public interface IApi {
 
     String obtenerNombreDonantePorId(int idPedido);
 
-    // --- ORDENES DE RETIRO ---
+    //  ORDENES DE RETIRO 
 
     // Actualizado para CrearOrdenRetiro (referenciado en VentanaPrincipal)
     void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) 
@@ -74,10 +74,10 @@ public interface IApi {
     
     List<OrdenRetiroDTO> obtenerOrdenesAsignadas(String voluntario);
 
-    // --- VISITAS Y VOLUNTARIOS ---
+    //  VISITAS Y VOLUNTARIOS 
 
     // Actualizado para RegistrarVisitaDialog.java
-    void registrarVisita(int idOrdenRetiro, int idPedido, VisitaDTO visitaDTO) 
+    void registrarVisita(int idOrdenRetiro, int idPedido, java.time.LocalDateTime fechaHora, String resultado, String observacion) 
             throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
 
     List<VoluntarioDTO> obtenerVoluntarios();

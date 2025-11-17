@@ -41,7 +41,6 @@ public class ListadoOrdenesRetiro extends JFrame {
     }
 
     // Metodos
-    // metodo para cargar datos
     private void cargarDatos() {
         DefaultTableModel model = (DefaultTableModel) tablaOrdenes.getModel();
         model.setRowCount(0);
@@ -49,11 +48,9 @@ public class ListadoOrdenesRetiro extends JFrame {
         try {
             List<OrdenRetiroDTO> ordenes = api.obtenerTodasOrdenesRetiro();
             
-            // --- USO DE OBJETONULOEXCEPTION (Si la API retorna null) ---
             if (ordenes == null) {
                 throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de órdenes.");
             }
-            // -----------------------------------------------------------
 
             for (OrdenRetiroDTO orden : ordenes) {
                 // Se mantienen los chequeos de nulidad para asegurar la visualización
@@ -66,9 +63,6 @@ public class ListadoOrdenesRetiro extends JFrame {
         } catch (ObjetoNuloException ex) {
             // Manejo de la excepción custom para datos nulos
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga de Datos", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) {
-             // Manejo de otros errores de la API
-            JOptionPane.showMessageDialog(this, "Error al obtener las órdenes de retiro: " + ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

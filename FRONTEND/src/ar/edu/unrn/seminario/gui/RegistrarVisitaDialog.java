@@ -9,7 +9,6 @@ import java.time.format.DateTimeParseException;
 import java.util.concurrent.ExecutionException; // Importar para manejar excepciones del Worker
 
 import ar.edu.unrn.seminario.api.IApi;
-import ar.edu.unrn.seminario.dto.VisitaDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -166,7 +165,6 @@ public class RegistrarVisitaDialog extends JDialog {
             String fecha = txtFecha.getText();
             String hora = txtHora.getText();
             
-            // --- USO DE CAMPOVACIOEXCEPTION (Validaciones de GUI) ---
             if (fecha == null || fecha.trim().isEmpty()) {
                 throw new CampoVacioException("El campo Fecha no puede estar vacío.");
             }
@@ -175,40 +173,23 @@ public class RegistrarVisitaDialog extends JDialog {
                 throw new CampoVacioException("El campo Hora no puede estar vacío.");
             }
             
-            // Validación simple de formato
-            if (!fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                 // Delegamos el error de formato a DateTimeParseException o lanzamos una excepción específica
-                 // Aquí lanzamos una excepción runtime o usada para formato si se prefiere, 
-                 // pero para este ejemplo usaremos el parseo posterior.
-            }
 
             String observaciones = txtObservaciones.getText();
             if (observaciones == null || observaciones.trim().isEmpty()) {
                 throw new CampoVacioException("El campo Observaciones es obligatorio.");
             }
-            // --------------------------------------------------------
 
             String resultado = (String) cmbResultado.getSelectedItem();
             
             // Intentar parsear fecha/hora (Puede lanzar DateTimeParseException)
             LocalDateTime fechaHora = LocalDateTime.parse(fecha + "T" + hora);
             
-            // SwingWorker para operación en segundo plano
             SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
                 @Override
                 protected String doInBackground() throws Exception {
-                    // Obtener nombre del donante (puede lanzar excepciones)
-                    String nombreDonante = api.obtenerNombreDonantePorId(idPedido); 
-                    
-                    if (nombreDonante == null) {
-                        // --- USO DE OBJETONULOEXCEPTION (Lógica interna) ---
-                        throw new ObjetoNuloException("No se pudo obtener el nombre del donante para el pedido ID: " + idPedido);
-                    }
-
-                    VisitaDTO visita = new VisitaDTO(fechaHora, resultado, observaciones, nombreDonante);
-                    
-                    // Llamada a la API (puede lanzar ReglaNegocioException, ObjetoNuloException, etc.)
-                    api.registrarVisita(idOrden, idPedido, visita);
+                    // la gui solo envia los datos primitivos que tiene
+                    // la api es responsable de construir la entidad
+                    api.registrarVisita(idOrden, idPedido, fechaHora, resultado, observaciones);
                     
                     return "OK";
                 }
@@ -226,20 +207,15 @@ public class RegistrarVisitaDialog extends JDialog {
                         dispose(); 
 
                     } catch (InterruptedException | ExecutionException ex) {
-                        // Desempaquetar la excepción real (ExecutionException envuelve la original)
                         Throwable causa = ex.getCause();
                         
                         if (causa instanceof ReglaNegocioException) {
-                            // --- MANEJO DE REGLANEGOCIOEXCEPTION ---
                             JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, causa.getMessage(), "Operación no permitida", JOptionPane.WARNING_MESSAGE);
                         } else if (causa instanceof ObjetoNuloException) {
-                            // --- MANEJO DE OBJETONULOEXCEPTION ---
                             JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, causa.getMessage(), "Error de Datos", JOptionPane.ERROR_MESSAGE);
                         } else if (causa instanceof CampoVacioException) {
-                             // Si la API lanza CampoVacioException (aunque ya validamos en GUI)
                             JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, causa.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
                         } else {
-                            // Otros errores (BD, conexión, etc.)
                             JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, "Error inesperado: " + causa.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                             causa.printStackTrace();
                         }
@@ -252,14 +228,10 @@ public class RegistrarVisitaDialog extends JDialog {
             worker.execute();
 
         } catch (CampoVacioException ex) {
-            // Captura de validaciones de la GUI antes del Worker
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Datos Incompletos", JOptionPane.WARNING_MESSAGE);
             btnGuardar.setEnabled(true);
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this, "La fecha u hora no tienen un formato válido (YYYY-MM-DD y HH:MM).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-            btnGuardar.setEnabled(true);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al preparar la visita: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             btnGuardar.setEnabled(true);
         }
     }

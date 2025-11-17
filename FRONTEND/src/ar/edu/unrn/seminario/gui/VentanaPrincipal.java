@@ -44,8 +44,8 @@ public class VentanaPrincipal extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					IApi api = new MemoryApi();
-					//IApi api = new PersistenceApi();
+					//IApi api = new MemoryApi();
+					IApi api = new PersistenceApi();
 					VentanaPrincipal frame = new VentanaPrincipal(api);
 					frame.setLocationRelativeTo(null);
 					frame.setVisible(true);

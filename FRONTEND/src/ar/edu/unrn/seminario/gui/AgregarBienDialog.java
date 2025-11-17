@@ -108,7 +108,6 @@ public class AgregarBienDialog extends JDialog {
         // accion del boton "Aceptar"
         aceptarButton.addActionListener(event -> {
             try {
-                // --- 1. Validaciones de Campos Vacíos (Uso de CampoVacioException) ---
                 String cantidadText = cantidadTextField.getText();
                 String descripcion = descripcionTextField.getText();
                 String fechaVencimientoText = fechaVencimientoTextField.getText();
@@ -121,11 +120,10 @@ public class AgregarBienDialog extends JDialog {
                     throw new CampoVacioException("El campo Descripción no puede estar vacío.");
                 }
 
-                // Validación específica para Alimentos
+                // fecha de vencimiento obligatoria solo para alimentos
                 if (fechaVencimientoTextField.isEnabled() && (fechaVencimientoText == null || fechaVencimientoText.trim().isEmpty())) {
                     throw new CampoVacioException("La fecha de vencimiento es obligatoria para Alimentos.");
                 }
-                // ---------------------------------------------------------------------
                 
                 String categoria = (String) categoriaComboBox.getSelectedItem();
                 
@@ -140,19 +138,15 @@ public class AgregarBienDialog extends JDialog {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     fechaVencimiento = LocalDate.parse(fechaVencimientoText, formatter);
 
-                    // --- 2. Validación de Lógica de Negocio (Uso de FechaVencimientoInvalidaException) ---
                     if (!fechaVencimiento.isAfter(LocalDate.now())) {
                         throw new FechaVencimientoInvalidaException("La fecha de vencimiento debe ser posterior a la fecha actual.");
                     }
-                    // -----------------------------------------------------------------------------------------
                 }
 
-                // --- 3. Creación y posible ObjetoNuloException (si BienDTO fuera null) ---
                 bien = new BienDTO(estadoId, cantidad, categoriaId, descripcion, fechaVencimiento);
                 if (bien == null) {
                     throw new ObjetoNuloException("Error interno: No se pudo crear el objeto Bien.");
                 }
-                // ------------------------------------------------------------------------
 
                 dispose();
             } catch (CampoVacioException ex) {
@@ -168,11 +162,8 @@ public class AgregarBienDialog extends JDialog {
                 // Manejo de la excepción custom para fecha lógica.
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Fecha", JOptionPane.ERROR_MESSAGE);
             } catch (ObjetoNuloException ex) {
-                 // Manejo de la excepción custom para objeto nulo (caso extremo aquí).
+                 // Manejo de la excepción custom para objeto nulo 
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Creación", JOptionPane.ERROR_MESSAGE);
-            } catch (Exception ex) {
-                // Manejo de cualquier otra excepción no esperada.
-                JOptionPane.showMessageDialog(AgregarBienDialog.this, "Ocurrió un error inesperado: " + ex.getMessage(), "Error Desconocido", JOptionPane.ERROR_MESSAGE);
             }
         });
 
