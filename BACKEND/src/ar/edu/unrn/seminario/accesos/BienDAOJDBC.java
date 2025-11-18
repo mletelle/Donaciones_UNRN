@@ -22,7 +22,12 @@ public class BienDAOJDBC implements BienDao {
 				statement.setInt(2, bien.obtenerCategoria());
 				statement.setInt(3, bien.obtenerCantidad());
 				statement.setInt(4, bien.obtenerTipo());
-				statement.setString(5, "");
+				
+				if (bien.getDescripcion() != null && !bien.getDescripcion().isEmpty()) {
+					statement.setString(5, bien.getDescripcion());
+				} else {
+					statement.setNull(5, java.sql.Types.VARCHAR);
+				}
 				
 				if (bien.getFecVec() != null) {
 					statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
