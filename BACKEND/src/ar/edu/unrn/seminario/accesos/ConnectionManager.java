@@ -5,9 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnectionManager {
-	// por alguna razon el driver no anda, logre hacerlo andar solo con credenciales
 	// private static String DRIVER = "com.mysql.jdbc.Driver";.
-	
+
 	// Base local
 	private static String URL_DB = "jdbc:mysql://localhost:3306/";
 	protected static String DB = "seminario_2025_1";
