@@ -28,9 +28,10 @@ public class Bien {
     private int cantidad;
     private int categoria;
     private boolean perecedero;
-    private Date fecVec = new Date();
+    private Date fecVec = null;
     private Date fechaIngreso = new Date();
     private String estado;
+    private String descripcion;
     private Vehiculo vehiculo;
     
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
@@ -96,6 +97,14 @@ public class Bien {
 
 	public void setPerecedero(boolean perecedero) {
 		this.perecedero = perecedero;
+	}
+	
+	public String getDescripcion() {
+		return descripcion;
+	}
+	
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
 	}
 	
     public void asignarVehiculo(Vehiculo vehiculo) {

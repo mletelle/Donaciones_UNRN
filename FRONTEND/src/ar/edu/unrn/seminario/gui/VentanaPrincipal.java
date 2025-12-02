@@ -39,23 +39,6 @@ public class VentanaPrincipal extends JFrame {
 	private JMenuItem listadoPedidosMenuItem; 
 	private JComboBox<VoluntarioDTO> voluntarioSelectorComboBox;
 
-	// revisar, habria que agregar un boton de cerrrar a cada listado o ventana que no tnga boton de cerrar
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					//IApi api = new MemoryApi();
-					IApi api = new PersistenceApi();
-					VentanaPrincipal frame = new VentanaPrincipal(api);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	} 
-
 	public VentanaPrincipal(IApi api) {
 		setTitle("Ventana Principal");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

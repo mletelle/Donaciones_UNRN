@@ -315,6 +315,21 @@ public class PersistenceApi implements IApi {
 			List<Bien> bienes = new ArrayList<>();
 			for (BienDTO bienDTO : pedidoDTO.getBienes()) {
 				Bien bien = new Bien(bienDTO.getTipo(), bienDTO.getCantidad(), bienDTO.getCategoria());
+				
+				// asignar descripcion
+				if (bienDTO.getDescripcion() != null) {
+					bien.setDescripcion(bienDTO.getDescripcion());
+				}
+				
+				// asignar fecha de vencimiento (convertir LocalDate a Date)
+				if (bienDTO.getFechaVencimiento() != null) {
+					java.time.ZoneId zoneId = java.time.ZoneId.systemDefault();
+					java.util.Date fechaVenc = java.util.Date.from(
+						bienDTO.getFechaVencimiento().atStartOfDay(zoneId).toInstant()
+					);
+					bien.setFecVec(fechaVenc);
+				}
+				
 				bienes.add(bien);
 			}
 			
