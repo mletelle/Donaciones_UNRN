@@ -26,7 +26,7 @@ public class Beneficiario {
         //contacto y ordenActual pueden nacer nulos 
     }
 
-    //ETODOS DE NEGOCIO
+    //METODOS DE NEGOCIO
     public void cambiarUbicacion(Ubicacion nuevaUbicacion) {
         if (nuevaUbicacion == null) {
             throw new IllegalArgumentException("La nueva ubicación no puede ser nula.");

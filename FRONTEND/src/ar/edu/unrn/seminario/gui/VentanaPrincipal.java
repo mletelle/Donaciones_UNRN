@@ -1,7 +1,6 @@
 package ar.edu.unrn.seminario.gui;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,8 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 
 import ar.edu.unrn.seminario.api.IApi;
-import ar.edu.unrn.seminario.api.MemoryApi;
-import ar.edu.unrn.seminario.api.PersistenceApi;
 import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
@@ -33,7 +30,7 @@ public class VentanaPrincipal extends JFrame {
 	private JMenu voluntarioMenu;
 	private JMenu configuracionMenu;
 	private JMenuItem salirMenuItem;
-	private int donanteIdActual = -1; // hardcodear donanteId
+	private int donanteIdActual = -1;  // hardcodear donanteId
 	private JMenuItem crearOrdenMenuItem; 
 	private JMenuItem listadoOrdenesMenuItem;
 	private JMenuItem listadoPedidosMenuItem; 
@@ -49,11 +46,8 @@ public class VentanaPrincipal extends JFrame {
 		contentPane.setLayout(new BorderLayout());
 		setContentPane(contentPane);
 		
-		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
-
-		
 		
 		// Usuarios
 		usuarioMenu = new JMenu("Usuarios");
@@ -61,27 +55,24 @@ public class VentanaPrincipal extends JFrame {
 
 		JMenuItem altaUsuarioMenuItem = new JMenuItem("Alta/Modificacion");
 		altaUsuarioMenuItem.addActionListener(new ActionListener() {
-			
 			public void actionPerformed(ActionEvent arg0) {
 				AltaUsuario alta = new AltaUsuario(api);
 				alta.setLocationRelativeTo(null);
 				alta.setVisible(true);
 			}
-			
 		});
 		usuarioMenu.add(altaUsuarioMenuItem);
 
 		JMenuItem listadoUsuarioMenuItem = new JMenuItem("Listado");
 		listadoUsuarioMenuItem.addActionListener(new ActionListener() {
-			
 			public void actionPerformed(ActionEvent arg0) {
 				ListadoUsuario listado= new ListadoUsuario(api);
 				listado.setLocationRelativeTo(null);
 				listado.setVisible(true);
 			}
-			
 		});
 		usuarioMenu.add(listadoUsuarioMenuItem);
+
 		// Donaciones
 		mnDonaciones = new JMenu("Donaciones");
 		menuBar.add(mnDonaciones);
@@ -92,13 +83,13 @@ public class VentanaPrincipal extends JFrame {
 				if ("DONANTE".equals(rolActual)) {
 					List<DonanteDTO> donantes = api.obtenerDonantes();
 					if (!donantes.isEmpty()) {
-						donanteIdActual = donantes.get(0).getId(); // hardcodear al primer donante
+						donanteIdActual = donantes.get(0).getId(); 
 					} else {
 						JOptionPane.showMessageDialog(VentanaPrincipal.this, "No hay donantes registrados para simular.", "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 				} else {
-					donanteIdActual = -1; // hardcodear sin donante
+					donanteIdActual = -1; 
 				}
 
 				RegistrarPedidoDonacion dialog = new RegistrarPedidoDonacion(api, donanteIdActual);
@@ -106,17 +97,20 @@ public class VentanaPrincipal extends JFrame {
 				dialog.setVisible(true);
 			}
 		});
+		
 		JMenuItem listadoInventarioItem = new JMenuItem("Gestión de Inventario");
         listadoInventarioItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // Instanciamos la ventana pasándole la API
-                ListadoInventario ventanaInventario = new ListadoInventario(api);
-                ventanaInventario.setLocationRelativeTo(null); // Centrar en pantalla
-                ventanaInventario.setVisible(true); // Mostrarla
+                // Se pasa el rolActual al constructor
+                ListadoInventario ventanaInventario = new ListadoInventario(api, rolActual);
+                ventanaInventario.setLocationRelativeTo(null); 
+                ventanaInventario.setVisible(true); 
             }
         });
         mnDonaciones.add(listadoInventarioItem);
+        
 		mnDonaciones.add(mntmRegistrarPedido);
+		
 		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro");
 		listadoOrdenesMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -126,6 +120,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(listadoOrdenesMenuItem);
+		
 		listadoPedidosMenuItem = new JMenuItem("Listado Pedidos de Donacion");
 		listadoPedidosMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -135,6 +130,7 @@ public class VentanaPrincipal extends JFrame {
 			}
 		});
 		mnDonaciones.add(listadoPedidosMenuItem);
+		
 		crearOrdenMenuItem = new JMenuItem("Crear Orden de Retiro");
 		crearOrdenMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -162,7 +158,6 @@ public class VentanaPrincipal extends JFrame {
 		});
 		voluntarioMenu.add(gestionarOrdenesMenuItem);
         
-        
         JMenuItem listadoVisitasMenuItem = new JMenuItem("Historial de Visitas");
         listadoVisitasMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -183,6 +178,7 @@ public class VentanaPrincipal extends JFrame {
             }
         });
         voluntarioMenu.add(listadoVisitasMenuItem);
+        
 		//  Configuracion
 		configuracionMenu = new JMenu("Configuracion");
 		menuBar.add(configuracionMenu);
@@ -205,16 +201,16 @@ public class VentanaPrincipal extends JFrame {
 		contentPane.add(rolPanel, BorderLayout.SOUTH);
 
 		JLabel voluntarioLabel = new JLabel("Voluntario:");
-        voluntarioLabel.setVisible(false); //  oculto
+        voluntarioLabel.setVisible(false); 
         rolPanel.add(voluntarioLabel);
 
         voluntarioSelectorComboBox = new JComboBox<>();
 		voluntarioSelectorComboBox.setEnabled(false);
-		voluntarioSelectorComboBox.setVisible(false); //  oculto
+		voluntarioSelectorComboBox.setVisible(false); 
 		rolPanel.add(voluntarioSelectorComboBox);
 
 		// cargar voluntarios al iniciar
-		List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios(); //  en la API
+		List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios(); 
 		for (VoluntarioDTO voluntario : voluntarios) {
 			voluntarioSelectorComboBox.addItem(voluntario);
 		}
@@ -233,9 +229,6 @@ public class VentanaPrincipal extends JFrame {
 				voluntarioSelectorComboBox.setEnabled(esVoluntario);
 				voluntarioSelectorComboBox.setVisible(esVoluntario);
 				voluntarioLabel.setVisible(esVoluntario);
-
-				// Depuracion
-				//System.out.println("Rol actual: " + rolActual);
 
 				// actualizar lista de voluntarios dinamicamente
 				if (esVoluntario) {
@@ -272,11 +265,6 @@ public class VentanaPrincipal extends JFrame {
 	    
 	    listadoOrdenesMenuItem.setVisible(!"DONANTE".equals(rolActual));
 	    listadoPedidosMenuItem.setVisible(!"DONANTE".equals(rolActual));
-	    voluntarioSelectorComboBox.setVisible("VOLUNTARIO".equals(rolActual)); // actualizar visibilidad del selector
+	    voluntarioSelectorComboBox.setVisible("VOLUNTARIO".equals(rolActual)); 
 	}
-	
-	
-	
-	
-	
 }

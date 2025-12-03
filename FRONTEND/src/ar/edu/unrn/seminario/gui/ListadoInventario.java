@@ -15,7 +15,7 @@ public class ListadoInventario extends JFrame {
     private IApi api;
     private List<BienDTO> listaActualBienes; 
 
-    public ListadoInventario(IApi api) {
+    public ListadoInventario(IApi api, String rol) {
         this.api = api;
         
         setTitle("Gestión de Inventario (En Stock)");
@@ -25,7 +25,6 @@ public class ListadoInventario extends JFrame {
 
         JPanel panelPrincipal = new JPanel(new BorderLayout());
 
-        // Columna 0 es ID (oculta si quieres, pero necesaria para la lógica)
         String[] columnNames = {"ID", "Categoría", "Descripción", "Cantidad", "Estado", "Vencimiento"};
         
         tableModel = new DefaultTableModel(columnNames, 0) {
@@ -43,6 +42,13 @@ public class ListadoInventario extends JFrame {
         
         JButton btnAjustar = new JButton("Ajustar Stock / Editar");
         btnAjustar.addActionListener(e -> abrirEdicion());
+
+        // Desactivar botón si es Donante
+        if ("DONANTE".equals(rol)) {
+            btnAjustar.setEnabled(false);
+            btnAjustar.setToolTipText("Acción no permitida para Donantes");
+            //btnAjustar.setVisible(false);
+        }
 
         buttonPanel.add(btnActualizar);
         buttonPanel.add(btnAjustar);
@@ -87,6 +93,7 @@ public class ListadoInventario extends JFrame {
                 .orElse(null);
 
         if (bienSeleccionado != null) {
+            // Se pasa 'this' como ventana padre para refrescar luego
             EditarBienDialog dialog = new EditarBienDialog(this, api, bienSeleccionado, this);
             dialog.setVisible(true);
         }
