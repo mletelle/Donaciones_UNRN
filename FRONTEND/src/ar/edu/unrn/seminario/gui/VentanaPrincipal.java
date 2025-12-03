@@ -48,10 +48,13 @@ public class VentanaPrincipal extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout());
 		setContentPane(contentPane);
-
+		
+		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
+		
+		
 		// Usuarios
 		usuarioMenu = new JMenu("Usuarios");
 		menuBar.add(usuarioMenu);
@@ -103,6 +106,16 @@ public class VentanaPrincipal extends JFrame {
 				dialog.setVisible(true);
 			}
 		});
+		JMenuItem listadoInventarioItem = new JMenuItem("Gestión de Inventario");
+        listadoInventarioItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Instanciamos la ventana pasándole la API
+                ListadoInventario ventanaInventario = new ListadoInventario(api);
+                ventanaInventario.setLocationRelativeTo(null); // Centrar en pantalla
+                ventanaInventario.setVisible(true); // Mostrarla
+            }
+        });
+        mnDonaciones.add(listadoInventarioItem);
 		mnDonaciones.add(mntmRegistrarPedido);
 		listadoOrdenesMenuItem = new JMenuItem("Listado de Ordenes de Retiro");
 		listadoOrdenesMenuItem.addActionListener(new ActionListener() {
@@ -261,5 +274,9 @@ public class VentanaPrincipal extends JFrame {
 	    listadoPedidosMenuItem.setVisible(!"DONANTE".equals(rolActual));
 	    voluntarioSelectorComboBox.setVisible("VOLUNTARIO".equals(rolActual)); // actualizar visibilidad del selector
 	}
+	
+	
+	
+	
 	
 }

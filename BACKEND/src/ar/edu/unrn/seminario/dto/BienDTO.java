@@ -3,7 +3,7 @@ package ar.edu.unrn.seminario.dto;
 import java.time.LocalDate;
 
 public class BienDTO {
-	// Constantes Categoria
+    // Constantes 
     public static final int CATEGORIA_ROPA = 1;
     public static final int CATEGORIA_MUEBLES = 2;
     public static final int CATEGORIA_ALIMENTOS = 3;
@@ -15,10 +15,10 @@ public class BienDTO {
     public static final int CATEGORIA_HIGIENE = 9;
     public static final int CATEGORIA_OTROS = 10;
 
-    // Constantes tipo
     public static final int TIPO_NUEVO = 1;
     public static final int TIPO_USADO = 2;
 
+    // Atributos 
     private int id;
     private int tipo;
     private int cantidad;
@@ -26,6 +26,20 @@ public class BienDTO {
     private String descripcion;
     private LocalDate fechaVencimiento;
     private int peso;
+    
+    // Nuevos atributos
+    private String categoriaTexto;
+    private String estadoTexto;     
+    private String vencimientoTexto;
+
+    // Nuevo constructor
+    public BienDTO(String categoriaTexto, String descripcion, int cantidad, String estadoTexto, String vencimientoTexto) {
+        this.categoriaTexto = categoriaTexto;
+        this.descripcion = descripcion;
+        this.cantidad = cantidad;
+        this.estadoTexto = estadoTexto;
+        this.vencimientoTexto = vencimientoTexto;
+    }
 
     public BienDTO(int tipo, int cantidad, int categoria, String descripcion, LocalDate fechaVencimiento) {
         this.tipo = tipo;
@@ -35,59 +49,57 @@ public class BienDTO {
         this.fechaVencimiento = fechaVencimiento;
     }
 
+    public String getCategoriaTexto() {
+    	return categoriaTexto;
+    	}
+    public String getEstadoTexto() {
+    	return estadoTexto; 
+    	}
+    public String getVencimientoTexto() { 
+    	return vencimientoTexto; 
+    	}
+
     public String getDescripcion() {
-        return descripcion;
-    }
-
-    public LocalDate getFechaVencimiento() {
-        return fechaVencimiento;
-    }
-
+    	return descripcion;
+    	}
+    public int getCantidad() { 
+    	return cantidad; 
+    	}
+    public LocalDate getFechaVencimiento() { 
+    	return fechaVencimiento; 
+    	}
     public int getTipo() {
-        return tipo;
-    }
-    
-    public int getCantidad() {
-        return cantidad;
-    }
-    
+    	return tipo;
+    	}
     public int getCategoria() {
-        return categoria;
-    }
-    
+    	return categoria; 
+    	}
     public int getId() {
-        return id;
-    }
-    
-    public int getPeso() {
-        return peso;
-    }
-    
+    	return id; 
+    	}
+    public int getPeso() { 
+    	return peso; 
+    	}
+
     public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
+    	this.descripcion = descripcion;
+    	}
+    public void setFechaVencimiento(LocalDate fechaVencimiento) { 
+    	this.fechaVencimiento = fechaVencimiento;
+    	}
+    public void setTipo(int tipo) { 
+    	this.tipo = tipo;
     }
-
-    public void setFechaVencimiento(LocalDate fechaVencimiento) {
-        this.fechaVencimiento = fechaVencimiento;
-    }
-
-    public void setTipo(int tipo) {
-        this.tipo = tipo;
-    }
-
     public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
-    }
-
+    	this.cantidad = cantidad;
+    	}
     public void setCategoria(int categoria) {
-        this.categoria = categoria;
-    }
-
+    	this.categoria = categoria;
+    	}
     public void setId(int id) {
-        this.id = id;
-    }
-
+    	this.id = id; 
+    	}
     public void setPeso(int peso) {
-        this.peso = peso;
-    }
+    	this.peso = peso;
+    	}
 }
