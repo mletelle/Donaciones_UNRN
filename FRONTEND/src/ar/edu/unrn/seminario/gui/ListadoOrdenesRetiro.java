@@ -3,8 +3,6 @@ package ar.edu.unrn.seminario.gui;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
 
 import ar.edu.unrn.seminario.api.IApi;

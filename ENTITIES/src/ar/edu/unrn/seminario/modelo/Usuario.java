@@ -13,8 +13,6 @@ public class Usuario {
 	private String email;
 	private Rol rol;
 	private boolean activo;
-	private String contacto;
-    private String ubicacion;
 	
 	//  Atributos absorbidos de Persona
 	private String apellido;
@@ -25,8 +23,16 @@ public class Usuario {
 	private ArrayList<PedidosDonacion> pedidos; // Para Donante
 	private ArrayList<OrdenRetiro> ordenesAsignadas; // Para Voluntario
 
+	// Atributos para rol Beneficiario
+	private String necesidad;
+	private Integer personasACargo;
+
 	// Constructores
-	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException {
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
+		this(usuario, contrasena, nombre, email, rol, apellido, dni, direccion, null, null);
+	}
+
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion, String necesidad, Integer personasACargo) throws CampoVacioException, ObjetoNuloException {
 		if (usuario == null || usuario.isEmpty()) {
 			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
 		}
@@ -48,7 +54,6 @@ public class Usuario {
 		if (dni <= 0) {
 			throw new CampoVacioException("El campo 'dni' debe ser un numero positivo.");
 		}
-		//  solo requerida para DONANTES
 		if ((direccion == null || direccion.isEmpty()) && rol.getCodigo() == 3) {
 			throw new CampoVacioException("El campo 'direccion' no puede estar vacio para Donantes.");
 		}
@@ -61,12 +66,10 @@ public class Usuario {
 		this.apellido = apellido;
 		this.dni = dni;
 		this.direccion = direccion;
-		this.activo = true; // ACTIVO POR DEFECTO
-	    this.contacto = contacto;
-	    this.ubicacion = ubicacion;
+		this.necesidad = necesidad;
+		this.personasACargo = personasACargo;
+		this.activo = true;
 		
-		
-		//  listas según el rol
 		this.pedidos = new ArrayList<>();
 		this.ordenesAsignadas = new ArrayList<>();
 	}
@@ -112,6 +115,22 @@ public class Usuario {
 		return ordenesAsignadas;
 	}
 
+	public String getNecesidad() {
+		return necesidad;
+	}
+
+	public void setNecesidad(String necesidad) {
+		this.necesidad = necesidad;
+	}
+
+	public Integer getPersonasACargo() {
+		return personasACargo;
+	}
+
+	public void setPersonasACargo(Integer personasACargo) {
+		this.personasACargo = personasACargo;
+	}
+
 	public String obtenerApellido() {
 		return apellido;
 	}
@@ -136,14 +155,6 @@ public class Usuario {
 		return isActivo() ? "ACTIVO" : "INACTIVO";
 	}
 
-	public String obtenerContacto() {
-		return contacto;
-	}
-	
-	public String obtenerUbicacion() {
-		return ubicacion;
-	}
-	
 	// Setters
 	public void setUsuario(String usuario) {
 		this.usuario = usuario;
@@ -176,14 +187,7 @@ public class Usuario {
 	public void setDireccion(String direccion) {
 		this.direccion = direccion;
 	}
-	
-	public void setUbicacion(String ubicacion) {
-		this.ubicacion = ubicacion;
-	}
 
-	public void setContacto(String contacto) {
-		this.contacto = contacto;
-	}
 	// metodo para activar
 	public void activar() {
 		if (!isActivo())
@@ -219,7 +223,15 @@ public class Usuario {
 	}
 
 		public String toString() {
-			return nombre + " " + apellido + " (DNI " + dni + ")";
+			StringBuilder sb = new StringBuilder();
+			sb.append(nombre).append(" ").append(apellido).append(" (DNI ").append(dni).append(")");
+			if (necesidad != null && !necesidad.isEmpty()) {
+				sb.append(" - Necesidad: ").append(necesidad);
+			}
+			if (personasACargo != null && personasACargo > 0) {
+				sb.append(" - Personas a cargo: ").append(personasACargo);
+			}
+			return sb.toString();
 		}
 
 		public Ubicacion getUbicacionEntidad() {

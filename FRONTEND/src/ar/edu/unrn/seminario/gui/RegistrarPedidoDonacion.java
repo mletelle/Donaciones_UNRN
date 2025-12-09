@@ -190,7 +190,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
         
-        // Renderizador para DonanteDTO (para que muestre Nombre Apellido)
+        // Renderizador para UsuarioDTO (para que muestre Nombre Apellido)
         donanteComboBox.setRenderer(new javax.swing.ListCellRenderer<UsuarioDTO>() {
             @Override
             public Component getListCellRendererComponent(JList<? extends UsuarioDTO> list, UsuarioDTO value, int index, boolean isSelected, boolean cellHasFocus) {

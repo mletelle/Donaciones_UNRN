@@ -113,6 +113,17 @@ public class BienDAOJDBC implements BienDao {
         }
     }
 
+    @Override
+    public void asociarAOrdenEntrega(int idBien, int idOrdenEntrega, String nuevoEstado, Connection conn) throws SQLException {
+        try (PreparedStatement statement = conn.prepareStatement(
+                "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?")) {
+            statement.setInt(1, idOrdenEntrega);
+            statement.setString(2, nuevoEstado);
+            statement.setInt(3, idBien);
+            statement.executeUpdate();
+        }
+    }
+
     // Helper para mapear ResultSet a Objeto Bien
     private Bien mapearBien(ResultSet rs) throws SQLException {
         try {
