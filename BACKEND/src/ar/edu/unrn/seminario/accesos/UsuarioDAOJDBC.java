@@ -86,7 +86,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"), 
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("Contacto"),
+							rs.getString("Ubicacion"));
 					if (!rs.getBoolean("activo")) {
 						usuario.desactivar();
 					}
@@ -123,7 +125,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"),
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("Contacto"),
+							rs.getString("Ubicacion"));
 					if (!rs.getBoolean("activo")) {
 						usuario.desactivar();
 					}
@@ -164,7 +168,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"),
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("Contacto"),
+							rs.getString("Ubicacion"));
 					usuarios.add(usuario);
 				} catch (Exception e) {
 					System.err.println("Error buscando Usuario: " + e.getMessage());
@@ -200,7 +206,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 	                        rol, 
 	                        rs.getString("apellido"), 
 	                        rs.getInt("dni"), 
-	                        rs.getString("direccion"));
+	                        rs.getString("direccion"),
+	                        rs.getString("Contacto"),
+							rs.getString("Ubicacion"));
 	                
 	                if (!rs.getBoolean("activo")) {
 	                    usuario.desactivar();

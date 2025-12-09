@@ -1,136 +1,238 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
-import java.util.List;
+
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class Usuario {
-    
-    private String usuario;
-    private String contrasena;
-    private String nombre;
-    private String apellido;
-    private String dni; // String para permitir validaciones flexibles
-    private String email;
-    private String direccion; 
-    private Rol rol;
-    private boolean activo;
+	
+	private String usuario;
+	private String contrasena;
+	private String nombre;
+	private String email;
+	private Rol rol;
+	private boolean activo;
+	private String contacto;
+    private String ubicacion;
+	
+	//  Atributos absorbidos de Persona
+	private String apellido;
+	private int dni;
+	private String direccion; // solo String en lugar de objeto Ubicacion
+	
+	// Atributos para roles específicos
+	private ArrayList<PedidosDonacion> pedidos; // Para Donante
+	private ArrayList<OrdenRetiro> ordenesAsignadas; // Para Voluntario
 
-    // Atributos específicos encapsulados
-    private String contacto; // Beneficiario
-    private OrdenEntrega ordenEntregaActual; // Beneficiario
-    private ArrayList<PedidosDonacion> pedidos; // Donante
-    private ArrayList<OrdenRetiro> ordenesAsignadas; // Voluntario
+	// Constructores
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException {
+		if (usuario == null || usuario.isEmpty()) {
+			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
+		}
+		if (contrasena == null || contrasena.isEmpty()) {
+			throw new CampoVacioException("El campo 'contraseña' no puede estar vacio.");
+		}
+		if (nombre == null || nombre.isEmpty()) {
+			throw new CampoVacioException("El campo 'nombre' no puede estar vacio.");
+		}
+		if (email == null || email.isEmpty()) {
+			throw new CampoVacioException("El campo 'email' no puede estar vacio.");
+		}
+		if (rol == null) {
+			throw new ObjetoNuloException("El campo 'rol' no puede ser nulo.");
+		}
+		if (apellido == null || apellido.isEmpty()) {
+			throw new CampoVacioException("El campo 'apellido' no puede estar vacio.");
+		}
+		if (dni <= 0) {
+			throw new CampoVacioException("El campo 'dni' debe ser un numero positivo.");
+		}
+		//  solo requerida para DONANTES
+		if ((direccion == null || direccion.isEmpty()) && rol.getCodigo() == 3) {
+			throw new CampoVacioException("El campo 'direccion' no puede estar vacio para Donantes.");
+		}
 
-    public static final int ROL_ADMIN = 1;
-    public static final int ROL_VOLUNTARIO = 2;
-    public static final int ROL_DONANTE = 3;
-    public static final int ROL_BENEFICIARIO = 4;
+		this.usuario = usuario;
+		this.contrasena = contrasena;
+		this.nombre = nombre;
+		this.email = email;
+		this.rol = rol;
+		this.apellido = apellido;
+		this.dni = dni;
+		this.direccion = direccion;
+		this.activo = true; // ACTIVO POR DEFECTO
+	    this.contacto = contacto;
+	    this.ubicacion = ubicacion;
+		
+		
+		//  listas según el rol
+		this.pedidos = new ArrayList<>();
+		this.ordenesAsignadas = new ArrayList<>();
+	}
 
-    public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, String dni, String direccion, String contacto) throws CampoVacioException, ObjetoNuloException {
-        if (usuario == null || usuario.isEmpty()) throw new CampoVacioException("Usuario obligatorio.");
-        if (contrasena == null || contrasena.isEmpty()) throw new CampoVacioException("Contraseña obligatoria.");
-        if (dni == null || dni.isEmpty()) throw new CampoVacioException("DNI obligatorio.");
-        if (rol == null) throw new ObjetoNuloException("Rol no puede ser nulo.");
+	// Getters
+	public String getUsuario() {
+		return usuario;
+	}
+	
+	public String getContrasena() {
+		return contrasena;
+	}
 
-        this.usuario = usuario;
-        this.contrasena = contrasena;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.rol = rol;
-        this.dni = dni;
-        this.direccion = direccion;
-        this.contacto = contacto;
-        this.activo = true;
+	public String getNombre() {
+		return nombre;
+	}
 
-        if (esDonante()) this.pedidos = new ArrayList<>();
-        if (esVoluntario()) this.ordenesAsignadas = new ArrayList<>();
-    }
-    
-    // Constructor simplificado para compatibilidad con DAOs antiguos si es necesario
-    public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws Exception {
-       this(usuario, contrasena, nombre, email, rol, apellido, String.valueOf(dni), direccion, null);
-    }
+	public String getEmail() {
+		return email;
+	}
 
-    public boolean esAdministrador() {
-    	return this.rol.getCodigo() == ROL_ADMIN;
-    	}
-    public boolean esVoluntario() {
-    	return this.rol.getCodigo() == ROL_VOLUNTARIO;
-    	}
-    public boolean esDonante() {
-    	return this.rol.getCodigo() == ROL_DONANTE;
-    	}
-    public boolean esBeneficiario() { 
-    	return this.rol.getCodigo() == ROL_BENEFICIARIO;
-    	}
+	public Rol getRol() {
+		return rol;
+	}
 
-    public void agregarPedido(PedidosDonacion pedido) {
-        if (esDonante() && this.pedidos != null) this.pedidos.add(pedido);
-    }
+	public String getApellido() {
+		return apellido;
+	}
 
-    public void asignarOrdenRetiro(OrdenRetiro orden) {
-        if (esVoluntario() && this.ordenesAsignadas != null) this.ordenesAsignadas.add(orden);
-    }
-    
-    public void asignarOrdenEntrega(OrdenEntrega orden) {
-        if (esBeneficiario()) this.ordenEntregaActual = orden;
-    }
+	public int getDni() {
+		return dni;
+	}
 
-    public String getUsuario() {
-    	return usuario;
-    	}
-    public String getContrasena() {
-    	return contrasena; 
-    	}
-    public String getNombre() {
-    	return nombre; }
-    public String getApellido() {
-    	return apellido; 
-    	}
-    public String getDni() {
-    	return dni;
-    	}
-    public String getEmail() {
-    	return email; 
-    	}
-    public String getDireccion() {
-    	return direccion;
-    	}
-    public Rol getRol() {
-    	return rol; 
-    	}
-    public String getContacto() {
-    	return contacto;
-    	}
-    public boolean isActivo() {
-    	return activo; 
-    	}
-    public void activar() {
-    	this.activo = true;
-    	}
-    public void desactivar() {
-    	this.activo = false; 
-    }
-    public String obtenerEstado() { 
-    	return activo ? "ACTIVO" : "INACTIVO";
-    }
-    
-    // Métodos alias para compatibilidad
-    public String obtenerDireccion() {
-    	return direccion; 
-    	}
-    public String obtenerNombre() {
-    	return nombre; 
-    	}
-    public String obtenerApellido() {
-    	return apellido;
-}
+	public String getDireccion() {
+		return direccion;
+	}
 
-    @Override
-    public String toString() {
-        return nombre + " " + apellido + " (" + rol.getNombre() + ")";
-    }
-}
+	public ArrayList<PedidosDonacion> getPedidos() {
+		return pedidos;
+	}
+
+	public ArrayList<OrdenRetiro> getOrdenesAsignadas() {
+		return ordenesAsignadas;
+	}
+
+	public String obtenerApellido() {
+		return apellido;
+	}
+
+	public int obtenerDni() {
+		return dni;
+	}
+
+	public String obtenerDireccion() {
+		return direccion;
+	}
+
+	public String obtenerNombre() {
+		return nombre;
+	}
+
+	public boolean isActivo() {
+		return activo;
+	}
+
+	public String obtenerEstado() {
+		return isActivo() ? "ACTIVO" : "INACTIVO";
+	}
+
+	public String obtenerContacto() {
+		return contacto;
+	}
+	
+	public String obtenerUbicacion() {
+		return ubicacion;
+	}
+	
+	// Setters
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
+
+	public void setContrasena(String contrasena) {
+		this.contrasena = contrasena;
+	}
+
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setRol(Rol rol) {
+		this.rol = rol;
+	}
+
+	public void setApellido(String apellido) {
+		this.apellido = apellido;
+	}
+
+	public void setDni(int dni) {
+		this.dni = dni;
+	}
+
+	public void setDireccion(String direccion) {
+		this.direccion = direccion;
+	}
+	
+	public void setUbicacion(String ubicacion) {
+		this.ubicacion = ubicacion;
+	}
+
+	public void setContacto(String contacto) {
+		this.contacto = contacto;
+	}
+	// metodo para activar
+	public void activar() {
+		if (!isActivo())
+			this.activo = true;
+	}
+
+	// metodo para desactivar
+	public void desactivar() {
+		if (isActivo())
+			this.activo = false;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + dni; // DNI como clave principal
+		result = prime * result + ((usuario == null) ? 0 : usuario.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Usuario other = (Usuario) obj;
+		// Unicidad por DNI
+		return this.dni == other.dni;
+	}
+
+		public String toString() {
+			return nombre + " " + apellido + " (DNI " + dni + ")";
+		}
+
+		public Ubicacion getUbicacionEntidad() {
+			// Si el usuario no tiene dirección (ej. Admin, Voluntario), retorna null
+			if (this.direccion == null || this.direccion.isEmpty()) {
+				// Esto es válido, pero la API debe manejarlo (lo hace)
+				return null; 
+			}
+			
+			// Crea un objeto Ubicacion "dummy" usando la dirección de string.
+			// Asume valores vacíos para zona/barrio y 0.0 para coords,
+			// ya que el modelo Usuario (actualmente) no los almacena por separado.
+			return new Ubicacion(this.direccion, "N/A", "N/A", 0.0, 0.0);
+		}
+	}
+

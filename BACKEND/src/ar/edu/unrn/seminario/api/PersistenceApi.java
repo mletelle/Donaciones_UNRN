@@ -25,7 +25,6 @@ import ar.edu.unrn.seminario.accesos.VehiculoDao;
 import ar.edu.unrn.seminario.accesos.VisitaDAOJDBC;
 import ar.edu.unrn.seminario.accesos.VisitaDao;
 import ar.edu.unrn.seminario.dto.BienDTO;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.RolDTO;
@@ -230,28 +229,6 @@ public class PersistenceApi implements IApi {
         }
     }
 
-    /// Se utilizo stream
-    @Override
-    public List<DonanteDTO> obtenerDonantes() {
-        Connection conn = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            // Uso de Stream para mapear Usuario -> DonanteDTO
-            return usuarioDao.findByRol(3, conn).stream()
-                .map(u -> new DonanteDTO(
-                    u.getDni(),
-                    u.getNombre() + " " + u.getApellido(),
-                    u.obtenerDireccion() != null ? u.obtenerDireccion() : ""
-                ))
-                .collect(Collectors.toList());
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        } finally {
-            ConnectionManager.disconnect();
-        }
-    }
-    
     /// Se utilizó stream
     @Override
     public List<PedidoDonacionDTO> obtenerTodosPedidos() {
@@ -279,7 +256,7 @@ public class PersistenceApi implements IApi {
 
     @Override
     public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
-            String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
+            String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
@@ -288,7 +265,7 @@ public class PersistenceApi implements IApi {
             Rol rol = rolDao.find(codigoRol, conn);
             if (rol == null) throw new ObjetoNuloException("Rol no encontrado");
             
-            Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion);
+            Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion, contacto, ubicacion);
             usuarioDao.create(usuario, conn);
             
             conn.commit();
@@ -312,7 +289,7 @@ public class PersistenceApi implements IApi {
             List<Usuario> usuarios = usuarioDao.findAll(conn);
             for (Usuario u : usuarios) {
                 dtos.add(new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
-                        u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()));
+                        u.getRol().getNombre(), u.isActivo(), u.obtenerEstado(), u.obtenerContacto(), u.obtenerUbicacion()));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -330,7 +307,7 @@ public class PersistenceApi implements IApi {
             Usuario u = usuarioDao.find(username, conn);
             if (u != null) {
                 return new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
-                        u.getRol().getNombre(), u.isActivo(), u.obtenerEstado());
+                        u.getRol().getNombre(), u.isActivo(), u.obtenerEstado(), u.obtenerContacto(), u.obtenerUbicacion());
             }
         } catch (SQLException e) {
             e.printStackTrace();
