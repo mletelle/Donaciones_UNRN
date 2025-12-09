@@ -221,7 +221,8 @@ CREATE TABLE `visitas` (
 --
 -- Dumping data for table `visitas`
 --
-
+-- Se agregó la columna "estado_inventario" a la tabla bienes
+ALTER TABLE bienes ADD COLUMN estado_inventario VARCHAR(20) DEFAULT 'PENDIENTE';
 LOCK TABLES `visitas` WRITE;
 /*!40000 ALTER TABLE `visitas` DISABLE KEYS */;
 INSERT INTO `visitas` VALUES (19,12,13,'2025-11-16 20:46:56','Donante Ausente','No estaba, despues vuelvo'),(20,13,20,'2025-11-18 19:13:14','Cancelado','No se va a retirar');
