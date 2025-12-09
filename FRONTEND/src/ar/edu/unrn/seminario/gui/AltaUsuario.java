@@ -31,6 +31,8 @@ public class AltaUsuario extends JFrame {
     private JTextField nombreTextField;
     private JTextField emailTextField;
     private JComboBox<String> rolComboBox;
+    private JTextField contactoTextField;
+    private JTextField ubicacionTextField;
     
     // nuevos campos añadidos que vienen de persona
     private JTextField apellidoTextField;
@@ -128,7 +130,6 @@ public class AltaUsuario extends JFrame {
             }
         }
 
-        // campo Direccion (solo para Donante)
         direccionLabel = new JLabel("Direccion:");
         direccionLabel.setBounds(43, 245, 93, 16);
         direccionLabel.setVisible(false);
@@ -139,7 +140,6 @@ public class AltaUsuario extends JFrame {
         direccionTextField.setVisible(false);
         contentPane.add(direccionTextField);
 
-        // Listener para mostrar/ocultar campo para DONANTE
         rolComboBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
@@ -155,7 +155,6 @@ public class AltaUsuario extends JFrame {
 
         JButton aceptarButton = new JButton("Aceptar");
         
-        // Accion del boton "Aceptar"
         aceptarButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 try {
@@ -194,9 +193,18 @@ public class AltaUsuario extends JFrame {
                     if (email == null || email.trim().isEmpty()) {
                         throw new CampoVacioException("El campo 'Email' no puede estar vacío.");
                     }
-                    
+
+                    String contacto = contactoTextField.getText();
+                    if (contacto == null || contacto.trim().isEmpty()) {
+                        throw new CampoVacioException("El campo 'Contacto' no puede estar vacío.");
+                    }
+
+                    String ubicacion = ubicacionTextField.getText();
+                    if (ubicacion == null || ubicacion.trim().isEmpty()) {
+                        throw new CampoVacioException("El campo 'Ubicación' no puede estar vacío.");
+                    }
+
                     String direccion = null;
-                    // direccion obligatoria solo para donantes
                     if (rol.getCodigo() == CODIGO_ROL_DONANTE) {
                         direccion = direccionTextField.getText();
                         if (direccion == null || direccion.trim().isEmpty()) {
@@ -214,7 +222,9 @@ public class AltaUsuario extends JFrame {
                         rol.getCodigo(),
                         apellido,
                         dni,
-                        direccion
+                        direccion,
+                        contacto, 
+                        ubicacion 
                     );
                     
                     JOptionPane.showMessageDialog(null, "Usuario registrado con éxito!", "Info", JOptionPane.INFORMATION_MESSAGE);
@@ -224,18 +234,17 @@ public class AltaUsuario extends JFrame {
                 } catch (UsuarioInvalidoException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Registro", JOptionPane.ERROR_MESSAGE);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "DNI debe ser un número válido.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "DNI debe ser un número válido (sin puntos ni letras).", "Error", JOptionPane.ERROR_MESSAGE);
                 } catch (CampoVacioException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
                 } catch (ObjetoNuloException ex) {
                     JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de API", JOptionPane.ERROR_MESSAGE);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Error inesperado: " + ex.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace(); 
                 }
             }
-        });
-        
+        });        
         aceptarButton.setBounds(218, 290, 97, 25);
         contentPane.add(aceptarButton);
 

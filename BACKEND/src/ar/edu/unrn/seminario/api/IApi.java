@@ -9,7 +9,7 @@ import ar.edu.unrn.seminario.exception.*;
 public interface IApi {
 
     // usuarios
-    void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException;
+    void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException;
     UsuarioDTO obtenerUsuario(String username);
     void eliminarUsuario(String username);
     List<UsuarioDTO> obtenerUsuarios();
@@ -26,7 +26,6 @@ public interface IApi {
 
     // pedidos y donantes
     void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException;
-    List<DonanteDTO> obtenerDonantes();
     List<PedidoDonacionDTO> obtenerPedidosPendientes();
     List<PedidoDonacionDTO> obtenerTodosPedidos();
     List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);

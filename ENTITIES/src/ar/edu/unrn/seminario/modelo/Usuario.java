@@ -13,6 +13,8 @@ public class Usuario {
 	private String email;
 	private Rol rol;
 	private boolean activo;
+	private String contacto;
+    private String ubicacion;
 	
 	//  Atributos absorbidos de Persona
 	private String apellido;
@@ -24,7 +26,7 @@ public class Usuario {
 	private ArrayList<OrdenRetiro> ordenesAsignadas; // Para Voluntario
 
 	// Constructores
-	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
+	public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException {
 		if (usuario == null || usuario.isEmpty()) {
 			throw new CampoVacioException("El campo 'usuario' no puede estar vacio.");
 		}
@@ -60,6 +62,9 @@ public class Usuario {
 		this.dni = dni;
 		this.direccion = direccion;
 		this.activo = true; // ACTIVO POR DEFECTO
+	    this.contacto = contacto;
+	    this.ubicacion = ubicacion;
+		
 		
 		//  listas según el rol
 		this.pedidos = new ArrayList<>();
@@ -131,6 +136,14 @@ public class Usuario {
 		return isActivo() ? "ACTIVO" : "INACTIVO";
 	}
 
+	public String obtenerContacto() {
+		return contacto;
+	}
+	
+	public String obtenerUbicacion() {
+		return ubicacion;
+	}
+	
 	// Setters
 	public void setUsuario(String usuario) {
 		this.usuario = usuario;
@@ -163,7 +176,14 @@ public class Usuario {
 	public void setDireccion(String direccion) {
 		this.direccion = direccion;
 	}
+	
+	public void setUbicacion(String ubicacion) {
+		this.ubicacion = ubicacion;
+	}
 
+	public void setContacto(String contacto) {
+		this.contacto = contacto;
+	}
 	// metodo para activar
 	public void activar() {
 		if (!isActivo())
