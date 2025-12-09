@@ -8,11 +8,15 @@ public class ConnectionManager {
 	// private static String DRIVER = "com.mysql.jdbc.Driver";.
 
 	// Base local
+	/*
 	private static String URL_DB = "jdbc:mysql://localhost:3306/";
 	protected static String DB = "seminario_2025_1";
 	protected static String user = "seminario"; 
 	protected static String pass = "Seminario_Pass_123!"; 
 /*
+ * 
+ * */
+ 
 	// Base externa Railway MySQL 
 	// Host y Puerto de MYSQL_PUBLIC_URL 
 	private static String URL_DB = "jdbc:mysql://yamanote.proxy.rlwy.net:43821/"; 
@@ -22,7 +26,7 @@ public class ConnectionManager {
 	protected static String user = "root"; 
     // Contraseña de MYSQL_ROOT_PASSWORD
 	protected static String pass = "vduEoaIuUWIxXJpQDzQXGBQrfBiTbDaY"; 
-*/
+
 	protected static Connection conn = null;
 
 	public static void connect() {

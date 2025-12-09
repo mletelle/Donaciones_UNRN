@@ -227,6 +227,37 @@ LOCK TABLES `visitas` WRITE;
 /*!40000 ALTER TABLE `visitas` DISABLE KEYS */;
 INSERT INTO `visitas` VALUES (19,12,13,'2025-11-16 20:46:56','Donante Ausente','No estaba, despues vuelvo'),(20,13,20,'2025-11-18 19:13:14','Cancelado','No se va a retirar');
 /*!40000 ALTER TABLE `visitas` ENABLE KEYS */;
+
+-- Agregar columna 'contacto' a USUARIOS (para rol Beneficiario)
+ALTER TABLE usuarios ADD COLUMN contacto VARCHAR(255) DEFAULT NULL;
+
+-- Crea tabla ORDENES_ENTREGA vinculada a USUARIOS
+CREATE TABLE IF NOT EXISTS ordenes_entrega (
+  id INT NOT NULL AUTO_INCREMENT,
+  fecha_generacion DATETIME NOT NULL,
+  fecha_programada DATETIME DEFAULT NULL,
+  fecha_ejecucion DATETIME DEFAULT NULL,
+  estado INT NOT NULL,
+  usuario_voluntario VARCHAR(45),
+  usuario_beneficiario VARCHAR(45) NOT NULL,
+  id_pedido_origen INT,
+  patente_vehiculo VARCHAR(10),
+  PRIMARY KEY (id),
+  CONSTRAINT fk_oe_voluntario FOREIGN KEY (usuario_voluntario) REFERENCES usuarios (usuario) ON UPDATE CASCADE,
+  CONSTRAINT fk_oe_beneficiario FOREIGN KEY (usuario_beneficiario) REFERENCES usuarios (usuario) ON UPDATE CASCADE,
+  CONSTRAINT fk_oe_pedido FOREIGN KEY (id_pedido_origen) REFERENCES pedidos_donacion (id) ON UPDATE CASCADE,
+  CONSTRAINT fk_oe_vehiculo FOREIGN KEY (patente_vehiculo) REFERENCES vehiculos (patente) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vincular bienes y visitas a las órdenes de entrega
+ALTER TABLE bienes ADD COLUMN id_orden_entrega INT DEFAULT NULL;
+ALTER TABLE bienes ADD CONSTRAINT fk_bienes_oe FOREIGN KEY (id_orden_entrega) REFERENCES ordenes_entrega (id) ON DELETE SET NULL;
+
+ALTER TABLE visitas ADD COLUMN id_orden_entrega INT DEFAULT NULL;
+ALTER TABLE visitas ADD CONSTRAINT fk_visitas_oe FOREIGN KEY (id_orden_entrega) REFERENCES ordenes_entrega (id) ON DELETE CASCADE;
+
+
+
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

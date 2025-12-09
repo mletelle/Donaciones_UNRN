@@ -1,148 +1,70 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
-import java.util.Date;
+import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class OrdenEntrega {
 
-    // variables 
-    private static int secuencia = 0;//para el id
+    private static int secuencia = 0;
     
-    // Constantes estado
-    private static final int ESTADO_PENDIENTE = 1;
-    private static final int ESTADO_EN_EJECUCION = 2;
-    private static final int ESTADO_COMPLETADO = 3;
-    private static final int ESTADO_CANCELADO = 4;
+    public static final int ESTADO_PENDIENTE = 1;
+    public static final int ESTADO_EN_EJECUCION = 2;
+    public static final int ESTADO_COMPLETADO = 3;
+    public static final int ESTADO_CANCELADO = 4;
 
     private int id;
-    private Date fechaGeneracion = new Date();
     private int estado;
-    private Ubicacion destino;
-    private Usuario voluntario; // ahora es Usuario
+    private Usuario voluntario; 
+    private Usuario beneficiario; 
     private ArrayList<Visita> visitas;
     private PedidosDonacion pedidoOrigen;
-    private ArrayList<Bien> bienes;
-    
-    private Vehiculo v;
-    private Date fechaEjecucion = new Date();
-    private Date fechaProgramada = new Date();
 
-    public OrdenEntrega(PedidosDonacion pedido, Ubicacion destino) {
+    public OrdenEntrega(PedidosDonacion pedido, Usuario beneficiario) throws ObjetoNuloException {
+        if (pedido == null) throw new ObjetoNuloException("Pedido nulo.");
+        if (beneficiario == null) throw new ObjetoNuloException("Beneficiario nulo.");
+        if (!beneficiario.esBeneficiario()) throw new IllegalArgumentException("Usuario no es Beneficiario.");
+
         this.id = ++secuencia;
         this.estado = ESTADO_PENDIENTE;
-        this.destino = destino;
         this.pedidoOrigen = pedido;
-        this.visitas = new ArrayList<Visita>();
-    	ArrayList<Bien> bienes = new ArrayList<Bien>();
-        /// pedido.asignarOrden(this);
+        this.beneficiario = beneficiario;
+        this.visitas = new ArrayList<>();
+        
+        this.beneficiario.asignarOrdenEntrega(this);
     }
     
-    public Usuario obtenerVoluntario() { 
-    	return this.voluntario;
+    // Constructor para hidratación desde JDBC
+    public OrdenEntrega(int id, int estado, Usuario beneficiario, Usuario voluntario, PedidosDonacion pedido) {
+        this.id = id;
+        this.estado = estado;
+        this.beneficiario = beneficiario;
+        this.voluntario = voluntario;
+        this.pedidoOrigen = pedido;
+        this.visitas = new ArrayList<>();
     }
     
-    public int obtenerEstado() {
-        return estado;
-    }
-
-    public ArrayList<Visita> obtenerVisitas() {
-      return visitas;
+    public void asignarVoluntario(Usuario v) throws ObjetoNuloException {
+        if (v == null) throw new ObjetoNuloException("Voluntario nulo.");
+        if (!v.esVoluntario()) throw new IllegalArgumentException("Usuario no es voluntario.");
+        this.voluntario = v;
     }
     
-	public boolean estaCompletada() {
-		return estado == ESTADO_COMPLETADO;
-	}
-    
-    private void asignarRecursos(Usuario v, Vehiculo vehiculo) { 
-    	this.v = vehiculo;
-    	asignarVoluntario(v);
-    }
-
-    // asignacion de voluntario
-    public void asignarVoluntario(Usuario v) { 
-        voluntario = v;
-    }
-  
-    // actualizacion de estado
-    public void actualizarEstado(int nuevoEstado) {
-        this.estado = nuevoEstado;
-    }
-  
-    // metodos para cambiar el estado
-    public void iniciar() {
-        estado = ESTADO_EN_EJECUCION;
-    }
-    
+    public int getId() { 
+    	return id;
+    	}
+    public Usuario obtenerBeneficiario() {
+    	return beneficiario;
+    	}
+    public Usuario obtenerVoluntario() {
+    	return voluntario;
+    	}
+    public int obtenerEstado() { 
+    	return estado;
+    	}
+    public PedidosDonacion getPedidoOrigen() {
+    	return pedidoOrigen;
+    	}
     public void marcarEntregada() {
-        estado = ESTADO_COMPLETADO;
-    }
-    
-    public void cancelar(String motivo) {
-        estado = ESTADO_CANCELADO;
-        System.out.println("Motivo de cancelacion: "+motivo);
-    }
-    
-    // metodo para agregar visita
-    public void agregarVisita(Visita v) {
-        visitas.add(v);
-    }
-
-    // metodo para quitar un bien
-    public void quitarBien(Bien item) {
-    	bienes.remove(item);
-     }
-    
-    // metodo para agregar un bien
-     private void agregarItem(Bien item) {
-    	 bienes.add(item);
-     }
-     
-     @Override
-     public String toString() {
-         return "Orden#" + id + " -> " + destino + ": " + describirEstado();
-     }
-   
-     // metodo de ayuda para el toString
-     private String describirEstado() {
-         switch (estado) {
-             case ESTADO_PENDIENTE:
-                 return "PENDIENTE";
-             case ESTADO_EN_EJECUCION:
-                 return "EN_EJECUCION";
-             case ESTADO_COMPLETADO:
-                 return "COMPLETADO";
-             case ESTADO_CANCELADO:
-                 return "CANCELADO";
-             default:
-                 return "";
-         }
-     }
-     
-    // metodo para imprimir el detalle de la orden
-    public String imprimirDetalle(int nroVivienda) {//no es tostring porque recibe nroVivienda
-        StringBuilder sb = new StringBuilder();
-        sb.append("OrdenDeRetiro").append(id)
-                .append(" Vivienda: ").append(nroVivienda)
-                .append(". Voluntario: ");
-        Usuario v = obtenerVoluntario(); 
-        sb.append(v != null ? v.obtenerNombre() + " " + v.obtenerApellido() : " ")
-                .append(" (Estado: ").append(describirEstado()).append("):\n");
-
-        if (visitas.isEmpty()) {
-            sb.append("sin visitas\n");
-        } else {
-            for (int i = 0; i < visitas.size(); i++) {
-                Visita vi = visitas.get(i);
-                sb.append("  Visita ").append(i + 1)
-                        .append(": Fecha: ").append(vi.obtenerFechaFormateada())
-                        .append("\n    Obs.: ").append(vi.obtenerObservacion()).append("\n");
-            }
-        }
-        return sb.toString();
-    }
-
-	public boolean equals(OrdenEntrega obj) {
-        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidoOrigen.equals(obj.pedidoOrigen));
-    }
-	
+    	this.estado = ESTADO_COMPLETADO; 
+    	}
 }
