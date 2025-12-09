@@ -1,6 +1,7 @@
 package ar.edu.unrn.seminario.gui;
 
 import java.awt.BorderLayout;
+
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 
 import ar.edu.unrn.seminario.api.IApi;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
 
@@ -81,7 +82,7 @@ public class VentanaPrincipal extends JFrame {
 		mntmRegistrarPedido.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if ("DONANTE".equals(rolActual)) {
-					List<DonanteDTO> donantes = api.obtenerDonantes();
+					List<UsuarioDTO> donantes = (List<UsuarioDTO>) api.obtenerUsuario(rolActual);
 					if (!donantes.isEmpty()) {
 						donanteIdActual = donantes.get(0).getId(); 
 					} else {

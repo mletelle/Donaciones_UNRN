@@ -60,9 +60,9 @@ public class MemoryApi implements IApi {
 
         // Usuarios Base
         try {
-            registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1, "Sistema", 11111111, null, "2920303030", "lalala");
-            registrarUsuario("clopez", "pass", "clopez@unrn.edu.ar", "Carlos", 2, "Lopez", 22222222, null, "2920202020", "lololo");
-            registrarUsuario("jperez", "pass", "jperez@unrn.edu.ar", "Juan", 3, "Perez", 55555555, null, "292010101010", "lilili");
+            registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1, "Sistema", 11111111, null);
+            registrarUsuario("clopez", "pass", "clopez@unrn.edu.ar", "Carlos", 2, "Lopez", 22222222, null);
+            registrarUsuario("jperez", "pass", "jperez@unrn.edu.ar", "Juan", 3, "Perez", 55555555, "Calle Falsa 123");
         } catch (UsuarioInvalidoException e) {
             e.printStackTrace();
         }
@@ -204,7 +204,7 @@ public class MemoryApi implements IApi {
 
     @Override
     public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
-            String apellido, int dni, String direccion, String contacto, String ubicacion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
+            String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
         
         if (usuarios.stream().anyMatch(u -> u.getUsuario().equalsIgnoreCase(username))) {
             throw new UsuarioInvalidoException("El nombre de usuario ya existe.");
@@ -216,7 +216,7 @@ public class MemoryApi implements IApi {
         Rol rol = roles.stream().filter(r -> r.getCodigo().equals(codigoRol)).findFirst().orElse(null);
         if (rol == null) throw new ObjetoNuloException("Rol no encontrado.");
 
-        Usuario nuevoUsuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion, contacto, ubicacion);
+        Usuario nuevoUsuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion);
         usuarios.add(nuevoUsuario);
     }
 
@@ -224,7 +224,7 @@ public class MemoryApi implements IApi {
     public List<UsuarioDTO> obtenerUsuarios() {
         return usuarios.stream()
             .map(u -> new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
-                    u.getRol().getNombre(), u.isActivo(), u.obtenerEstado(), null, null))
+                    u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()))
             .collect(Collectors.toList());
     }
 
@@ -234,7 +234,7 @@ public class MemoryApi implements IApi {
             .filter(u -> u.getUsuario().equals(username))
             .findFirst()
             .map(u -> new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), u.getEmail(),
-                    u.getRol().getNombre(), u.isActivo(), u.obtenerEstado(), u.obtenerContacto(), u.obtenerUbicacion()))
+                    u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()))
             .orElse(null);
     }
 
@@ -324,6 +324,14 @@ public class MemoryApi implements IApi {
         PedidosDonacion pedido = new PedidosDonacion(fecha, bienes, pedidoDTO.getTipoVehiculo(), donante);
         
         pedidos.add(pedido);
+    }
+
+    @Override
+    public List<UsuarioDTO> obtenerDonantes() {
+        return usuarios.stream()
+                .filter(u -> u.getRol().getCodigo() == 3 && u.isActivo())
+                .map(u -> new UsuarioDTO(u.getDni(), u.getNombre() + " " + u.getApellido(), u.obtenerDireccion()))
+                .collect(Collectors.toList());
     }
 
     @Override

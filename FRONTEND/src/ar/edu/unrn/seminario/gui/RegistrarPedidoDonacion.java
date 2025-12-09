@@ -30,7 +30,7 @@ import javax.swing.JList;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.BienDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -40,6 +40,7 @@ public class RegistrarPedidoDonacion extends JDialog {
 
     private JPanel contentPane;
     private JTextField fechaTextField;
+    private JComboBox<UsuarioDTO> donanteComboBox;
     private JComboBox<String> tipoVehiculoComboBox;
     private List<BienDTO> bienes;
     private JTable bienesTable;
@@ -62,7 +63,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         fechaTextField = new JTextField();
         tipoVehiculoComboBox = new JComboBox<>();
         tipoVehiculoComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Auto", "Camioneta", "Camion"}));
-
+        donanteComboBox = new JComboBox<>();
         
         JButton btnAgregarBien = new JButton("Agregar Bien");
         JButton btnAceptar = new JButton("Cargar Pedido de Donacion");
@@ -73,6 +74,8 @@ public class RegistrarPedidoDonacion extends JDialog {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         fechaTextField.setText(fechaActual.format(formatter));
 
+        // Carga de donantes y manejo de errores (método refactorizado)
+        cargarDonantes();
 
         // Configuración de la tabla de bienes
         bienesTable = new JTable(new BienTableModel(bienes));
@@ -85,6 +88,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         panelFormulario.add(new JLabel("Tipo de Vehiculo:"));
         panelFormulario.add(tipoVehiculoComboBox);
         panelFormulario.add(new JLabel("Donante:"));
+        panelFormulario.add(donanteComboBox);
         panelFormulario.add(new JLabel("")); 
         panelFormulario.add(btnAgregarBien);
         contentPane.add(panelFormulario, BorderLayout.NORTH);
@@ -131,6 +135,20 @@ public class RegistrarPedidoDonacion extends JDialog {
                     String tipoVehiculo = (String) tipoVehiculoComboBox.getSelectedItem();
                     int idDonanteSeleccionado;
 
+                    if (donanteComboBox.isEnabled()) {
+                        UsuarioDTO donanteSeleccionado = (UsuarioDTO) donanteComboBox.getSelectedItem();
+                        
+                        if (donanteSeleccionado == null) {
+                            throw new ObjetoNuloException("Debe seleccionar un donante de la lista.");
+                        }
+                        idDonanteSeleccionado = donanteSeleccionado.getId();
+                    } else {
+                        if (donanteId == -1) {
+                             throw new ObjetoNuloException("Error interno: No se pudo determinar el ID del donante precargado.");
+                        }
+                        idDonanteSeleccionado = donanteId;
+                    }
+
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate fechaParsed;
                     try {
@@ -165,5 +183,78 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
 
-  
+        // Accion del boton cancelar
+        btnCancelar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
+        
+        // Renderizador para DonanteDTO (para que muestre Nombre Apellido)
+        donanteComboBox.setRenderer(new javax.swing.ListCellRenderer<UsuarioDTO>() {
+            @Override
+            public Component getListCellRendererComponent(JList<? extends UsuarioDTO> list, UsuarioDTO value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = new JLabel();
+                if (value != null) {
+                    label.setText(value.getNombre() + " " + value.getApellido());
+                }
+                if (isSelected) {
+                    label.setBackground(list.getSelectionBackground());
+                    label.setForeground(list.getSelectionForeground());
+                } else {
+                    label.setBackground(list.getBackground());
+                    label.setForeground(list.getForeground());
+                }
+                label.setOpaque(true);
+                return label;
+            }
+        });
+    }
+
+    // Constructor que recibe el ID del donante
+    public RegistrarPedidoDonacion(IApi api, int donanteId) {
+        this(api); // Llama al constructor base
+        this.donanteId = donanteId;
+
+        // Búsqueda del donante para preseleccionar y deshabilitar el combo
+        if (this.donanteId != -1) {
+            donanteComboBox.setEnabled(false);
+            for (int i = 0; i < donanteComboBox.getItemCount(); i++) {
+                UsuarioDTO donante = donanteComboBox.getItemAt(i);
+                if (donante.getId() == this.donanteId) {
+                    donanteComboBox.setSelectedItem(donante);
+                    break;
+                }
+            }
+        } else {
+            donanteComboBox.setEnabled(true);
+        }
+    }
+    
+    // Método refactorizado para la carga de donantes
+    private void cargarDonantes() {
+        try {
+            List<UsuarioDTO> donantes = api.obtenerDonantes();
             
+            // --- USO DE OBJETONULOEXCEPTION (Validar resultado de API) ---
+            if (donantes == null) {
+                throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de donantes.");
+            }
+            // -----------------------------------------------------------
+            
+            for (UsuarioDTO donante : donantes) {
+                donanteComboBox.addItem(donante);
+            }
+            
+            if (donantes.isEmpty()) {
+                 JOptionPane.showMessageDialog(this, "No hay donantes registrados para seleccionar.", "Advertencia", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (ObjetoNuloException ex) {
+            // Manejo de la excepción custom
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
+            // Deshabilita el combo si falla la carga
+            donanteComboBox.setEnabled(false);
+        }
+    }
+}

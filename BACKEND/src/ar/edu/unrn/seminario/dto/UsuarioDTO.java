@@ -1,7 +1,7 @@
 package ar.edu.unrn.seminario.dto;
 
 public class UsuarioDTO {
-
+	
 	private String username;
 	private String password;
 	private String nombre;
@@ -9,11 +9,13 @@ public class UsuarioDTO {
 	private String rol;
 	private boolean activo;
 	private String estado;
-    private String contacto;
-    private String ubicacion; 
+	
+	private int dni;
+	private String apellido;
+	private String direccion;
 
 	public UsuarioDTO(String username, String password, String nombre, String email, String rol, boolean activo,
-			String estado, String contacto, String ubicacion) {
+			String estado) {
 		super();
 		this.username = username;
 		this.password = password;
@@ -22,9 +24,15 @@ public class UsuarioDTO {
 		this.rol = rol;
 		this.activo = activo;
 		this.estado = estado;
-	    this.contacto = contacto;
-	    this.ubicacion = ubicacion;
 	}
+
+	public UsuarioDTO(int dni, String nombre, String apellido, String direccion) {
+		this.dni = dni;
+		this.nombre = nombre;
+		this.apellido = apellido;
+		this.direccion = direccion;
+	}
+
 
 	public String getUsername() {
 		return username;
@@ -52,14 +60,6 @@ public class UsuarioDTO {
 
 	public String getEstado() {
 		return estado;
-	}
-	
-	public String obtenerContacto() {
-		return contacto;
-	}
-	
-	public String obtenerUbicacion() {
-		return ubicacion;
 	}
 
 	public void setUsername(String username) {
@@ -90,8 +90,14 @@ public class UsuarioDTO {
 		this.estado = estado;
 	}
 
-	public void setUbicacion(String ubicacion) {
-		this.ubicacion = ubicacion;
+	public String getApellido() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getId() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 }

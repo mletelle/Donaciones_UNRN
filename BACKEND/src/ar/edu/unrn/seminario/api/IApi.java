@@ -50,4 +50,5 @@ public interface IApi {
     void crearOrdenEntrega(int idBeneficiario, List<Integer> idsBienesAEntregar) 
     	    throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
     */
+	List<UsuarioDTO> obtenerDonantes();
 }
