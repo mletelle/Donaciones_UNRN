@@ -18,6 +18,7 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 import ar.edu.unrn.seminario.exception.UsuarioInvalidoException;
 import ar.edu.unrn.seminario.modelo.Bien;
+import ar.edu.unrn.seminario.modelo.OrdenEntrega;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.ResultadoVisita;
@@ -32,6 +33,7 @@ public class MemoryApi implements IApi {
     private List<PedidosDonacion> pedidos;
     private List<OrdenRetiro> ordenes;
     private List<Vehiculo> vehiculosDisponibles;
+    private List<OrdenEntrega> ordenesEntrega;
 
     private static int secuenciaBien = 0;
 
@@ -40,6 +42,7 @@ public class MemoryApi implements IApi {
         this.usuarios = new ArrayList<>();
         this.pedidos = new ArrayList<>();
         this.ordenes = new ArrayList<>();
+        this.ordenesEntrega = new ArrayList<>();
         this.vehiculosDisponibles = new ArrayList<>();
 
         inicializarDatos();
@@ -50,6 +53,7 @@ public class MemoryApi implements IApi {
         roles.add(new Rol(1, "ADMIN"));
         roles.add(new Rol(2, "VOLUNTARIO"));
         roles.add(new Rol(3, "DONANTE"));
+        roles.add(new Rol(4, "BENEFICIARIO"));
 
         // Vehículos
         vehiculosDisponibles.add(new Vehiculo("AE 123 CD", "Disponible", "Auto", 500));
@@ -61,9 +65,43 @@ public class MemoryApi implements IApi {
             registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1, "Sistema", 11111111, null);
             registrarUsuario("clopez", "pass", "clopez@unrn.edu.ar", "Carlos", 2, "Lopez", 22222222, null);
             registrarUsuario("jperez", "pass", "jperez@unrn.edu.ar", "Juan", 3, "Perez", 55555555, "Calle Falsa 123");
+
+            // Beneficiario dummy
+            Rol rolBenef = roles.stream().filter(r -> r.getCodigo() == 4).findFirst().orElse(null);
+            Usuario benef = new Usuario("benef1", "pass", "Ana", "ana@mail.com", rolBenef, "Gomez", 99999999,
+                    "Direccion 1");
+            benef.setNecesidad("Alimentos");
+            benef.setPersonasACargo(3);
+            usuarios.add(benef);
+
+            // --- STOCK INICIAL PARA PRUEBAS ---
+            // Simulamos un pedido ya completado para tener bienes EN_STOCK
+            Usuario donante = usuarios.stream().filter(u -> u.getDni() == 55555555).findFirst().orElse(null);
+            List<Bien> bienesStock = new ArrayList<>();
+            bienesStock.add(crearBienStock(BienDTO.TIPO_NUEVO, BienDTO.CATEGORIA_ALIMENTOS, "Arroz x 1kg", 10));
+            bienesStock.add(crearBienStock(BienDTO.TIPO_NUEVO, BienDTO.CATEGORIA_ALIMENTOS, "Leche Larga Vida", 20));
+            bienesStock.add(crearBienStock(BienDTO.TIPO_NUEVO, BienDTO.CATEGORIA_ROPA, "Abrigo Invierno", 5));
+
+            PedidosDonacion pedidoStock = new PedidosDonacion(LocalDateTime.now().minusDays(10), bienesStock, "Auto",
+                    donante);
+            try {
+                pedidoStock.marcarCompletado(); // Pedido finalizado
+            } catch (ReglaNegocioException e) {
+                e.printStackTrace();
+            }
+            pedidos.add(pedidoStock);
+
         } catch (UsuarioInvalidoException e) {
             e.printStackTrace();
         }
+    }
+
+    private Bien crearBienStock(int tipo, int categoria, String desc, int cantidad) throws CampoVacioException {
+        Bien b = new Bien(tipo, cantidad, categoria);
+        b.setId(++secuenciaBien);
+        b.setDescripcion(desc);
+        b.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+        return b;
     }
 
     @Override
@@ -523,6 +561,57 @@ public class MemoryApi implements IApi {
     @Override
     public void crearOrdenEntrega(String userBeneficiario, List<Integer> idsBienesAEntregar)
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
-        // en memoria no hace nada, es solo para mantener compatibilidad con IApi
+
+        Usuario beneficiario = usuarios.stream()
+                .filter(u -> u.getUsuario().equals(userBeneficiario))
+                .findFirst()
+                .orElse(null);
+
+        if (beneficiario == null) {
+            throw new ObjetoNuloException("Beneficiario no existe: " + userBeneficiario);
+        }
+
+        List<Bien> bienesParaEntregar = new ArrayList<>();
+        for (Integer idBien : idsBienesAEntregar) {
+            // Buscar bien en todo el inventario (pedidos)
+            Bien bien = pedidos.stream()
+                    .flatMap(p -> p.obtenerBienes().stream())
+                    .filter(b -> b.getId() == idBien)
+                    .findFirst()
+                    .orElse(null);
+
+            if (bien == null) {
+                throw new ObjetoNuloException("Bien no existe ID: " + idBien);
+            }
+            if (!Bien.ESTADO_EN_STOCK.equals(bien.getEstadoInventario())) {
+                throw new ReglaNegocioException("Bien no disponible: " + bien.getDescripcion());
+            }
+            bienesParaEntregar.add(bien);
+        }
+
+        // Crear orden
+        OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesParaEntregar);
+
+        // Asignación de recursos (Simulación: Asignar primer voluntario y vehículo
+        // disponible)
+        Usuario voluntario = usuarios.stream().filter(u -> u.getRol().getCodigo() == 2).findFirst().orElse(null);
+        Vehiculo vehiculo = vehiculosDisponibles.stream().findFirst().orElse(null);
+
+        if (voluntario != null && vehiculo != null) {
+            orden.asignarRecursos(voluntario, vehiculo);
+        }
+
+        // Actualizar estados
+        orden.setEstado(OrdenEntrega.ESTADO_PENDIENTE);
+
+        for (Bien bien : bienesParaEntregar) {
+            bien.setEstadoInventario(Bien.ESTADO_ENTREGADO); // O RESERVADO segun lógica
+            // En este caso, para que no aparezca mas en stock, lo ponemos ENTREGADO o
+            // similar.
+            // La instrucción dice: "para que dejen de aparecer en el inventario disponible"
+        }
+
+        // Persistir
+        ordenesEntrega.add(orden);
     }
 }
