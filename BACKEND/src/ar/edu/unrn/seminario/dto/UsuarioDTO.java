@@ -9,6 +9,10 @@ public class UsuarioDTO {
 	private String rol;
 	private boolean activo;
 	private String estado;
+	
+	private int dni;
+	private String apellido;
+	private String direccion;
 
 	public UsuarioDTO(String username, String password, String nombre, String email, String rol, boolean activo,
 			String estado) {
@@ -21,6 +25,14 @@ public class UsuarioDTO {
 		this.activo = activo;
 		this.estado = estado;
 	}
+
+	public UsuarioDTO(int dni, String nombre, String apellido, String direccion) {
+		this.dni = dni;
+		this.nombre = nombre;
+		this.apellido = apellido;
+		this.direccion = direccion;
+	}
+
 
 	public String getUsername() {
 		return username;
@@ -76,6 +88,16 @@ public class UsuarioDTO {
 
 	public void setEstado(String estado) {
 		this.estado = estado;
+	}
+
+	public String getApellido() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getId() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 }

@@ -26,7 +26,6 @@ public interface IApi {
 
     // pedidos y donantes
     void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException;
-    List<DonanteDTO> obtenerDonantes();
     List<PedidoDonacionDTO> obtenerPedidosPendientes();
     List<PedidoDonacionDTO> obtenerTodosPedidos();
     List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
@@ -51,4 +50,5 @@ public interface IApi {
     void crearOrdenEntrega(int idBeneficiario, List<Integer> idsBienesAEntregar) 
     	    throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
     */
+	List<UsuarioDTO> obtenerDonantes();
 }

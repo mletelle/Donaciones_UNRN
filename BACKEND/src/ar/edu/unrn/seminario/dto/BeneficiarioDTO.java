@@ -1,4 +1,4 @@
-package ar.edu.unrn.seminario.dto;
+/*package ar.edu.unrn.seminario.dto;
 
 public class BeneficiarioDTO {
     private int id; 
@@ -47,4 +47,4 @@ public class BeneficiarioDTO {
 
         return nombre + " " + apellido + " (DNI: " + dni + ")";
     }
-}
+}*/

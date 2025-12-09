@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import ar.edu.unrn.seminario.dto.BienDTO;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.RolDTO;
@@ -328,10 +327,10 @@ public class MemoryApi implements IApi {
     }
 
     @Override
-    public List<DonanteDTO> obtenerDonantes() {
+    public List<UsuarioDTO> obtenerDonantes() {
         return usuarios.stream()
                 .filter(u -> u.getRol().getCodigo() == 3 && u.isActivo())
-                .map(u -> new DonanteDTO(u.getDni(), u.getNombre() + " " + u.getApellido(), u.obtenerDireccion()))
+                .map(u -> new UsuarioDTO(u.getDni(), u.getNombre() + " " + u.getApellido(), u.obtenerDireccion()))
                 .collect(Collectors.toList());
     }
 

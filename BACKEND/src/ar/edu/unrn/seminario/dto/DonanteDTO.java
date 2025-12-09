@@ -1,4 +1,4 @@
-package ar.edu.unrn.seminario.dto;
+/*package ar.edu.unrn.seminario.dto;
 
 public class DonanteDTO {
     
@@ -41,4 +41,4 @@ public class DonanteDTO {
     public String toString() {
         return nombre + " " + apellido;
     }
-}
+}*/
