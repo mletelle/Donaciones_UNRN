@@ -26,7 +26,7 @@ public interface IApi {
 
     // pedidos y donantes
     void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException;
-    List<DonanteDTO> obtenerDonantes();
+    List<UsuarioDTO> obtenerDonantes();
     List<PedidoDonacionDTO> obtenerPedidosPendientes();
     List<PedidoDonacionDTO> obtenerTodosPedidos();
     List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
@@ -40,15 +40,17 @@ public interface IApi {
 
     // visitas y voluntarios
     void registrarVisita(int idOrdenRetiro, int idPedido, LocalDateTime fechaHora, String resultado, String observacion) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
-    List<VoluntarioDTO> obtenerVoluntarios();
-    List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario);
+    List<UsuarioDTO> obtenerVoluntarios();
+    List<UsuarioDTO> obtenerBeneficiarios();
+    List<VisitaDTO> obtenerVisitasPorVoluntario(UsuarioDTO voluntario);
 
     // inventario
     List<BienDTO> obtenerInventario();
     
     void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
-  /*  
-    void crearOrdenEntrega(int idBeneficiario, List<Integer> idsBienesAEntregar) 
+
+    void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException;
+
+    void crearOrdenEntrega(String userBeneficiario, List<Integer> idsBienesAEntregar) 
     	    throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
-    */
 }

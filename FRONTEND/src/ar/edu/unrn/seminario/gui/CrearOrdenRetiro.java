@@ -11,7 +11,7 @@ import javax.swing.table.DefaultTableModel;
 
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
-import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -23,7 +23,7 @@ public class CrearOrdenRetiro extends JDialog {
     private IApi api;
     private JTable pedidosTable;
     private DefaultTableModel pedidosTableModel;
-    private JComboBox<VoluntarioDTO> voluntarioComboBox;
+    private JComboBox<UsuarioDTO> voluntarioComboBox;
     private JComboBox<String> tipoVehiculoComboBox;
 
 
@@ -89,9 +89,9 @@ public class CrearOrdenRetiro extends JDialog {
 
     // Metodo para cargar voluntarios
     private void cargarVoluntarios() {
-        List<VoluntarioDTO> voluntarios = api.obtenerVoluntarios();
+        List<UsuarioDTO> voluntarios = api.obtenerVoluntarios();
         if (voluntarios != null) {
-            for (VoluntarioDTO voluntario : voluntarios) {
+            for (UsuarioDTO voluntario : voluntarios) {
                 voluntarioComboBox.addItem(voluntario);
             }
         }
@@ -100,8 +100,8 @@ public class CrearOrdenRetiro extends JDialog {
             @Override
             public java.awt.Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof VoluntarioDTO) {
-                    VoluntarioDTO voluntario = (VoluntarioDTO) value;
+                if (value instanceof UsuarioDTO) {
+                    UsuarioDTO voluntario = (UsuarioDTO) value;
                     setText(voluntario.getNombre() + " " + voluntario.getApellido());
                 }
                 return this;
@@ -125,7 +125,7 @@ public class CrearOrdenRetiro extends JDialog {
                 throw new CampoVacioException("Debe seleccionar al menos un pedido para crear la orden de retiro.");
             }
 
-            VoluntarioDTO voluntarioSeleccionado = (VoluntarioDTO) voluntarioComboBox.getSelectedItem();
+            UsuarioDTO voluntarioSeleccionado = (UsuarioDTO) voluntarioComboBox.getSelectedItem();
 
             if (voluntarioSeleccionado == null) {
                 throw new ObjetoNuloException("Debe seleccionar un voluntario para asignar la orden.");

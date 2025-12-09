@@ -30,7 +30,7 @@ import javax.swing.JList;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.BienDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -40,7 +40,7 @@ public class RegistrarPedidoDonacion extends JDialog {
 
     private JPanel contentPane;
     private JTextField fechaTextField;
-    private JComboBox<DonanteDTO> donanteComboBox;
+    private JComboBox<UsuarioDTO> donanteComboBox;
     private JComboBox<String> tipoVehiculoComboBox;
     private List<BienDTO> bienes;
     private JTable bienesTable;
@@ -136,7 +136,7 @@ public class RegistrarPedidoDonacion extends JDialog {
                     int idDonanteSeleccionado;
 
                     if (donanteComboBox.isEnabled()) {
-                        DonanteDTO donanteSeleccionado = (DonanteDTO) donanteComboBox.getSelectedItem();
+                        UsuarioDTO donanteSeleccionado = (UsuarioDTO) donanteComboBox.getSelectedItem();
                         
                         if (donanteSeleccionado == null) {
                             throw new ObjetoNuloException("Debe seleccionar un donante de la lista.");
@@ -190,10 +190,10 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
         });
         
-        // Renderizador para DonanteDTO (para que muestre Nombre Apellido)
-        donanteComboBox.setRenderer(new javax.swing.ListCellRenderer<DonanteDTO>() {
+        // Renderizador para UsuarioDTO (para que muestre Nombre Apellido)
+        donanteComboBox.setRenderer(new javax.swing.ListCellRenderer<UsuarioDTO>() {
             @Override
-            public Component getListCellRendererComponent(JList<? extends DonanteDTO> list, DonanteDTO value, int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<? extends UsuarioDTO> list, UsuarioDTO value, int index, boolean isSelected, boolean cellHasFocus) {
                 JLabel label = new JLabel();
                 if (value != null) {
                     label.setText(value.getNombre() + " " + value.getApellido());
@@ -220,7 +220,7 @@ public class RegistrarPedidoDonacion extends JDialog {
         if (this.donanteId != -1) {
             donanteComboBox.setEnabled(false);
             for (int i = 0; i < donanteComboBox.getItemCount(); i++) {
-                DonanteDTO donante = donanteComboBox.getItemAt(i);
+                UsuarioDTO donante = donanteComboBox.getItemAt(i);
                 if (donante.getId() == this.donanteId) {
                     donanteComboBox.setSelectedItem(donante);
                     break;
@@ -234,7 +234,7 @@ public class RegistrarPedidoDonacion extends JDialog {
     // Método refactorizado para la carga de donantes
     private void cargarDonantes() {
         try {
-            List<DonanteDTO> donantes = api.obtenerDonantes();
+            List<UsuarioDTO> donantes = api.obtenerDonantes();
             
             // --- USO DE OBJETONULOEXCEPTION (Validar resultado de API) ---
             if (donantes == null) {
@@ -242,7 +242,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
             // -----------------------------------------------------------
             
-            for (DonanteDTO donante : donantes) {
+            for (UsuarioDTO donante : donantes) {
                 donanteComboBox.addItem(donante);
             }
             

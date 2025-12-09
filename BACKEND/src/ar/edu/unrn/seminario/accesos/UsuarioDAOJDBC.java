@@ -18,9 +18,8 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 		PreparedStatement statement = null;
 		try {
 			statement = conn
-					.prepareStatement("INSERT INTO usuarios(usuario, contrasena, nombre, correo, activo, rol, apellido, dni, direccion) "
-							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-// atributos modificados de proyecto base, tiene mas atributos el nuestro
+					.prepareStatement("INSERT INTO usuarios(usuario, contrasena, nombre, correo, activo, rol, apellido, dni, direccion, necesidad, personas_cargo) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			statement.setString(1, usuario.getUsuario());
 			statement.setString(2, usuario.getContrasena());
 			statement.setString(3, usuario.getNombre());
@@ -30,6 +29,18 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 			statement.setString(7, usuario.getApellido());
 			statement.setInt(8, usuario.getDni());
 			statement.setString(9, usuario.obtenerDireccion());
+			
+			if (usuario.getNecesidad() != null) {
+				statement.setString(10, usuario.getNecesidad());
+			} else {
+				statement.setNull(10, java.sql.Types.VARCHAR);
+			}
+			
+			if (usuario.getPersonasACargo() != null) {
+				statement.setInt(11, usuario.getPersonasACargo());
+			} else {
+				statement.setNull(11, java.sql.Types.INTEGER);
+			}
 			
 			int cantidad = statement.executeUpdate();
 			if (cantidad <= 0) {
@@ -69,7 +80,7 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.prepareStatement(
-					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, u.necesidad, u.personas_cargo, r.codigo as codigo_rol, r.nombre as nombre_rol "
 							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
 							+ "WHERE u.usuario = ?");
 
@@ -86,7 +97,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"), 
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("necesidad"),
+							rs.getObject("personas_cargo") != null ? rs.getInt("personas_cargo") : null);
 					if (!rs.getBoolean("activo")) {
 						usuario.desactivar();
 					}
@@ -109,9 +122,8 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 		try {
 			statement = conn.createStatement();
 			rs = statement.executeQuery(
-					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, u.necesidad, u.personas_cargo, r.codigo as codigo_rol, r.nombre as nombre_rol "
 							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo)");
-// para el listado completo, sin filtro de activos
 			while (rs.next()) {
 				try {
 					Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
@@ -123,7 +135,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"),
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("necesidad"),
+							rs.getObject("personas_cargo") != null ? rs.getInt("personas_cargo") : null);
 					if (!rs.getBoolean("activo")) {
 						usuario.desactivar();
 					}
@@ -146,7 +160,7 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 		ResultSet rs = null;
 		try {
 			statement = conn.prepareStatement(
-					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+					"SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, u.necesidad, u.personas_cargo, r.codigo as codigo_rol, r.nombre as nombre_rol "
 							+ "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
 							+ "WHERE r.codigo = ? AND u.activo = 1");
 			
@@ -164,7 +178,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 							rol, 
 							rs.getString("apellido"), 
 							rs.getInt("dni"),
-							rs.getString("direccion"));
+							rs.getString("direccion"),
+							rs.getString("necesidad"),
+							rs.getObject("personas_cargo") != null ? rs.getInt("personas_cargo") : null);
 					usuarios.add(usuario);
 				} catch (Exception e) {
 					System.err.println("Error buscando Usuario: " + e.getMessage());
@@ -182,14 +198,14 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 	    ResultSet rs = null;
 	    try {
 	        statement = conn.prepareStatement(
-	                "SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, r.codigo as codigo_rol, r.nombre as nombre_rol "
+	                "SELECT u.usuario, u.contrasena, u.nombre, u.correo, u.activo, u.apellido, u.dni, u.direccion, u.necesidad, u.personas_cargo, r.codigo as codigo_rol, r.nombre as nombre_rol "
 	                        + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
-	                        + "WHERE u.dni = ?"); // Búsqueda por DNI
+	                        + "WHERE u.dni = ?");
 
 	        statement.setInt(1, dni);
 	        rs = statement.executeQuery();
 	        
-	        if (rs.next()) { // Solo debe haber uno
+	        if (rs.next()) {
 	            try {
 	                Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
 	                usuario = new Usuario(
@@ -200,7 +216,9 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 	                        rol, 
 	                        rs.getString("apellido"), 
 	                        rs.getInt("dni"), 
-	                        rs.getString("direccion"));
+	                        rs.getString("direccion"),
+	                        rs.getString("necesidad"),
+	                        rs.getObject("personas_cargo") != null ? rs.getInt("personas_cargo") : null);
 	                
 	                if (!rs.getBoolean("activo")) {
 	                    usuario.desactivar();

@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import ar.edu.unrn.seminario.accesos.BienDAOJDBC;
 import ar.edu.unrn.seminario.accesos.BienDao;
 import ar.edu.unrn.seminario.accesos.ConnectionManager;
+import ar.edu.unrn.seminario.accesos.OrdenEntregaDAOJDBC;
+import ar.edu.unrn.seminario.accesos.OrdenEntregaDao;
 import ar.edu.unrn.seminario.accesos.OrdenRetiroDAOJDBC;
 import ar.edu.unrn.seminario.accesos.OrdenRetiroDao;
 import ar.edu.unrn.seminario.accesos.PedidosDonacionDAOJDBC;
@@ -25,18 +27,17 @@ import ar.edu.unrn.seminario.accesos.VehiculoDao;
 import ar.edu.unrn.seminario.accesos.VisitaDAOJDBC;
 import ar.edu.unrn.seminario.accesos.VisitaDao;
 import ar.edu.unrn.seminario.dto.BienDTO;
-import ar.edu.unrn.seminario.dto.DonanteDTO;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
 import ar.edu.unrn.seminario.dto.RolDTO;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
-import ar.edu.unrn.seminario.dto.VoluntarioDTO;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 import ar.edu.unrn.seminario.exception.UsuarioInvalidoException;
 import ar.edu.unrn.seminario.modelo.Bien;
+import ar.edu.unrn.seminario.modelo.OrdenEntrega;
 import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.ResultadoVisita;
@@ -52,6 +53,7 @@ public class PersistenceApi implements IApi {
     private PedidosDonacionDao pedidoDao;
     private BienDao bienDao;
     private OrdenRetiroDao ordenDao;
+    private OrdenEntregaDao ordenEntregaDao;
     private VehiculoDao vehiculoDao;
     private VisitaDao visitaDao;
 
@@ -61,24 +63,25 @@ public class PersistenceApi implements IApi {
         pedidoDao = new PedidosDonacionDAOJDBC();
         bienDao = new BienDAOJDBC();
         ordenDao = new OrdenRetiroDAOJDBC();
+        ordenEntregaDao = new OrdenEntregaDAOJDBC();
         vehiculoDao = new VehiculoDAOJDBC();
         visitaDao = new VisitaDAOJDBC();
     }
-    
+
     /// Se utilizó lambda
     @Override
     public List<BienDTO> obtenerInventario() {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
-            
+
             // Recuperar entidades desde la BD (filtradas por estado EN_STOCK)
             List<Bien> bienesEnStock = bienDao.findByEstadoInventario(Bien.ESTADO_EN_STOCK, conn);
 
             // Uso de STREAM para transformar Entidades -> DTOs visuales
             return bienesEnStock.stream()
-                .map(this::convertirEntidadADTOVisual) // Referencia a método helper
-                .collect(Collectors.toList());
+                    .map(this::convertirEntidadADTOVisual) // Referencia a método helper
+                    .collect(Collectors.toList());
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,7 +95,7 @@ public class PersistenceApi implements IApi {
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
         String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
-        
+
         String vencimientoStr = "-";
         if (bien.getFecVec() != null) {
             java.time.LocalDate localDate = new java.sql.Date(bien.getFecVec().getTime()).toLocalDate();
@@ -101,23 +104,22 @@ public class PersistenceApi implements IApi {
 
         // Usamos el constructor visual (Strings)
         BienDTO dto = new BienDTO(
-            categoriaStr,
-            bien.getDescripcion(),
-            bien.obtenerCantidad(),
-            estadoStr,
-            vencimientoStr
-        );
-        
+                categoriaStr,
+                bien.getDescripcion(),
+                bien.obtenerCantidad(),
+                estadoStr,
+                vencimientoStr);
+
         // Setea el id real
         dto.setId(bien.getId());
         dto.setCategoria(bien.obtenerCategoria()); // Útil para lógica interna si hace falta
         dto.setTipo(bien.obtenerTipo());
-        
+
         return dto;
     }
 
-    
-    public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+    public void actualizarBienInventario(BienDTO bienDTO)
+            throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
@@ -143,49 +145,96 @@ public class PersistenceApi implements IApi {
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
             // Podrías actualizar el estado si el DTO lo permite (ej: mover a DAÑADO)
-            
+
             // Persistir
             bienDao.update(bienDb, conn);
 
             conn.commit();
         } catch (SQLException e) {
-            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            try {
+                if (conn != null)
+                    conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             throw new RuntimeException("Error actualizando inventario", e);
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); } catch (SQLException e) {}
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                }
             }
             ConnectionManager.disconnect();
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+    @Override
+    public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
+        Connection conn = null;
+        try {
+            conn = ConnectionManager.getConnection();
+            conn.setAutoCommit(false);
+
+            Bien bienDb = bienDao.findById(idBien, conn);
+            if (bienDb == null) {
+                throw new ObjetoNuloException("El bien no existe en el inventario.");
+            }
+
+            bienDb.setEstadoInventario(Bien.ESTADO_BAJA);
+            bienDb.setDescripcion(bienDb.getDescripcion() + " [BAJA: " + motivo + "]");
+            bienDao.update(bienDb, conn);
+
+            conn.commit();
+        } catch (SQLException e) {
+            try {
+                if (conn != null)
+                    conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            throw new RuntimeException("Error dando de baja bien: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                }
+            }
+            ConnectionManager.disconnect();
+        }
+    }
+
     // Helper simple para categorías (podría estar en un Enum o clase Utils)
     private String mapCategoriaToString(int idCategoria) {
         switch (idCategoria) {
-            case BienDTO.CATEGORIA_ROPA: return "Ropa";
-            case BienDTO.CATEGORIA_MUEBLES: return "Muebles";
-            case BienDTO.CATEGORIA_ALIMENTOS: return "Alimentos";
-            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return "Electrodomesticos";
-            case BienDTO.CATEGORIA_HERRAMIENTAS: return "Herramientas";
-            case BienDTO.CATEGORIA_JUGUETES: return "Juguetes";
-            case BienDTO.CATEGORIA_LIBROS: return "Libros";
-            case BienDTO.CATEGORIA_MEDICAMENTOS: return "Medicamentos";
-            case BienDTO.CATEGORIA_HIGIENE: return "Higiene";
-            
-            default: return "Otros";
+            case BienDTO.CATEGORIA_ROPA:
+                return "Ropa";
+            case BienDTO.CATEGORIA_MUEBLES:
+                return "Muebles";
+            case BienDTO.CATEGORIA_ALIMENTOS:
+                return "Alimentos";
+            case BienDTO.CATEGORIA_ELECTRODOMESTICOS:
+                return "Electrodomesticos";
+            case BienDTO.CATEGORIA_HERRAMIENTAS:
+                return "Herramientas";
+            case BienDTO.CATEGORIA_JUGUETES:
+                return "Juguetes";
+            case BienDTO.CATEGORIA_LIBROS:
+                return "Libros";
+            case BienDTO.CATEGORIA_MEDICAMENTOS:
+                return "Medicamentos";
+            case BienDTO.CATEGORIA_HIGIENE:
+                return "Higiene";
+
+            default:
+                return "Otros";
         }
     }
 
     @Override
-    public void registrarVisita(int idOrdenRetiro, int idPedido, LocalDateTime fechaHora, String resultado, String observacion)
+    public void registrarVisita(int idOrdenRetiro, int idPedido, LocalDateTime fechaHora, String resultado,
+            String observacion)
             throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
 
         Connection conn = null;
@@ -194,10 +243,12 @@ public class PersistenceApi implements IApi {
             conn.setAutoCommit(false);
 
             PedidosDonacion pedido = pedidoDao.findByIdAndOrden(idPedido, idOrdenRetiro, conn);
-            if (pedido == null) throw new ObjetoNuloException("Pedido inválido.");
-            
+            if (pedido == null)
+                throw new ObjetoNuloException("Pedido inválido.");
+
             OrdenRetiro orden = pedido.obtenerOrden();
-            if (orden == null) throw new ObjetoNuloException("Orden no encontrada.");
+            if (orden == null)
+                throw new ObjetoNuloException("Orden no encontrada.");
 
             ResultadoVisita resEnum = ResultadoVisita.fromString(resultado);
             Visita visita = new Visita(fechaHora, resEnum, observacion);
@@ -209,7 +260,7 @@ public class PersistenceApi implements IApi {
                 // --- INVENTARIO: PASAR A EN_STOCK ---
                 bienDao.updateEstadoPorPedido(idPedido, Bien.ESTADO_EN_STOCK, conn);
             } else if (resEnum == ResultadoVisita.CANCELADO) {
-                pedido.marcarCompletado(); 
+                pedido.marcarCompletado();
             } else {
                 pedido.marcarEnEjecucion();
             }
@@ -232,18 +283,20 @@ public class PersistenceApi implements IApi {
 
     /// Se utilizo stream
     @Override
-    public List<DonanteDTO> obtenerDonantes() {
+    public List<UsuarioDTO> obtenerDonantes() {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
-            // Uso de Stream para mapear Usuario -> DonanteDTO
+            // Uso de Stream para mapear Usuario -> UsuarioDTO
             return usuarioDao.findByRol(3, conn).stream()
-                .map(u -> new DonanteDTO(
-                    u.getDni(),
-                    u.getNombre() + " " + u.getApellido(),
-                    u.obtenerDireccion() != null ? u.obtenerDireccion() : ""
-                ))
-                .collect(Collectors.toList());
+                    .map(u -> new UsuarioDTO(
+                            u.getUsuario(),
+                            u.getNombre(),
+                            u.getApellido(),
+                            u.getDni(),
+                            u.obtenerDireccion() != null ? u.obtenerDireccion() : "",
+                            3))
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -251,7 +304,7 @@ public class PersistenceApi implements IApi {
             ConnectionManager.disconnect();
         }
     }
-    
+
     /// Se utilizó stream
     @Override
     public List<PedidoDonacionDTO> obtenerTodosPedidos() {
@@ -260,15 +313,14 @@ public class PersistenceApi implements IApi {
             conn = ConnectionManager.getConnection();
             // Uso de Stream para mapear PedidoDonacion -> PedidoDonacionDTO
             return pedidoDao.findAll(conn).stream()
-                .map(p -> new PedidoDonacionDTO(
-                    p.getId(),
-                    p.obtenerFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    p.describirTipoVehiculo(),
-                    p.getDonante().getDni(),
-                    p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido(),
-                    p.obtenerEstado()
-                ))
-                .collect(Collectors.toList());
+                    .map(p -> new PedidoDonacionDTO(
+                            p.getId(),
+                            p.obtenerFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            p.describirTipoVehiculo(),
+                            p.getDonante().getDni(),
+                            p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido(),
+                            p.obtenerEstado()))
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -279,18 +331,20 @@ public class PersistenceApi implements IApi {
 
     @Override
     public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
-            String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
+            String apellido, int dni, String direccion)
+            throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
-            
+
             Rol rol = rolDao.find(codigoRol, conn);
-            if (rol == null) throw new ObjetoNuloException("Rol no encontrado");
-            
+            if (rol == null)
+                throw new ObjetoNuloException("Rol no encontrado");
+
             Usuario usuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion);
             usuarioDao.create(usuario, conn);
-            
+
             conn.commit();
         } catch (SQLException e) {
             rollback(conn);
@@ -402,10 +456,12 @@ public class PersistenceApi implements IApi {
     }
 
     @Override
-    public void activarRol(Integer codigo) { }
+    public void activarRol(Integer codigo) {
+    }
 
     @Override
-    public void desactivarRol(Integer codigo) { }
+    public void desactivarRol(Integer codigo) {
+    }
 
     @Override
     public void activarUsuario(String username) {
@@ -424,7 +480,10 @@ public class PersistenceApi implements IApi {
             conn.setAutoCommit(false);
             Usuario usuario = usuarioDao.find(username, conn);
             if (usuario != null) {
-                if (activar) usuario.activar(); else usuario.desactivar();
+                if (activar)
+                    usuario.activar();
+                else
+                    usuario.desactivar();
                 usuarioDao.update(usuario, conn);
             }
             conn.commit();
@@ -444,28 +503,30 @@ public class PersistenceApi implements IApi {
             conn.setAutoCommit(false);
 
             Usuario donante = usuarioDao.findByDni(pedidoDTO.getDonanteId(), conn);
-            if (donante == null) throw new ObjetoNuloException("Donante no encontrado");
+            if (donante == null)
+                throw new ObjetoNuloException("Donante no encontrado");
 
             List<Bien> bienes = new ArrayList<>();
             for (ar.edu.unrn.seminario.dto.BienDTO dto : pedidoDTO.getBienes()) {
                 Bien bien = new Bien(dto.getTipo(), dto.getCantidad(), dto.getCategoria());
-                if (dto.getDescripcion() != null) bien.setDescripcion(dto.getDescripcion());
+                if (dto.getDescripcion() != null)
+                    bien.setDescripcion(dto.getDescripcion());
                 if (dto.getFechaVencimiento() != null) {
                     java.time.ZoneId zoneId = java.time.ZoneId.systemDefault();
                     bien.setFecVec(java.util.Date.from(dto.getFechaVencimiento().atStartOfDay(zoneId).toInstant()));
                 }
                 bienes.add(bien);
             }
-            
+
             // Parseo de DTO a fecha
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDateTime fecha = java.time.LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
-            
+
             PedidosDonacion pedido = new PedidosDonacion(fecha, bienes, pedidoDTO.getTipoVehiculo(), donante);
-            
+
             int idPedido = pedidoDao.create(pedido, conn);
             bienDao.createBatch(bienes, idPedido, conn);
-            
+
             conn.commit();
         } catch (SQLException e) {
             rollback(conn);
@@ -481,14 +542,13 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             return pedidoDao.findAllPendientes(conn).stream()
-                .map(p -> new PedidoDonacionDTO(
-                    p.getId(),
-                    p.obtenerFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    p.describirTipoVehiculo(),
-                    p.getDonante().getDni(),
-                    p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido()
-                ))
-                .collect(Collectors.toList());
+                    .map(p -> new PedidoDonacionDTO(
+                            p.getId(),
+                            p.obtenerFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            p.describirTipoVehiculo(),
+                            p.getDonante().getDni(),
+                            p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido()))
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -503,13 +563,12 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             return pedidoDao.findByOrden(idOrden, conn).stream()
-                .map(p -> new PedidoDonacionDTO(
-                    p.getId(),
-                    p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido(),
-                    p.obtenerDireccion(),
-                    p.obtenerEstado()
-                ))
-                .collect(Collectors.toList());
+                    .map(p -> new PedidoDonacionDTO(
+                            p.getId(),
+                            p.getDonante().obtenerNombre() + " " + p.getDonante().obtenerApellido(),
+                            p.obtenerDireccion(),
+                            p.obtenerEstado()))
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -547,9 +606,10 @@ public class PersistenceApi implements IApi {
             if (pedidos == null || pedidos.size() != idsPedidos.size()) {
                 throw new ObjetoNuloException("No se encontraron todos los pedidos solicitados.");
             }
-            
+
             for (PedidosDonacion p : pedidos) {
-                if (p.obtenerOrden() != null) throw new ReglaNegocioException("El pedido " + p.getId() + " ya tiene orden.");
+                if (p.obtenerOrden() != null)
+                    throw new ReglaNegocioException("El pedido " + p.getId() + " ya tiene orden.");
             }
 
             Usuario voluntario = usuarioDao.findByDni(idVoluntario, conn);
@@ -558,7 +618,8 @@ public class PersistenceApi implements IApi {
             }
 
             Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn);
-            if (vehiculo == null) throw new ReglaNegocioException("No hay vehículos disponibles de tipo " + tipoVehiculo);
+            if (vehiculo == null)
+                throw new ReglaNegocioException("No hay vehículos disponibles de tipo " + tipoVehiculo);
 
             OrdenRetiro orden = new OrdenRetiro(pedidos, null);
             orden.asignarVehiculo(vehiculo);
@@ -568,7 +629,8 @@ public class PersistenceApi implements IApi {
             orden.setId(idOrden);
 
             // Actualizar pedidos
-            try (PreparedStatement stmt = conn.prepareStatement("UPDATE pedidos_donacion SET estado = ?, id_orden_retiro = ? WHERE id = ?")) {
+            try (PreparedStatement stmt = conn
+                    .prepareStatement("UPDATE pedidos_donacion SET estado = ?, id_orden_retiro = ? WHERE id = ?")) {
                 for (PedidosDonacion p : pedidos) {
                     stmt.setString(1, p.obtenerEstado());
                     stmt.setInt(2, idOrden);
@@ -593,8 +655,8 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             return ordenDao.findByEstado(estado, conn).stream()
-                .map(this::mapearOrdenADTO)
-                .collect(Collectors.toList());
+                    .map(this::mapearOrdenADTO)
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -609,8 +671,8 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             return ordenDao.findAll(conn).stream()
-                .map(this::mapearOrdenADTO)
-                .collect(Collectors.toList());
+                    .map(this::mapearOrdenADTO)
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -625,8 +687,8 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             return ordenDao.findByVoluntario(voluntarioUser, conn).stream()
-                .map(this::mapearOrdenADTO)
-                .collect(Collectors.toList());
+                    .map(this::mapearOrdenADTO)
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -636,13 +698,14 @@ public class PersistenceApi implements IApi {
     }
 
     @Override
-    public List<VoluntarioDTO> obtenerVoluntarios() {
+    public List<UsuarioDTO> obtenerVoluntarios() {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
             return usuarioDao.findByRol(2, conn).stream()
-                .map(v -> new VoluntarioDTO(v.getDni(), v.getNombre(), v.getApellido(), v.getUsuario()))
-                .collect(Collectors.toList());
+                    .map(v -> new UsuarioDTO(v.getUsuario(), v.getNombre(), v.getApellido(), v.getDni(),
+                            v.obtenerDireccion(), 2))
+                    .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -652,7 +715,24 @@ public class PersistenceApi implements IApi {
     }
 
     @Override
-    public List<VisitaDTO> obtenerVisitasPorVoluntario(VoluntarioDTO voluntario) {
+    public List<UsuarioDTO> obtenerBeneficiarios() {
+        Connection conn = null;
+        try {
+            conn = ConnectionManager.getConnection();
+            return usuarioDao.findByRol(4, conn).stream()
+                    .map(b -> new UsuarioDTO(b.getUsuario(), b.getNombre(), b.getApellido(), b.getDni(),
+                            b.obtenerDireccion(), 4))
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            ConnectionManager.disconnect();
+        }
+    }
+
+    @Override
+    public List<VisitaDTO> obtenerVisitasPorVoluntario(UsuarioDTO voluntario) {
         Connection conn = null;
         List<VisitaDTO> dtos = new ArrayList<>();
         try {
@@ -663,15 +743,15 @@ public class PersistenceApi implements IApi {
                 List<Visita> visitas = visitaDao.findByVoluntario(vol, conn);
                 for (Visita v : visitas) {
                     String donante = (v.getPedidoRelacionado() != null && v.getPedidoRelacionado().getDonante() != null)
-                        ? v.getPedidoRelacionado().getDonante().obtenerNombre() + " " + v.getPedidoRelacionado().getDonante().obtenerApellido()
-                        : "Desconocido";
-                    
+                            ? v.getPedidoRelacionado().getDonante().obtenerNombre() + " "
+                                    + v.getPedidoRelacionado().getDonante().obtenerApellido()
+                            : "Desconocido";
+
                     dtos.add(new VisitaDTO(
-                        v.obtenerFechaFormateada(),
-                        v.obtenerObservacion(),
-                        v.obtenerResultado().toString(),
-                        donante
-                    ));
+                            v.obtenerFechaFormateada(),
+                            v.obtenerObservacion(),
+                            v.obtenerResultado().toString(),
+                            donante));
                 }
             }
         } catch (SQLException e) {
@@ -684,35 +764,86 @@ public class PersistenceApi implements IApi {
 
     // Helpers de conexión y mapeo
     private void rollback(Connection conn) {
-        try { if (conn != null) conn.rollback(); } catch (SQLException e) { e.printStackTrace(); }
+        try {
+            if (conn != null)
+                conn.rollback();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void closeConnection(Connection conn) {
-        try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+        try {
+            if (conn != null)
+                conn.setAutoCommit(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         ConnectionManager.disconnect();
     }
 
     private OrdenRetiroDTO mapearOrdenADTO(OrdenRetiro o) {
-        String vol = o.obtenerVoluntarioPrincipal() != null ? o.obtenerVoluntarioPrincipal().obtenerNombre() + " " + o.obtenerVoluntarioPrincipal().obtenerApellido() : "Sin Voluntario";
-        String don = o.obtenerDonante() != null ? o.obtenerDonante().obtenerNombre() + " " + o.obtenerDonante().obtenerApellido() : "Sin Donante";
+        String vol = o.obtenerVoluntarioPrincipal() != null ? o.obtenerVoluntarioPrincipal().obtenerNombre() + " "
+                + o.obtenerVoluntarioPrincipal().obtenerApellido() : "Sin Voluntario";
+        String don = o.obtenerDonante() != null
+                ? o.obtenerDonante().obtenerNombre() + " " + o.obtenerDonante().obtenerApellido()
+                : "Sin Donante";
         String veh = o.obtenerVehiculo() != null ? o.obtenerVehiculo().getDescripcion() : "Sin Vehículo";
-        
+
         return new OrdenRetiroDTO(
-            o.getId(),
-            o.obtenerNombreEstado(),
-            o.obtenerFechaCreacion(),
-            new ArrayList<>(), // Visitas se cargan aparte si es necesario
-            don,
-            veh,
-            vol
-        );
+                o.getId(),
+                o.obtenerNombreEstado(),
+                o.obtenerFechaCreacion(),
+                new ArrayList<>(),
+                don,
+                veh,
+                vol);
     }
-/*
-	@Override
-	public void crearOrdenEntrega(int idBeneficiario, List<Integer> idsBienesAEntregar)
-			throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
-		// TODO Auto-generated method stub
-		
-	}
-	*/
+
+    @Override
+    public void crearOrdenEntrega(String userBeneficiario, List<Integer> idsBienesAEntregar)
+            throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
+        Connection conn = null;
+        try {
+            conn = ConnectionManager.getConnection();
+            conn.setAutoCommit(false);
+
+            Usuario beneficiario = usuarioDao.find(userBeneficiario, conn);
+            if (beneficiario == null) {
+                throw new ObjetoNuloException("beneficiario no existe");
+            }
+
+            List<Bien> bienesParaEntregar = new ArrayList<>();
+            for (Integer idBien : idsBienesAEntregar) {
+                Bien bien = bienDao.findById(idBien, conn);
+                if (bien == null) {
+                    throw new ObjetoNuloException("bien no existe: " + idBien);
+                }
+                if (!Bien.ESTADO_EN_STOCK.equals(bien.getEstadoInventario())) {
+                    throw new ReglaNegocioException("bien no esta disponible: " + bien.getDescripcion());
+                }
+                bienesParaEntregar.add(bien);
+            }
+
+            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesParaEntregar);
+            int idOrden = ordenEntregaDao.create(orden, conn);
+
+            for (Bien bien : bienesParaEntregar) {
+                bienDao.asociarAOrdenEntrega(bien.getId(), idOrden, Bien.ESTADO_ENTREGADO, conn);
+            }
+
+            conn.commit();
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            throw new RuntimeException("error creando orden de entrega: " + e.getMessage());
+        } finally {
+            ConnectionManager.disconnect();
+        }
+    }
 }

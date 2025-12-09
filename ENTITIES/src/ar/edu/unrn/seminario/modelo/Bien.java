@@ -41,6 +41,7 @@ public class Bien {
     public static final String ESTADO_PENDIENTE = "PENDIENTE";
     public static final String ESTADO_EN_STOCK = "EN_STOCK";
     public static final String ESTADO_ENTREGADO = "ENTREGADO";
+    public static final String ESTADO_BAJA = "BAJA";
 
     private String estadoInventario; 
     
