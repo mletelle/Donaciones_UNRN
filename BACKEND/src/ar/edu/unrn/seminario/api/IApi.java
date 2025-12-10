@@ -2,6 +2,7 @@ package ar.edu.unrn.seminario.api;
 
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.Map; // Importante para el Mapa de bienes
 
 import ar.edu.unrn.seminario.dto.*;
 import ar.edu.unrn.seminario.exception.*;
@@ -9,7 +10,11 @@ import ar.edu.unrn.seminario.exception.*;
 public interface IApi {
 
     // usuarios
-    void registrarUsuario(String username, String password, String email, String nombre, Integer rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException;
+    void registrarUsuario(String username, String password, String email, String nombre, Integer rol, 
+                          String apellido, int dni, String direccion, 
+                          String necesidad, int personasCargo, String prioridad) 
+                          throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException;
+                          
     UsuarioDTO obtenerUsuario(String username);
     void eliminarUsuario(String username);
     List<UsuarioDTO> obtenerUsuarios();
@@ -32,7 +37,7 @@ public interface IApi {
     List<PedidoDonacionDTO> obtenerPedidosDeOrden(int idOrden);
     String obtenerNombreDonantePorId(int idPedido);
 
-    // ordenes
+    // ordenes retiro
     void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo) throws ReglaNegocioException, ObjetoNuloException;
     List<OrdenRetiroDTO> obtenerOrdenesDeRetiro(String estado);
     List<OrdenRetiroDTO> obtenerTodasOrdenesRetiro() throws ReglaNegocioException;
@@ -46,11 +51,16 @@ public interface IApi {
 
     // inventario
     List<BienDTO> obtenerInventario();
-    
     void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
-
     void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException;
 
-    void crearOrdenEntrega(String userBeneficiario, List<Integer> idsBienesAEntregar) 
-    	    throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
+    // Ordenes entrega
+    void crearOrdenEntrega(String userBeneficiario, Map<Integer, Integer> bienesYCantidades, String userVoluntario) 
+           throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
+           
+    List<OrdenEntregaDTO> obtenerEntregasPorBeneficiario(String username);
+    
+    // Gestión Operativa de Entregas
+    List<OrdenEntregaDTO> obtenerEntregasPendientes();
+    void completarEntrega(int idOrden, String usuarioVoluntario) throws ObjetoNuloException;
 }

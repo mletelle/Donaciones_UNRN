@@ -37,8 +37,8 @@ public class ListadoInventario extends JFrame {
         panelPrincipal.add(new JScrollPane(table), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        JButton btnActualizar = new JButton("Actualizar");
-        btnActualizar.addActionListener(e -> cargarInventario());
+        
+        // Se elimino el boton "actualizar", no hacia nada.
         
         JButton btnAjustar = new JButton("Ajustar Stock / Editar");
         btnAjustar.addActionListener(e -> abrirEdicion());
@@ -54,7 +54,6 @@ public class ListadoInventario extends JFrame {
             btnDarDeBaja.setToolTipText("Acción no permitida para Donantes");
         }
 
-        buttonPanel.add(btnActualizar);
         buttonPanel.add(btnAjustar);
         buttonPanel.add(btnDarDeBaja);
         

@@ -1,0 +1,36 @@
+package ar.edu.unrn.seminario.dto;
+
+public class OrdenEntregaDTO {
+    private int id;
+    private String fecha;
+    private String estado;
+    private String descripcionBienes;
+
+    public OrdenEntregaDTO(int id, String fecha, String estado, String descripcionBienes) {
+        this.id = id;
+        this.fecha = fecha;
+        this.estado = estado;
+        this.descripcionBienes = descripcionBienes;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getFecha() {
+        return fecha;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public String getDescripcionBienes() {
+        return descripcionBienes;
+    }
+    
+    @Override
+    public String toString() {
+        return "Orden #" + id + " - " + fecha + " (" + estado + ")";
+    }
+}

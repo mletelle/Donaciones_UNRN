@@ -22,5 +22,10 @@ public interface BienDao {
 	
 	// Asociar bien a orden de entrega y cambiar su estado
 	void asociarAOrdenEntrega(int idBien, int idOrdenEntrega, String nuevoEstado, Connection conn) throws SQLException;
+
 	
+	List<Bien> findByOrdenEntrega(int idOrdenEntrega, Connection conn) throws SQLException;
+	
+	
+	int create(Bien bien, int idPedidoOriginal, Connection conn) throws SQLException;
 }
