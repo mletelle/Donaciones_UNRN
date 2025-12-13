@@ -38,7 +38,6 @@ public class ListadoInventario extends JFrame {
 
         JPanel buttonPanel = new JPanel();
         
-        // Se elimino el boton "actualizar", no hacia nada.
         
         JButton btnAjustar = new JButton("Ajustar Stock / Editar");
         btnAjustar.addActionListener(e -> abrirEdicion());

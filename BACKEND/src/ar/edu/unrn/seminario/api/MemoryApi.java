@@ -56,6 +56,31 @@ public class MemoryApi implements IApi {
             // Beneficiario de prueba
             registrarUsuario("inst_comedor", "1234", "comedor@mail.com", "Comedor", 4, "", 99999999, "Calle Solidaria 10", "Alimentos", 100, "ALTA");
 
+            // crear algunos bienes ya en inventario para pruebas
+            Usuario donantePrueba = usuarios.stream().filter(u -> u.getUsuario().equals("jperez")).findFirst().orElse(null);
+            if (donantePrueba != null) {
+                java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, 1, donantePrueba);
+                try {
+                    Bien b1 = new Bien(BienDTO.TIPO_NUEVO, 10, BienDTO.CATEGORIA_ALIMENTOS);
+                    b1.setDescripcion("Paquete de arroz 1kg");
+                    b1.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b1.setId(++secuenciaBien);
+
+                    Bien b2 = new Bien(BienDTO.TIPO_NUEVO, 5, BienDTO.CATEGORIA_ROPA);
+                    b2.setDescripcion("Camisas talla M");
+                    b2.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b2.setId(++secuenciaBien);
+
+                    pd.obtenerBienes().add(b1);
+                    pd.obtenerBienes().add(b2);
+                    pedidos.add(pd);
+                } catch (CampoVacioException e) {
+                    // no deberia ocurrir, pero imprimimos para debug
+                    e.printStackTrace();
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -373,11 +398,13 @@ public class MemoryApi implements IApi {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
         return ordenesEntrega.stream()
                 .filter(o -> o.getEstado() == OrdenEntrega.ESTADO_PENDIENTE)
-                .map(o -> new OrdenEntregaDTO(
-                        o.getId(),
-                        sdf.format(o.getFechaGeneracion()),
-                        o.obtenerEstadoString(),
-                        "Bienes en memoria"))
+                .map(o -> {
+                    String resumen = "Sin detalle";
+                    if (o.getBienes() != null && !o.getBienes().isEmpty()) {
+                        resumen = o.getBienes().stream().map(Object::toString).collect(Collectors.joining(", "));
+                    }
+                    return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.obtenerEstadoString(), resumen);
+                })
                 .collect(Collectors.toList());
     }
 

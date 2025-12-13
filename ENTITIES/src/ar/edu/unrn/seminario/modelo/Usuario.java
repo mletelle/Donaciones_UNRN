@@ -21,11 +21,11 @@ public class Usuario {
     private Integer personasACargo;
     private String prioridad; 
 
-    // Listas
+    
     private ArrayList<PedidosDonacion> pedidos;
     private ArrayList<OrdenRetiro> ordenesAsignadas;
 
-    // Constructor Completo Actualizado
+    
     public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, 
                    String apellido, int dni, String direccion, String necesidad, 
                    Integer personasACargo, String prioridad) throws CampoVacioException, ObjetoNuloException {
@@ -66,7 +66,7 @@ public class Usuario {
         this.ordenesAsignadas = new ArrayList<>();
     }
 
-    // Constructor simplificado (para compatibilidad o roles simples)
+    
     public Usuario(String usuario, String contrasena, String nombre, String email, Rol rol, String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException {
         this(usuario, contrasena, nombre, email, rol, apellido, dni, direccion, null, 0, null);
     }

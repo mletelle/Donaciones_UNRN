@@ -187,7 +187,7 @@ public class PersistenceApi implements IApi {
         }
     }
 
-    // U
+    // Usuarios
 
     @Override
     public List<UsuarioDTO> obtenerDonantes() {

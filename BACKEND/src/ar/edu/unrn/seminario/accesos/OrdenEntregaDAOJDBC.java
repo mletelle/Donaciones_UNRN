@@ -22,7 +22,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
 
     @Override
     public int create(OrdenEntrega orden, Connection conn) throws SQLException {
-        // CAMBIO: Se agrega 'usuario_voluntario' al INSERT
         String sql = "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)";
         
         PreparedStatement stmt = null;
@@ -35,7 +34,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             stmt.setInt(2, orden.getEstado());
             stmt.setString(3, orden.getBeneficiario().getUsuario());
             
-            // Si hay voluntario asignado, lo guardamos
             if (orden.getVoluntario() != null) {
                 stmt.setString(4, orden.getVoluntario().getUsuario());
             } else {
@@ -88,7 +86,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     @Override
     public List<OrdenEntrega> findAllPendientes(Connection conn) throws SQLException {
         List<OrdenEntrega> ordenes = new ArrayList<>();
-        // Estado 1 = PENDIENTE
         String sql = "SELECT * FROM ordenes_entrega WHERE estado = 1 ORDER BY fecha_generacion ASC";
         
         try (Statement stmt = conn.createStatement();

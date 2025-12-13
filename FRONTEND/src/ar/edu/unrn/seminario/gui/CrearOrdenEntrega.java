@@ -16,7 +16,7 @@ public class CrearOrdenEntrega extends JDialog {
 
     private IApi api;
     private JComboBox<UsuarioDTO> comboBeneficiarios;
-    private JComboBox<UsuarioDTO> comboVoluntarios; // NUEVO
+    private JComboBox<UsuarioDTO> comboVoluntarios;
     private JTable tablaInventario;
     private DefaultTableModel modeloTabla;
 
@@ -28,18 +28,17 @@ public class CrearOrdenEntrega extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        // Selecciones
-        JPanel panelTop = new JPanel(new GridLayout(2, 2, 10, 10)); // Grid 2x2
+        JPanel panelTop = new JPanel(new GridLayout(2, 2, 10, 10));
         panelTop.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        panelTop.add(new JLabel("Seleccionar Beneficiario:"));
+        panelTop.add(new JLabel("Seleccionar Beneficiario:")); 
         comboBeneficiarios = new JComboBox<>();
         cargarBeneficiarios();
         panelTop.add(comboBeneficiarios);
 
-        panelTop.add(new JLabel("Asignar Voluntario (Opcional):")); // NUEVO
+        panelTop.add(new JLabel("Asignar Voluntario (Opcional):"));
         comboVoluntarios = new JComboBox<>();
-        cargarVoluntarios(); // NUEVO
+        cargarVoluntarios();
         panelTop.add(comboVoluntarios);
         
         add(panelTop, BorderLayout.NORTH);
@@ -101,7 +100,7 @@ public class CrearOrdenEntrega extends JDialog {
             List<UsuarioDTO> voluntarios = api.obtenerVoluntarios();
             for (UsuarioDTO v : voluntarios) comboVoluntarios.addItem(v);
             
-            comboVoluntarios.setRenderer(new DefaultListCellRenderer() {
+            comboVoluntarios.setRenderer(new DefaultListCellRenderer() { 
                 @Override
                 public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
@@ -109,8 +108,7 @@ public class CrearOrdenEntrega extends JDialog {
                         UsuarioDTO u = (UsuarioDTO) value;
                         setText(u.getNombre() + " " + u.getApellido());
                     } else {
-                    	// En este caso, dejo la orden de entrega creada y la toma/ejecuta el voluntaria cualquiera que este disponible (revisar)
-                        setText("--- Sin Asignar ---");
+                        setText("---");
                     }
                     return this;
                 }
@@ -133,7 +131,6 @@ public class CrearOrdenEntrega extends JDialog {
             UsuarioDTO beneficiario = (UsuarioDTO) comboBeneficiarios.getSelectedItem();
             if (beneficiario == null) throw new CampoVacioException("Debe seleccionar un beneficiario.");
 
-            // Obtener Voluntario (puede ser nulo)
             UsuarioDTO voluntario = (UsuarioDTO) comboVoluntarios.getSelectedItem();
             String userVoluntario = (voluntario != null) ? voluntario.getUsuario() : null;
 

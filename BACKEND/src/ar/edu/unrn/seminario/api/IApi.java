@@ -2,7 +2,7 @@ package ar.edu.unrn.seminario.api;
 
 import java.util.List;
 import java.time.LocalDateTime;
-import java.util.Map; // Importante para el Mapa de bienes
+import java.util.Map;
 
 import ar.edu.unrn.seminario.dto.*;
 import ar.edu.unrn.seminario.exception.*;

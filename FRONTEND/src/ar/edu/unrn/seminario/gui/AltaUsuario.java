@@ -26,7 +26,7 @@ public class AltaUsuario extends JFrame {
         this.roles = api.obtenerRoles();
         setTitle("Alta Usuario");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 450, 500); // Agrandamos para los nuevos campos
+        setBounds(100, 100, 450, 500);
 
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -80,7 +80,6 @@ public class AltaUsuario extends JFrame {
         // Estado inicial de campos visuales
         actualizarVisibilidadCampos();
 
-        // Listener para ocultar/mostrar (Lógica de Presentación permitida en Front)
         rolComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 actualizarVisibilidadCampos();
@@ -100,7 +99,7 @@ public class AltaUsuario extends JFrame {
         // Aceptar
         aceptarButton.addActionListener(e -> {
             try {
-                // Recolección de datos
+                
                 int idx = rolComboBox.getSelectedIndex();
                 if (idx == -1) throw new Exception("Seleccione un rol");
                 Integer codRol = roles.get(idx).getCodigo();
@@ -122,14 +121,13 @@ public class AltaUsuario extends JFrame {
                 int pers = 0;
                 try { pers = Integer.parseInt(persStr); } catch (NumberFormatException ex) {}
 
-                // Llamada a API (La API y el Modelo validan todo)
+                
                 api.registrarUsuario(user, pass, email, nom, codRol, ape, dni, dir, nec, pers, prio);
 
                 JOptionPane.showMessageDialog(null, "Usuario registrado con éxito.");
                 dispose();
 
             } catch (Exception ex) {
-                // El Front solo muestra el error que viene del Back
                 JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
