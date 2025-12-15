@@ -12,7 +12,7 @@ import java.util.List;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.OrdenRetiroDTO;
 import ar.edu.unrn.seminario.dto.PedidoDonacionDTO;
-import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
@@ -24,9 +24,9 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
     private JTable tablaOrdenes;
     private DefaultTableModel modeloTabla;
     private IApi api;
-    private VoluntarioDTO voluntarioActual;
+    private UsuarioDTO voluntarioActual;
 
-    public ListadoOrdenesAsignadasVoluntario(IApi api, VoluntarioDTO voluntarioActual) {
+    public ListadoOrdenesAsignadasVoluntario(IApi api, UsuarioDTO voluntarioActual) {
         this.api = api;
         this.voluntarioActual = voluntarioActual;
 

@@ -230,17 +230,14 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			String estadoStr = rs.getString("o_estado");
 			EstadoOrden estado = EstadoOrden.fromString(estadoStr.toUpperCase());
 			orden.setEstado(estado);
-			
-            // Ya no se llama a usuarioDao.find() ni a vehiculoDao.findByPatente()
-
-            // Construir Voluntario (Usuario) desde el JOIN
-			/*String usuarioVoluntario = rs.getString("u_usuario");
+		
+			String usuarioVoluntario = rs.getString("u_usuario");
 			if (usuarioVoluntario != null) {
                 // Crear Rol desde el JOIN
                 Rol rol = new Rol(rs.getInt("r_codigo"), rs.getString("r_nombre"));
                 rol.setActivo(rs.getBoolean("r_activo"));
                 
-                Crear Usuario desde el JOIN
+                // Crear Usuario desde el JOIN
 				Usuario voluntario = new Usuario(
                     usuarioVoluntario,
                     rs.getString("u_contrasena"),
@@ -255,7 +252,7 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
                     voluntario.desactivar();
                 }
 				orden.asignarVoluntario(voluntario);
-			}*/
+			}
 			
             // Construir Vehiculo desde el JOIN
 			String patenteVehiculo = rs.getString("v_patente");

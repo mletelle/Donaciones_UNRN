@@ -1,148 +1,96 @@
 package ar.edu.unrn.seminario.modelo;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class OrdenEntrega {
 
-    // variables 
-    private static int secuencia = 0;//para el id
-    
-    // Constantes estado
-    private static final int ESTADO_PENDIENTE = 1;
-    private static final int ESTADO_EN_EJECUCION = 2;
-    private static final int ESTADO_COMPLETADO = 3;
-    private static final int ESTADO_CANCELADO = 4;
-
     private int id;
-    private Date fechaGeneracion = new Date();
+    private Date fechaGeneracion;
     private int estado;
-    private Ubicacion destino;
-    private Usuario voluntario; // ahora es Usuario
-    private ArrayList<Visita> visitas;
-    private PedidosDonacion pedidoOrigen;
-    private ArrayList<Bien> bienes;
-    
-    private Vehiculo v;
-    private Date fechaEjecucion = new Date();
-    private Date fechaProgramada = new Date();
+    private Usuario beneficiario;
+    private Usuario voluntario;
+    private Vehiculo vehiculo;
+    private List<Bien> bienes;
 
-    public OrdenEntrega(PedidosDonacion pedido, Ubicacion destino) {
-        this.id = ++secuencia;
+    // Constantes de estado
+    public static final int ESTADO_PENDIENTE = 1;
+    public static final int ESTADO_COMPLETADO = 3;
+    public static final int ESTADO_CANCELADO = 4;
+
+    // Constructor para NUEVAS ordenes
+    public OrdenEntrega(Usuario beneficiario, List<Bien> bienes) {
+        this.fechaGeneracion = new Date();
         this.estado = ESTADO_PENDIENTE;
-        this.destino = destino;
-        this.pedidoOrigen = pedido;
-        this.visitas = new ArrayList<Visita>();
-    	ArrayList<Bien> bienes = new ArrayList<Bien>();
-        /// pedido.asignarOrden(this);
+        this.beneficiario = beneficiario;
+        this.bienes = bienes;
     }
-    
-    public Usuario obtenerVoluntario() { 
-    	return this.voluntario;
+
+    public int getId() {
+        return id;
     }
-    
-    public int obtenerEstado() {
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Date getFechaGeneracion() {
+        return fechaGeneracion;
+    }
+
+    public void setFechaGeneracion(Date fechaGeneracion) {
+        this.fechaGeneracion = fechaGeneracion;
+    }
+
+    public int getEstado() {
         return estado;
     }
 
-    public ArrayList<Visita> obtenerVisitas() {
-      return visitas;
-    }
-    
-	public boolean estaCompletada() {
-		return estado == ESTADO_COMPLETADO;
-	}
-    
-    private void asignarRecursos(Usuario v, Vehiculo vehiculo) { 
-    	this.v = vehiculo;
-    	asignarVoluntario(v);
+    public void setEstado(int estado) {
+        this.estado = estado;
     }
 
-    // asignacion de voluntario
-    public void asignarVoluntario(Usuario v) { 
-        voluntario = v;
-    }
-  
-    // actualizacion de estado
-    public void actualizarEstado(int nuevoEstado) {
-        this.estado = nuevoEstado;
-    }
-  
-    // metodos para cambiar el estado
-    public void iniciar() {
-        estado = ESTADO_EN_EJECUCION;
-    }
-    
-    public void marcarEntregada() {
-        estado = ESTADO_COMPLETADO;
-    }
-    
-    public void cancelar(String motivo) {
-        estado = ESTADO_CANCELADO;
-        System.out.println("Motivo de cancelacion: "+motivo);
-    }
-    
-    // metodo para agregar visita
-    public void agregarVisita(Visita v) {
-        visitas.add(v);
+    public Usuario getBeneficiario() {
+        return beneficiario;
     }
 
-    // metodo para quitar un bien
-    public void quitarBien(Bien item) {
-    	bienes.remove(item);
-     }
-    
-    // metodo para agregar un bien
-     private void agregarItem(Bien item) {
-    	 bienes.add(item);
-     }
-     
-     @Override
-     public String toString() {
-         return "Orden#" + id + " -> " + destino + ": " + describirEstado();
-     }
-   
-     // metodo de ayuda para el toString
-     private String describirEstado() {
-         switch (estado) {
-             case ESTADO_PENDIENTE:
-                 return "PENDIENTE";
-             case ESTADO_EN_EJECUCION:
-                 return "EN_EJECUCION";
-             case ESTADO_COMPLETADO:
-                 return "COMPLETADO";
-             case ESTADO_CANCELADO:
-                 return "CANCELADO";
-             default:
-                 return "";
-         }
-     }
-     
-    // metodo para imprimir el detalle de la orden
-    public String imprimirDetalle(int nroVivienda) {//no es tostring porque recibe nroVivienda
-        StringBuilder sb = new StringBuilder();
-        sb.append("OrdenDeRetiro").append(id)
-                .append(" Vivienda: ").append(nroVivienda)
-                .append(". Voluntario: ");
-        Usuario v = obtenerVoluntario(); 
-        sb.append(v != null ? v.obtenerNombre() + " " + v.obtenerApellido() : " ")
-                .append(" (Estado: ").append(describirEstado()).append("):\n");
-
-        if (visitas.isEmpty()) {
-            sb.append("sin visitas\n");
-        } else {
-            for (int i = 0; i < visitas.size(); i++) {
-                Visita vi = visitas.get(i);
-                sb.append("  Visita ").append(i + 1)
-                        .append(": Fecha: ").append(vi.obtenerFechaFormateada())
-                        .append("\n    Obs.: ").append(vi.obtenerObservacion()).append("\n");
-            }
-        }
-        return sb.toString();
+    public void setBeneficiario(Usuario beneficiario) {
+        this.beneficiario = beneficiario;
     }
 
-	public boolean equals(OrdenEntrega obj) {
-        return (this.estado==obj.estado) && (this.destino.equals(obj.destino)) && (this.pedidoOrigen.equals(obj.pedidoOrigen));
+    public Usuario getVoluntario() {
+        return voluntario;
     }
-	
+
+    public void setVoluntario(Usuario voluntario) {
+        this.voluntario = voluntario;
+    }
+
+    public Vehiculo getVehiculo() {
+        return vehiculo;
+    }
+
+    public void setVehiculo(Vehiculo vehiculo) {
+        this.vehiculo = vehiculo;
+    }
+
+    public List<Bien> getBienes() {
+        return bienes;
+    }
+
+    public void setBienes(List<Bien> bienes) {
+        this.bienes = bienes;
+    }
+
+    public String obtenerEstadoString() {
+        if (estado == ESTADO_PENDIENTE) return "PENDIENTE";
+        if (estado == ESTADO_COMPLETADO) return "COMPLETADO";
+        if (estado == ESTADO_CANCELADO) return "CANCELADO";
+        return "DESCONOCIDO";
+    }
+
+    public void asignarRecursos(Usuario voluntario, Vehiculo vehiculo) {
+        this.voluntario = voluntario;
+        this.vehiculo = vehiculo;
+    }
 }

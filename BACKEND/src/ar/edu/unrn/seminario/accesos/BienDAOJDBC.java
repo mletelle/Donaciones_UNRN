@@ -113,6 +113,17 @@ public class BienDAOJDBC implements BienDao {
         }
     }
 
+    @Override
+    public void asociarAOrdenEntrega(int idBien, int idOrdenEntrega, String nuevoEstado, Connection conn) throws SQLException {
+        try (PreparedStatement statement = conn.prepareStatement(
+                "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?")) {
+            statement.setInt(1, idOrdenEntrega);
+            statement.setString(2, nuevoEstado);
+            statement.setInt(3, idBien);
+            statement.executeUpdate();
+        }
+    }
+
     // Helper para mapear ResultSet a Objeto Bien
     private Bien mapearBien(ResultSet rs) throws SQLException {
         try {
@@ -132,6 +143,66 @@ public class BienDAOJDBC implements BienDao {
             return bien;
         } catch (Exception e) {
             throw new SQLException("Error mapeando bien: " + e.getMessage(), e);
+        }
+    }
+    @Override
+    public List<Bien> findByOrdenEntrega(int idOrdenEntrega, Connection conn) throws SQLException {
+        List<Bien> bienes = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        try {
+            // Buscamos los bienes asociados a esta orden
+            statement = conn.prepareStatement("SELECT * FROM bienes WHERE id_orden_entrega = ?");
+            statement.setInt(1, idOrdenEntrega);
+            rs = statement.executeQuery();
+            
+            while (rs.next()) {
+                bienes.add(mapearBien(rs));
+            }
+        } finally {
+            if (rs != null) rs.close();
+            if (statement != null) statement.close();
+        }
+        return bienes;
+    }
+    
+    @Override
+    public int create(Bien bien, int idPedidoOriginal, Connection conn) throws SQLException {
+        String sql = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        PreparedStatement stmt = null;
+        ResultSet generatedKeys = null;
+        
+        try {
+            stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            
+            // Usamos el ID del pedido original para saber de dónde vino este bien fraccionado
+            stmt.setInt(1, idPedidoOriginal); 
+            stmt.setInt(2, bien.obtenerCategoria());
+            stmt.setInt(3, bien.obtenerCantidad());
+            stmt.setInt(4, bien.obtenerTipo());
+            
+            if (bien.getDescripcion() != null) stmt.setString(5, bien.getDescripcion());
+            else stmt.setNull(5, java.sql.Types.VARCHAR);
+            
+            if (bien.getFecVec() != null) stmt.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
+            else stmt.setNull(6, java.sql.Types.DATE);
+            
+            stmt.setString(7, bien.getEstadoInventario()); // Probablemente 'PENDIENTE' o 'ENTREGADO'
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) throw new SQLException("No se pudo crear el bien fraccionado.");
+
+            generatedKeys = stmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("No se obtuvo ID del bien.");
+            }
+        } finally {
+            if (generatedKeys != null) generatedKeys.close();
+            if (stmt != null) stmt.close();
         }
     }
 }

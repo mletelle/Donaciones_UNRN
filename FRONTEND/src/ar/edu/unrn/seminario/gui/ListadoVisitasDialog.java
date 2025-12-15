@@ -6,14 +6,14 @@ import java.awt.*;
 import java.util.List;
 
 import ar.edu.unrn.seminario.dto.VisitaDTO;
-import ar.edu.unrn.seminario.dto.VoluntarioDTO;
+import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.api.IApi;
 // Importaciones de excepciones propias
 import ar.edu.unrn.seminario.exception.ObjetoNuloException; 
 
 public class ListadoVisitasDialog extends JDialog {
 
-    public ListadoVisitasDialog(IApi api, VoluntarioDTO voluntario) {
+    public ListadoVisitasDialog(IApi api, UsuarioDTO voluntario) {
         
         try {
             if (voluntario == null) {

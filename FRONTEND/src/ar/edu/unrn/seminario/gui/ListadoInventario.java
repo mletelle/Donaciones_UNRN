@@ -37,21 +37,24 @@ public class ListadoInventario extends JFrame {
         panelPrincipal.add(new JScrollPane(table), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        JButton btnActualizar = new JButton("Actualizar");
-        btnActualizar.addActionListener(e -> cargarInventario());
+        
         
         JButton btnAjustar = new JButton("Ajustar Stock / Editar");
         btnAjustar.addActionListener(e -> abrirEdicion());
+
+        JButton btnDarDeBaja = new JButton("Dar de Baja");
+        btnDarDeBaja.addActionListener(e -> darDeBaja());
 
         // Desactivar botón si es Donante
         if ("DONANTE".equals(rol)) {
             btnAjustar.setEnabled(false);
             btnAjustar.setToolTipText("Acción no permitida para Donantes");
-            //btnAjustar.setVisible(false);
+            btnDarDeBaja.setEnabled(false);
+            btnDarDeBaja.setToolTipText("Acción no permitida para Donantes");
         }
 
-        buttonPanel.add(btnActualizar);
         buttonPanel.add(btnAjustar);
+        buttonPanel.add(btnDarDeBaja);
         
         panelPrincipal.add(buttonPanel, BorderLayout.SOUTH);
         add(panelPrincipal);
@@ -93,9 +96,40 @@ public class ListadoInventario extends JFrame {
                 .orElse(null);
 
         if (bienSeleccionado != null) {
-            // Se pasa 'this' como ventana padre para refrescar luego
             EditarBienDialog dialog = new EditarBienDialog(this, api, bienSeleccionado, this);
             dialog.setVisible(true);
+        }
+    }
+
+    private void darDeBaja() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un bien para dar de baja.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int idSeleccionado = (int) table.getValueAt(selectedRow, 0);
+        String descripcion = (String) table.getValueAt(selectedRow, 2);
+
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de que desea dar de baja el bien: " + descripcion + "?",
+                "Confirmar Baja",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                String motivo = JOptionPane.showInputDialog(this, "Motivo de la baja:", "");
+                if (motivo != null && !motivo.isEmpty()) {
+                    api.darDeBajaBien(idSeleccionado, motivo);
+                    JOptionPane.showMessageDialog(this, "Bien dado de baja exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    cargarInventario();
+                } else if (motivo != null) {
+                    JOptionPane.showMessageDialog(this, "El motivo no puede estar vacío.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al dar de baja: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

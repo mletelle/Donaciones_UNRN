@@ -19,16 +19,19 @@ public enum EstadoOrden {
 	}
 	
 	public static EstadoOrden fromString(String texto) {
-		if (texto == null || texto.isEmpty()) {
-			throw new IllegalArgumentException("El estado no puede ser nulo o vacio");
-		}
-		String textoNormalizado = texto.trim().toUpperCase();
-		for (EstadoOrden e : EstadoOrden.values()) {
-			if (e.name().equals(textoNormalizado)) {
-				return e;
-			}
-		}
-		throw new IllegalArgumentException("Estado de orden desconocido: " + texto);
+	    if (texto == null || texto.isEmpty()) {
+	        throw new IllegalArgumentException("El estado no puede ser nulo o vacio");
+	    }
+	    
+	    String textoNormalizado = texto.trim().toUpperCase();
+
+
+	    for (EstadoOrden e : EstadoOrden.values()) {
+	        if (e.name().equals(textoNormalizado)) {
+	            return e;
+	        }
+	    }
+	    throw new IllegalArgumentException("Estado de orden desconocido: " + texto);
 	}
 	
 } 

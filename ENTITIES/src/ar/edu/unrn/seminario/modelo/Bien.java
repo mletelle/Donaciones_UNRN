@@ -41,6 +41,7 @@ public class Bien {
     public static final String ESTADO_PENDIENTE = "PENDIENTE";
     public static final String ESTADO_EN_STOCK = "EN_STOCK";
     public static final String ESTADO_ENTREGADO = "ENTREGADO";
+    public static final String ESTADO_BAJA = "BAJA";
 
     private String estadoInventario; 
     
@@ -189,9 +190,12 @@ public class Bien {
     }
     
     @Override
-        public String toString() {
-            return cantidad + " x " + describirTipo() + describirCategoria();
-        }
+    public String toString() {
+        // Formato: "Descripción (Categoría) x Cantidad"
+        // Ejemplo: "Paquete de Arroz (Alimentos) x 2"
+        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripción";
+        return desc + " (" + describirCategoria() + ") x " + cantidad;
+    }
 
 	@Override
 	public boolean equals(Object obj) {
