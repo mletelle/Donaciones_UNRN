@@ -1,6 +1,8 @@
 package ar.edu.unrn.seminario.dto;
 
 import java.time.LocalDate;
+import java.time.ZoneId; // <--- IMPORTANTE PARA LA CONVERSION
+import java.util.Date;
 
 public class BienDTO {
     // Constantes 
@@ -24,15 +26,16 @@ public class BienDTO {
     private int cantidad;
     private int categoria;
     private String descripcion;
-    private LocalDate fechaVencimiento;
+    private LocalDate fechaVencimiento; // El dato real (Moderno)
     private int peso;
     
-    // Nuevos atributos
+    // Nuevos atributos (para visualización)
     private String categoriaTexto;
     private String estadoTexto;     
     private String vencimientoTexto;
 
-    // Nuevo constructor
+    // --- CONSTRUCTORES ---
+
     public BienDTO(String categoriaTexto, String descripcion, int cantidad, String estadoTexto, String vencimientoTexto) {
         this.categoriaTexto = categoriaTexto;
         this.descripcion = descripcion;
@@ -48,58 +51,59 @@ public class BienDTO {
         this.descripcion = descripcion;
         this.fechaVencimiento = fechaVencimiento;
     }
+    
+    // Constructor vacío por las dudas (Buenas prácticas en DTOs)
+    public BienDTO() {}
 
-    public String getCategoriaTexto() {
-    	return categoriaTexto;
-    	}
-    public String getEstadoTexto() {
-    	return estadoTexto; 
-    	}
-    public String getVencimientoTexto() { 
-    	return vencimientoTexto; 
-    	}
+    // --- GETTERS Y SETTERS ESTÁNDAR ---
 
-    public String getDescripcion() {
-    	return descripcion;
-    	}
-    public int getCantidad() { 
-    	return cantidad; 
-    	}
-    public LocalDate getFechaVencimiento() { 
-    	return fechaVencimiento; 
-    	}
-    public int getTipo() {
-    	return tipo;
-    	}
-    public int getCategoria() {
-    	return categoria; 
-    	}
-    public int getId() {
-    	return id; 
-    	}
-    public int getPeso() { 
-    	return peso; 
-    	}
+    public String getCategoriaTexto() { return categoriaTexto; }
+    public String getEstadoTexto() { return estadoTexto; }
+    public String getVencimientoTexto() { return vencimientoTexto; }
 
-    public void setDescripcion(String descripcion) {
-    	this.descripcion = descripcion;
-    	}
-    public void setFechaVencimiento(LocalDate fechaVencimiento) { 
-    	this.fechaVencimiento = fechaVencimiento;
-    	}
-    public void setTipo(int tipo) { 
-    	this.tipo = tipo;
+    public String getDescripcion() { return descripcion; }
+    public int getCantidad() { return cantidad; }
+    public LocalDate getFechaVencimiento() { return fechaVencimiento; }
+    public int getTipo() { return tipo; }
+    public int getCategoria() { return categoria; }
+    public int getId() { return id; }
+    public int getPeso() { return peso; }
+
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
+    public void setTipo(int tipo) { this.tipo = tipo; }
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    public void setCategoria(int categoria) { this.categoria = categoria; }
+    public void setId(int id) { this.id = id; }
+    public void setPeso(int peso) { this.peso = peso; }
+
+    // --- MÉTODOS PUENTE (ADAPTERS) PARA LA VISTA SWING ---
+    // Estos métodos hacen la traducción de LocalDate <-> Date
+    
+    /**
+     * Devuelve la fecha en formato java.util.Date para componentes legacy (JSpinner, JDateChooser).
+     * Convierte el LocalDate interno usando la zona horaria del sistema.
+     */
+    public Date getVencimiento() {
+        if (this.fechaVencimiento == null) {
+            return null;
+        }
+        // Convertimos LocalDate (sin hora) a Date (con hora 00:00)
+        return Date.from(this.fechaVencimiento.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
-    public void setCantidad(int cantidad) {
-    	this.cantidad = cantidad;
-    	}
-    public void setCategoria(int categoria) {
-    	this.categoria = categoria;
-    	}
-    public void setId(int id) {
-    	this.id = id; 
-    	}
-    public void setPeso(int peso) {
-    	this.peso = peso;
-    	}
+
+    /**
+     * Recibe un java.util.Date desde la vista y lo guarda como LocalDate.
+     * Realiza la conversión inversa.
+     */
+    public void setVencimiento(Date nuevaFechaVencimiento) {
+        if (nuevaFechaVencimiento == null) {
+            this.fechaVencimiento = null;
+        } else {
+            // Convertimos Date a LocalDate
+            this.fechaVencimiento = nuevaFechaVencimiento.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        }
+    }
 }

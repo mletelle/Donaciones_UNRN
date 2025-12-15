@@ -148,7 +148,7 @@ public class AltaUsuario extends JFrame {
         boolean esBeneficiario = "BENEFICIARIO".equals(rol);
         boolean esDonante = "DONANTE".equals(rol);
 
-        // Reglas de visualización
+        //Reglas de visualizacion
         direccionLabel.setVisible(esDonante || esBeneficiario);
         direccionTextField.setVisible(esDonante || esBeneficiario);
 
