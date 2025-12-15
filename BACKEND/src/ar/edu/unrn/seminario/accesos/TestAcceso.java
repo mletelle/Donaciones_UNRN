@@ -1,4 +1,4 @@
-package ar.edu.unrn.seminario.accesos;
+/*package ar.edu.unrn.seminario.accesos;
 
 import java.sql.Connection;
 import java.util.List;
@@ -34,4 +34,4 @@ public class TestAcceso {
 //		System.out.println(usuarioDao.find("ldifabio"));
 	}
 
-}
+}*/

@@ -230,10 +230,7 @@ public class OrdenRetiroDAOJDBC implements OrdenRetiroDao {
 			String estadoStr = rs.getString("o_estado");
 			EstadoOrden estado = EstadoOrden.fromString(estadoStr.toUpperCase());
 			orden.setEstado(estado);
-			
-            // Ya no se llama a usuarioDao.find() ni a vehiculoDao.findByPatente()
-
-            // Construir Voluntario (Usuario) desde el JOIN
+		
 			String usuarioVoluntario = rs.getString("u_usuario");
 			if (usuarioVoluntario != null) {
                 // Crear Rol desde el JOIN

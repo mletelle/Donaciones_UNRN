@@ -24,8 +24,9 @@ public class Bien {
 	private static final int CATEGORIA_HIGIENE = 9;
 	private static final int CATEGORIA_OTROS = 10;
     
+	private int id; // nuevo atributo
     private int tipo;
-    private int cantidad;
+	private int cantidad;
     private int categoria;
     private boolean perecedero;
     private Date fecVec = null;
@@ -33,6 +34,17 @@ public class Bien {
     private String estado;
     private String descripcion;
     private Vehiculo vehiculo;
+    
+
+    
+    // Estados del inventario
+    public static final String ESTADO_PENDIENTE = "PENDIENTE";
+    public static final String ESTADO_EN_STOCK = "EN_STOCK";
+    public static final String ESTADO_ENTREGADO = "ENTREGADO";
+    public static final String ESTADO_BAJA = "BAJA";
+
+    private String estadoInventario; 
+    
     
     public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
         if (cantidad <= 0) {
@@ -44,12 +56,22 @@ public class Bien {
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.categoria = categoria;
+        this.estadoInventario = ESTADO_PENDIENTE;
     }
 
     public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
         this(tipo, cantidad, categoria);
         this.vehiculo = vehiculo;
     }
+    
+    public String getEstadoInventario() {
+        return estadoInventario;
+    }
+
+    public void setEstadoInventario(String estadoInventario) {
+        this.estadoInventario = estadoInventario;
+    }
+    
     
     public int obtenerTipo() {
         return tipo;
@@ -110,7 +132,22 @@ public class Bien {
     public void asignarVehiculo(Vehiculo vehiculo) {
         this.vehiculo = vehiculo;
     }
-  
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+    public int getCantidad() {
+		return cantidad;
+	}
+
+	public void setCantidad(int cantidad) {
+		this.cantidad = cantidad;
+	}
+    
+    
     //metodos de ayuda para el toString
     private String describirTipo() {
         switch (tipo) {
@@ -153,9 +190,12 @@ public class Bien {
     }
     
     @Override
-        public String toString() {
-            return cantidad + " x " + describirTipo() + describirCategoria();
-        }
+    public String toString() {
+        // Formato: "Descripción (Categoría) x Cantidad"
+        // Ejemplo: "Paquete de Arroz (Alimentos) x 2"
+        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripción";
+        return desc + " (" + describirCategoria() + ") x " + cantidad;
+    }
 
 	@Override
 	public boolean equals(Object obj) {
@@ -164,5 +204,6 @@ public class Bien {
 		Bien other = (Bien) obj;
 		return cantidad == other.cantidad && categoria == other.categoria && tipo == other.tipo;
 	}
+
     
 }

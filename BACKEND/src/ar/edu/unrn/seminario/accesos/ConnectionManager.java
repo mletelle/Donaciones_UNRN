@@ -7,12 +7,13 @@ import java.sql.SQLException;
 public class ConnectionManager {
 	// private static String DRIVER = "com.mysql.jdbc.Driver";.
 
-	// Base local
+// Base local
 	private static String URL_DB = "jdbc:mysql://localhost:3306/";
 	protected static String DB = "seminario_2025_1";
 	protected static String user = "seminario"; 
 	protected static String pass = "Seminario_Pass_123!"; 
-/*
+
+	/*
 	// Base externa Railway MySQL 
 	// Host y Puerto de MYSQL_PUBLIC_URL 
 	private static String URL_DB = "jdbc:mysql://yamanote.proxy.rlwy.net:43821/"; 
@@ -27,10 +28,14 @@ public class ConnectionManager {
 
 	public static void connect() {
 		try {
-			conn = DriverManager.getConnection(URL_DB + DB, user, pass);
+			// permitir recuperacion de clave publica cuando se usa auth caching_sha2_password
+			// y deshabilitar ssl por defecto en entorno local
+			String url = URL_DB + DB + "?useSSL=false&allowPublicKeyRetrieval=true";
+			conn = DriverManager.getConnection(url, user, pass);
 		} catch (SQLException sqlEx) {
 			System.out.println("No se ha podido conectar a " + URL_DB + DB + ". " + sqlEx.getMessage());
-			System.out.println("Error al cargar el driver");
+			// imprimir stacktrace para diagnostico
+			sqlEx.printStackTrace();
 		}
 	}
 

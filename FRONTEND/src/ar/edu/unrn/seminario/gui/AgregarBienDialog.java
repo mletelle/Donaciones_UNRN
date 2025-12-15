@@ -156,26 +156,26 @@ public class AgregarBienDialog extends JDialog {
 
                 dispose();
             } catch (CampoVacioException ex) {
-                // Manejo de la excepción custom para campos vacíos.
+                // manejo de la excepción custom para campos vacios
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
             } catch (NumberFormatException ex) {
-                // Manejo si la 'cantidad' no es un número.
+                //manejo si la cantidad no es un número
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, "Cantidad debe ser un número válido.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
             } catch (DateTimeParseException ex) {
-                // Manejo si la fecha tiene un formato incorrecto.
+                //manejo si la fecha tiene un formato incorrecto
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, "Fecha de vencimiento inválida (formato esperado: dd/MM/yyyy).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
             } catch (FechaVencimientoInvalidaException ex) {
-                // Manejo de la excepción custom para fecha lógica.
+                //manejo de la excepcion custom para fecha logica
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Fecha", JOptionPane.ERROR_MESSAGE);
             } catch (ObjetoNuloException ex) {
-                 // Manejo de la excepción custom para objeto nulo 
+                 //manejo de la excepcion custom para objeto nulo 
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Creación", JOptionPane.ERROR_MESSAGE);
             } catch (CantidadInvalidaException ex) { 
                 JOptionPane.showMessageDialog(AgregarBienDialog.this, ex.getMessage(), "Error de Validación, cantidad incorrecta", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Accion del boton cancelar
+        //accion del boton cancelar
         cancelarButton.addActionListener(event -> dispose());
     }
 

@@ -72,6 +72,10 @@ public class OrdenRetiro {
     public EstadoOrden obtenerEstadoOrden() {
         return this.estado;
     }
+
+    public Ubicacion obtenerDestino() {
+        return this.destino;
+    }
     
     public Usuario obtenerPrimerVoluntario() { 
         if (voluntarios.isEmpty()) {
