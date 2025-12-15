@@ -57,7 +57,6 @@ public class Usuario {
 		this.contrasena = contrasena;
 		this.nombre = nombre;
 		this.email = email;
-		this.rol = rol;
 		this.apellido = apellido;
 		this.dni = dni;
 		this.direccion = direccion;

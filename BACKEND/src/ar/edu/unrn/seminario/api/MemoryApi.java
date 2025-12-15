@@ -203,7 +203,7 @@ public class MemoryApi implements IApi {
     }
 
     @Override
-    public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
+    public void registrarUsuario(String username, String password, String email, String nombre, Rol rol,
             String apellido, int dni, String direccion) throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
         
         if (usuarios.stream().anyMatch(u -> u.getUsuario().equalsIgnoreCase(username))) {
@@ -213,10 +213,10 @@ public class MemoryApi implements IApi {
             throw new UsuarioInvalidoException("Ya existe un usuario con el DNI " + dni);
         }
 
-        Rol rol = roles.stream().filter(r -> r.getCodigo().equals(codigoRol)).findFirst().orElse(null);
-        if (rol == null) throw new ObjetoNuloException("Rol no encontrado.");
+        Rol rol1 = roles.stream().filter(r -> r.getCodigo().equals(rol1)).findFirst().orElse(null);
+        if (rol1 == null) throw new ObjetoNuloException("Rol no encontrado.");
 
-        Usuario nuevoUsuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion);
+        Usuario nuevoUsuario = new Usuario(username, password, nombre, email, apellido, dni, direccion, rol);
         usuarios.add(nuevoUsuario);
     }
 
@@ -467,4 +467,12 @@ public class MemoryApi implements IApi {
             don, veh, vol
         );
     }
+
+	@Override
+	public void registrarUsuario(String username, String password, String email, String nombre, Integer rol,
+			String apellido, int dni, String direccion, String contacto, String ubicacion)
+			throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
+		// TODO Auto-generated method stub
+		
+	}
 }
