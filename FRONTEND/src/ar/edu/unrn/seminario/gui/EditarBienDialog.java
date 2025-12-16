@@ -2,8 +2,10 @@ package ar.edu.unrn.seminario.gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Date; // <--- AGREGAR ESTA IMPORTACIÓN
-import java.util.Calendar; // <--- AGREGAR ESTA IMPORTACIÓN
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.BienDTO;
 import ar.edu.unrn.seminario.exception.*;
@@ -13,7 +15,7 @@ public class EditarBienDialog extends JDialog {
     private static final long serialVersionUID = 1L;
     private JTextField txtCantidad;
     private JTextField txtDescripcion;
-    private JSpinner spinnerVencimiento; // <--- NUEVO COMPONENTE
+    private JSpinner spinnerVencimiento;
     private IApi api;
     private BienDTO bienDTO;
     private ListadoInventario ventanaPadre;
@@ -28,14 +30,13 @@ public class EditarBienDialog extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10)); 
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         formPanel.add(new JLabel("ID Bien:"));
         JTextField txtId = new JTextField(String.valueOf(bienDTO.getId()));
         txtId.setEditable(false);
         formPanel.add(txtId);
-
 
         formPanel.add(new JLabel("Descripción:"));
         txtDescripcion = new JTextField(bienDTO.getDescripcion());
@@ -47,14 +48,13 @@ public class EditarBienDialog extends JDialog {
 
         formPanel.add(new JLabel("Vencimiento:"));
 
-        Date fechaInicial = bienDTO.getVencimiento();
-        if (fechaInicial == null) {
-            fechaInicial = new Date(); // Hoy
+        Date fechaInicial = new Date(); //default hoy
+        if (bienDTO.getFechaVencimiento() != null) {
+            fechaInicial = Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant());
         }
 
         SpinnerDateModel modelFecha = new SpinnerDateModel(fechaInicial, null, null, Calendar.DAY_OF_MONTH);
         spinnerVencimiento = new JSpinner(modelFecha);
-
         JSpinner.DateEditor editorFecha = new JSpinner.DateEditor(spinnerVencimiento, "dd/MM/yyyy");
         spinnerVencimiento.setEditor(editorFecha);
 
@@ -79,37 +79,35 @@ public class EditarBienDialog extends JDialog {
             String desc = txtDescripcion.getText().trim();
             String cantStr = txtCantidad.getText().trim();
 
-            if (desc.isEmpty()) throw new CampoVacioException("Descripción obligatoria.");
-            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria.");
+            if (desc.isEmpty()) throw new CampoVacioException("Descripcion obligatoria.o");
+            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria");
 
             int cantidad = Integer.parseInt(cantStr);
             
-            Date fechaDate = (Date) spinnerVencimiento.getValue();
-            
-            if (fechaDate != null) {
-                java.time.LocalDate fechaNueva = fechaDate.toInstant()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .toLocalDate();
+            Date fechaSwing = (Date) spinnerVencimiento.getValue();
+            LocalDate fechaParaDTO = null;
 
-                if (fechaNueva.isBefore(java.time.LocalDate.now())) {
-                    throw new Exception("Esta vencido para esa fecha. Debe ser posterior a (" + java.time.LocalDate.now() + ").");
-                }
+            if (fechaSwing != null) {
+                fechaParaDTO = fechaSwing.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
             }
 
             bienDTO.setDescripcion(desc);
             bienDTO.setCantidad(cantidad);
-            bienDTO.setVencimiento(fechaDate); 
+            bienDTO.setFechaVencimiento(fechaParaDTO);
 
             api.actualizarBienInventario(bienDTO);
 
-            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente.");
+            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente");
             ventanaPadre.cargarInventario();
             dispose();
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un numero entero!", "Error de Formato", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Aviso", JOptionPane.WARNING_MESSAGE);
+
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.WARNING_MESSAGE);
         }
     }
 }

@@ -1,11 +1,9 @@
 package ar.edu.unrn.seminario.dto;
 
 import java.time.LocalDate;
-import java.time.ZoneId; 
-import java.time.format.DateTimeFormatter; // <--- AGREGADO PARA EL FORMATO
-import java.util.Date;
 
 public class BienDTO {
+
     public static final int CATEGORIA_ROPA = 1;
     public static final int CATEGORIA_MUEBLES = 2;
     public static final int CATEGORIA_ALIMENTOS = 3;
@@ -45,57 +43,38 @@ public class BienDTO {
         this.cantidad = cantidad;
         this.categoria = categoria;
         this.descripcion = descripcion;
-        this.fechaVencimiento = fechaVencimiento; 
+        this.fechaVencimiento = fechaVencimiento;
     }
     
     public BienDTO() {}
 
-    //GETTERS Y SETTERS
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public String getCategoriaTexto() { return categoriaTexto; }
-    public String getEstadoTexto() { return estadoTexto; }
-    public String getVencimientoTexto() { return vencimientoTexto; }
+    public int getTipo() { return tipo; }
+    public void setTipo(int tipo) { this.tipo = tipo; }
+
+    public int getCantidad() { return cantidad; }
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+
+    public int getCategoria() { return categoria; }
+    public void setCategoria(int categoria) { this.categoria = categoria; }
 
     public String getDescripcion() { return descripcion; }
-    public int getCantidad() { return cantidad; }
-    public LocalDate getFechaVencimiento() { return fechaVencimiento; }
-    public int getTipo() { return tipo; }
-    public int getCategoria() { return categoria; }
-    public int getId() { return id; }
-    public int getPeso() { return peso; }
-
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-    
-    public void setFechaVencimiento(LocalDate fechaVencimiento) { 
-        this.fechaVencimiento = fechaVencimiento; 
-        if (fechaVencimiento != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            this.vencimientoTexto = fechaVencimiento.format(formatter);
-        } else {
-            this.vencimientoTexto = "-";
-        }
-    }
-    
-    public void setTipo(int tipo) { this.tipo = tipo; }
-    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
-    public void setCategoria(int categoria) { this.categoria = categoria; }
-    public void setId(int id) { this.id = id; }
+
+    public LocalDate getFechaVencimiento() { return fechaVencimiento; }
+    public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
+
+    public int getPeso() { return peso; }
     public void setPeso(int peso) { this.peso = peso; }
 
-    public Date getVencimiento() {
-        if (this.fechaVencimiento == null) {
-            return null;
-        }
-        return Date.from(this.fechaVencimiento.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    }
+    public String getCategoriaTexto() { return categoriaTexto; }
+    public void setCategoriaTexto(String categoriaTexto) { this.categoriaTexto = categoriaTexto; }
 
-    public void setVencimiento(Date nuevaFechaVencimiento) {
-        if (nuevaFechaVencimiento == null) {
-            this.setFechaVencimiento(null);
-        } else {
-            this.setFechaVencimiento(nuevaFechaVencimiento.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate());
-        }
-    }
+    public String getEstadoTexto() { return estadoTexto; }
+    public void setEstadoTexto(String estadoTexto) { this.estadoTexto = estadoTexto; }
+
+    public String getVencimientoTexto() { return vencimientoTexto; }
+    public void setVencimientoTexto(String vencimientoTexto) { this.vencimientoTexto = vencimientoTexto; }
 }
