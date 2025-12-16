@@ -5,6 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,41 +63,66 @@ public class PersistenceApi implements IApi {
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
         String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
+        
         String vencimientoStr = "-";
+        LocalDate fechaLocalDate = null; 
+
         if (bien.getFecVec() != null) {
-            java.time.LocalDate localDate = new java.sql.Date(bien.getFecVec().getTime()).toLocalDate();
-            vencimientoStr = localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            //convertimos: java.util.Date (DB) -> LocalDate (DTO)
+            fechaLocalDate = bien.getFecVec().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+
+            vencimientoStr = fechaLocalDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-        BienDTO dto = new BienDTO(
-                categoriaStr,
-                bien.getDescripcion(),
-                bien.obtenerCantidad(),
-                estadoStr,
-                vencimientoStr);
+        BienDTO dto = new BienDTO();
         dto.setId(bien.getId());
+        dto.setDescripcion(bien.getDescripcion());
+        dto.setCantidad(bien.obtenerCantidad());
         dto.setCategoria(bien.obtenerCategoria());
         dto.setTipo(bien.obtenerTipo());
+        
+        dto.setCategoriaTexto(categoriaStr);
+        dto.setEstadoTexto(estadoStr);
+        dto.setFechaVencimiento(fechaLocalDate); 
+        dto.setVencimientoTexto(vencimientoStr); 
+        
         return dto;
     }
 
+    @Override
     public void actualizarBienInventario(BienDTO bienDTO)
             throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
-            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
+            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID invalido.");
+
             Bien bienDb = bienDao.findById(bienDTO.getId(), conn);
-            if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
-            if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
-            
+            if (bienDb == null) throw new ObjetoNuloException("El bien no existe");
+            if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa");
+            if (bienDTO.getFechaVencimiento() != null) {
+                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
+                    throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + LocalDate.now() + ").");
+                }
+            }
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
+            //convertimos: java.util.Date (DB) -> LocalDate (DTO)
+            if (bienDTO.getFechaVencimiento() != null) {
+                Date fechaDB = Date.from(
+                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                );
+                bienDb.setFecVec(fechaDB);
+            } else {
+                bienDb.setFecVec(null);
+            }
             bienDao.update(bienDb, conn);
             conn.commit();
         } catch (SQLException e) {
             rollback(conn);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error en la caga del bien: " + e.getMessage(), e);
         } finally {
             closeConnection(conn);
         }

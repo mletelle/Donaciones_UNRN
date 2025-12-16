@@ -2,8 +2,10 @@ package ar.edu.unrn.seminario.gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Date; // <--- AGREGAR ESTA IMPORTACIÓN
-import java.util.Calendar; // <--- AGREGAR ESTA IMPORTACIÓN
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.BienDTO;
 import ar.edu.unrn.seminario.exception.*;
@@ -13,7 +15,7 @@ public class EditarBienDialog extends JDialog {
     private static final long serialVersionUID = 1L;
     private JTextField txtCantidad;
     private JTextField txtDescripcion;
-    private JSpinner spinnerVencimiento; // <--- NUEVO COMPONENTE
+    private JSpinner spinnerVencimiento;
     private IApi api;
     private BienDTO bienDTO;
     private ListadoInventario ventanaPadre;
@@ -24,52 +26,39 @@ public class EditarBienDialog extends JDialog {
         this.bienDTO = bienDTO;
         this.ventanaPadre = ventanaPadre;
 
-        // Agrandamos un poco la altura para que entre el nuevo campo
-        setSize(400, 300); // <--- MODIFICADO (antes era 250)
+        setSize(400, 300);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        // Cambiamos el GridLayout de 3 filas a 4 filas para hacer lugar
-        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10)); // <--- MODIFICADO (4 filas)
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // 1. ID (Igual que antes)
         formPanel.add(new JLabel("ID Bien:"));
         JTextField txtId = new JTextField(String.valueOf(bienDTO.getId()));
         txtId.setEditable(false);
         formPanel.add(txtId);
 
-        // 2. Descripción (Igual que antes)
         formPanel.add(new JLabel("Descripción:"));
         txtDescripcion = new JTextField(bienDTO.getDescripcion());
         formPanel.add(txtDescripcion);
 
-        // 3. Cantidad (Igual que antes)
         formPanel.add(new JLabel("Cantidad:"));
         txtCantidad = new JTextField(String.valueOf(bienDTO.getCantidad()));
         formPanel.add(txtCantidad);
 
-        // 4. Vencimiento (TODO ESTO ES NUEVO)
         formPanel.add(new JLabel("Vencimiento:"));
 
-        // Preparamos la fecha inicial.
-        // Ojo acá: Si en la DB viene null, ponemos la fecha de hoy para que no explote la UI.
-        // Esto es pensamiento de infraestructura: "Fail-safe".
-        Date fechaInicial = bienDTO.getVencimiento();
-        if (fechaInicial == null) {
-            fechaInicial = new Date(); // Hoy
+        Date fechaInicial = new Date(); //default hoy
+        if (bienDTO.getFechaVencimiento() != null) {
+            fechaInicial = Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant());
         }
 
-        // Configuramos el modelo del Spinner para que entienda que son Fechas
         SpinnerDateModel modelFecha = new SpinnerDateModel(fechaInicial, null, null, Calendar.DAY_OF_MONTH);
         spinnerVencimiento = new JSpinner(modelFecha);
-
-        // Le damos formato visual dd/MM/yyyy (Día/Mes/Año)
         JSpinner.DateEditor editorFecha = new JSpinner.DateEditor(spinnerVencimiento, "dd/MM/yyyy");
         spinnerVencimiento.setEditor(editorFecha);
 
         formPanel.add(spinnerVencimiento);
-        // FIN DE LO NUEVO EN VISTA
 
         add(formPanel, BorderLayout.CENTER);
 
@@ -90,29 +79,35 @@ public class EditarBienDialog extends JDialog {
             String desc = txtDescripcion.getText().trim();
             String cantStr = txtCantidad.getText().trim();
 
-            if (desc.isEmpty()) throw new CampoVacioException("Descripción obligatoria.");
-            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria.");
+            if (desc.isEmpty()) throw new CampoVacioException("Descripcion obligatoria.o");
+            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria");
 
             int cantidad = Integer.parseInt(cantStr);
             
-            // Capturamos la fecha del spinner
-            Date nuevaFechaVencimiento = (Date) spinnerVencimiento.getValue(); // <--- NUEVO
+            Date fechaSwing = (Date) spinnerVencimiento.getValue();
+            LocalDate fechaParaDTO = null;
 
-            // Actualizamos el DTO localmente
+            if (fechaSwing != null) {
+                fechaParaDTO = fechaSwing.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            }
+
             bienDTO.setDescripcion(desc);
             bienDTO.setCantidad(cantidad);
-            bienDTO.setVencimiento(nuevaFechaVencimiento); // <--- NUEVO: Asignamos al DTO
+            bienDTO.setFechaVencimiento(fechaParaDTO);
 
             api.actualizarBienInventario(bienDTO);
 
-            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente.");
+            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente");
             ventanaPadre.cargarInventario();
             dispose();
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un numero entero!", "Error de Formato", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.WARNING_MESSAGE);
         }
     }
 }
