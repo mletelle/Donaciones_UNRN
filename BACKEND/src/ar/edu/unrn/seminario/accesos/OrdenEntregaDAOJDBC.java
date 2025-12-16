@@ -98,6 +98,20 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     }
 
     @Override
+    public List<OrdenEntrega> findAll(Connection conn) throws SQLException {
+        List<OrdenEntrega> ordenes = new ArrayList<>();
+        String sql = "SELECT * FROM ordenes_entrega ORDER BY fecha_generacion DESC";
+        
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                ordenes.add(mapearOrden(rs, conn));
+            }
+        }
+        return ordenes;
+    }
+
+    @Override
     public void update(OrdenEntrega orden, Connection conn) throws SQLException {
         String sql = "UPDATE ordenes_entrega SET estado = ?, usuario_voluntario = ?, fecha_ejecucion = ? WHERE id = ?";
         
