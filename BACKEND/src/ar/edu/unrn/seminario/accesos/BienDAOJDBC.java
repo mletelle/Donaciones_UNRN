@@ -28,10 +28,10 @@ public class BienDAOJDBC implements BienDao {
                 if (bien.getDescripcion() != null) statement.setString(5, bien.getDescripcion());
                 else statement.setNull(5, java.sql.Types.VARCHAR);
                 
+                // Manejo de fecha
                 if (bien.getFecVec() != null) statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
                 else statement.setNull(6, java.sql.Types.DATE);
                 
-                // Si el objeto no tiene estado, por defecto es PENDIENTE
                 String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario() : "PENDIENTE";
                 statement.setString(7, estado);
 
@@ -100,12 +100,19 @@ public class BienDAOJDBC implements BienDao {
         PreparedStatement statement = null;
         try {
             statement = conn.prepareStatement(
-                "UPDATE bienes SET cantidad = ?, descripcion = ?, estado_inventario = ? WHERE id = ?");
+                "UPDATE bienes SET cantidad = ?, descripcion = ?, estado_inventario = ?, fecha_vencimiento = ? WHERE id = ?");
             
             statement.setInt(1, bien.obtenerCantidad());
             statement.setString(2, bien.getDescripcion());
             statement.setString(3, bien.getEstadoInventario());
-            statement.setInt(4, bien.getId()); // Usamos el ID del objeto Bien
+
+            if (bien.getFecVec() != null) {
+                statement.setDate(4, new java.sql.Date(bien.getFecVec().getTime()));
+            } else {
+                statement.setNull(4, java.sql.Types.DATE);
+            }
+
+            statement.setInt(5, bien.getId()); 
             
             statement.executeUpdate();
         } finally {
@@ -145,13 +152,13 @@ public class BienDAOJDBC implements BienDao {
             throw new SQLException("Error mapeando bien: " + e.getMessage(), e);
         }
     }
+
     @Override
     public List<Bien> findByOrdenEntrega(int idOrdenEntrega, Connection conn) throws SQLException {
         List<Bien> bienes = new ArrayList<>();
         PreparedStatement statement = null;
         ResultSet rs = null;
         try {
-            // Buscamos los bienes asociados a esta orden
             statement = conn.prepareStatement("SELECT * FROM bienes WHERE id_orden_entrega = ?");
             statement.setInt(1, idOrdenEntrega);
             rs = statement.executeQuery();
@@ -169,7 +176,7 @@ public class BienDAOJDBC implements BienDao {
     @Override
     public int create(Bien bien, int idPedidoOriginal, Connection conn) throws SQLException {
         String sql = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         PreparedStatement stmt = null;
         ResultSet generatedKeys = null;
@@ -177,7 +184,6 @@ public class BienDAOJDBC implements BienDao {
         try {
             stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
             
-            // Usamos el ID del pedido original para saber de dónde vino este bien fraccionado
             stmt.setInt(1, idPedidoOriginal); 
             stmt.setInt(2, bien.obtenerCategoria());
             stmt.setInt(3, bien.obtenerCantidad());
@@ -189,7 +195,7 @@ public class BienDAOJDBC implements BienDao {
             if (bien.getFecVec() != null) stmt.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
             else stmt.setNull(6, java.sql.Types.DATE);
             
-            stmt.setString(7, bien.getEstadoInventario()); // Probablemente 'PENDIENTE' o 'ENTREGADO'
+            stmt.setString(7, bien.getEstadoInventario());
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) throw new SQLException("No se pudo crear el bien fraccionado.");

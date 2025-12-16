@@ -7,7 +7,7 @@ import ar.edu.unrn.seminario.dto.BienDTO;
 
 public class BienTableModel extends AbstractTableModel {
 
-    // Define el formato de fecha para mostrar
+    //define el formato de fecha para mostrar
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     
     private List<BienDTO> bienes;
@@ -17,15 +17,15 @@ public class BienTableModel extends AbstractTableModel {
         this.bienes = bienes;
     }
 
-    // Método para actualizar la lista de datos y refrescar la JTable
+    //metodo para actualizar la lista de datos y refrescar la JTable
     public void setBienes(List<BienDTO> nuevosBienes) {
         this.bienes = nuevosBienes;
-        fireTableDataChanged(); // Notifica a la JTable que los datos han cambiado
+        fireTableDataChanged(); //notifica a la JTable que los datos han cambiado
     }
 
     @Override
     public int getRowCount() {
-        return bienes != null ? bienes.size() : 0; // Maneja si la lista es nula
+        return bienes != null ? bienes.size() : 0; //maneja si la lista es nula
     }
 
     @Override
@@ -46,29 +46,29 @@ public class BienTableModel extends AbstractTableModel {
 
         BienDTO bien = bienes.get(rowIndex);
         if (bien == null) {
-            return "Nulo"; // Maneja si el objeto BienDTO es nulo en la lista
+            return "Nulo"; //maneja si el objeto BienDTO es nulo en la lista
         }
         
-        // Uso de constantes para los tipos de estado, mejor que usar el literal 0.
-        // Asumiendo BienDTO.TIPO_NUEVO = 0 y BienDTO.TIPO_USADO = 1 (o cualquier otro valor)
+        //uso de constantes para los tipos de estado, mejor que usar el literal 0.
+        //asumiendo BienDTO.TIPO_NUEVO = 0 y BienDTO.TIPO_USADO = 1 (o cualquier otro valor)
         final String ESTADO_NUEVO = "Nuevo";
         final String ESTADO_USADO = "Usado";
         final int TIPO_NUEVO_CONSTANTE = 0; // Reemplazar con BienDTO.TIPO_NUEVO si está definido
 
         switch (columnIndex) {
-            case 0: // Categoria
+            case 0: //categoria
                 return mapCategoriaAString(bien.getCategoria());
-            case 1: // Cantidad
+            case 1: //cCantidad
                 return bien.getCantidad();
-            case 2: // Estado
-                // Usando constante o valor de BienDTO si es posible.
+            case 2: //estado
+                //usando constante o valor de BienDTO si es posible.
                 return bien.getTipo() == TIPO_NUEVO_CONSTANTE ? ESTADO_NUEVO : ESTADO_USADO; 
             case 3: // Fecha de Vencimiento
-                // Mejora: Formatea la fecha a dd/MM/yyyy
+                //mejora: Formatea la fecha a dd/MM/yyyy
                 return bien.getFechaVencimiento() != null 
                        ? bien.getFechaVencimiento().format(DATE_FORMATTER) 
                        : "N/A";
-            case 4: // Descripcion
+            case 4: //descripcion
                 return bien.getDescripcion();
             default:
                 return null;
