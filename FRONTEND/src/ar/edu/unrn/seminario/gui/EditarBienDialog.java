@@ -31,8 +31,8 @@ public class EditarBienDialog extends JDialog {
         setLayout(new BorderLayout(10, 10));
 
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         formPanel.add(new JLabel("ID Bien:"));
         JTextField txtId = new JTextField(String.valueOf(bienDTO.getId()));
         txtId.setEditable(false);
@@ -48,7 +48,9 @@ public class EditarBienDialog extends JDialog {
 
         formPanel.add(new JLabel("Vencimiento:"));
 
-        Date fechaInicial = new Date(); 
+        boolean requiereVencimiento = requiereVencimiento(bienDTO.getCategoria());
+
+        Date fechaInicial = new Date();
         if (bienDTO.getFechaVencimiento() != null) {
             fechaInicial = Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant());
         }
@@ -57,12 +59,7 @@ public class EditarBienDialog extends JDialog {
         spinnerVencimiento = new JSpinner(modelFecha);
         JSpinner.DateEditor editorFecha = new JSpinner.DateEditor(spinnerVencimiento, "dd/MM/yyyy");
         spinnerVencimiento.setEditor(editorFecha);
-
-        boolean esAlimento = (bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS);
-        spinnerVencimiento.setEnabled(esAlimento);
-        if (!esAlimento) {
-            spinnerVencimiento.setToolTipText("Solo disponible para Alimentos");
-        }
+        spinnerVencimiento.setEnabled(requiereVencimiento);
 
         formPanel.add(spinnerVencimiento);
 
@@ -85,37 +82,40 @@ public class EditarBienDialog extends JDialog {
             String desc = txtDescripcion.getText().trim();
             String cantStr = txtCantidad.getText().trim();
 
-            if (desc.isEmpty()) throw new CampoVacioException("Descripción obligatoria.");
-            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria.");
+            if (desc.isEmpty()) throw new CampoVacioException("Descripcion obligatoria.");
+            if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria");
 
             int cantidad = Integer.parseInt(cantStr);
-
+            
             LocalDate fechaParaDTO = null;
-
-            if (bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS) {
+            if (spinnerVencimiento.isEnabled()) {
                 Date fechaSwing = (Date) spinnerVencimiento.getValue();
                 if (fechaSwing != null) {
                     fechaParaDTO = fechaSwing.toInstant()
                         .atZone(ZoneId.systemDefault())
                         .toLocalDate();
                 }
-            } else {
-                fechaParaDTO = null; 
             }
 
             bienDTO.setDescripcion(desc);
             bienDTO.setCantidad(cantidad);
+            bienDTO.setFechaVencimiento(fechaParaDTO);
 
             api.actualizarBienInventario(bienDTO);
 
-            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente.");
+            JOptionPane.showMessageDialog(this, "Bien actualizado correctamente");
             ventanaPadre.cargarInventario();
             dispose();
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número entero.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un numero entero!", "Error de Formato", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
+
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.WARNING_MESSAGE);
         }
+    }
+
+    private boolean requiereVencimiento(int categoria) {
+        return categoria == BienDTO.CATEGORIA_ALIMENTOS || categoria == BienDTO.CATEGORIA_MEDICAMENTOS;
     }
 }

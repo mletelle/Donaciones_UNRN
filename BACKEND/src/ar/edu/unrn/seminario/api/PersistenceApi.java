@@ -97,42 +97,39 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
+            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID invalido.");
 
-            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
-            
             Bien bienDb = bienDao.findById(bienDTO.getId(), conn);
-            if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
-            
+            if (bienDb == null) throw new ObjetoNuloException("El bien no existe");
             if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa");
-
-            if (bienDTO.getFechaVencimiento() != null) {
-                if (bienDTO.getCategoria() != BienDTO.CATEGORIA_ALIMENTOS) {
-                     throw new ReglaNegocioException("Error de integridad: ee intento asignar vencimiento a un bien que no es Alimento.");
+            
+            boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
+                                        || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
+            
+            if (requiereVencimiento) {
+                if (bienDTO.getFechaVencimiento() == null) {
+                    throw new ReglaNegocioException("La fecha de vencimiento es obligatoria para alimentos y medicamentos.");
                 }
-
-                if (bienDTO.getFechaVencimiento().isBefore(java.time.LocalDate.now())) {
-                    throw new ReglaNegocioException("Esta vencido. Necesariamente tiene que ser posterior a (" + java.time.LocalDate.now() + ").");
+                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
+                    throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + LocalDate.now() + ").");
                 }
             }
             
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
-            
             if (bienDTO.getFechaVencimiento() != null) {
-                java.util.Date fechaDB = java.util.Date.from(
-                    bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+                Date fechaDB = Date.from(
+                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
                 );
                 bienDb.setFecVec(fechaDB);
             } else {
                 bienDb.setFecVec(null);
             }
-            
             bienDao.update(bienDb, conn);
             conn.commit();
-            
         } catch (SQLException e) {
             rollback(conn);
-            throw new RuntimeException("Error de base de datos: " + e.getMessage(), e);
+            throw new RuntimeException("Error en la carga del bien: " + e.getMessage(), e);
         } finally {
             closeConnection(conn);
         }
@@ -642,6 +639,28 @@ public class PersistenceApi implements IApi {
                          : "Sin detalle";
                  return new OrdenEntregaDTO(o.getId(), o.getFechaGeneracion().toString(), o.obtenerEstadoString(), resumen);
             }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            ConnectionManager.disconnect();
+        }
+    }
+
+    @Override
+    public List<OrdenEntregaDTO> obtenerTodasOrdenesEntrega() {
+        Connection conn = null;
+        try {
+            conn = ConnectionManager.getConnection();
+            return ordenEntregaDao.findAll(conn).stream()
+                    .map(o -> new OrdenEntregaDTO(
+                            o.getId(),
+                            o.getFechaGeneracion().toString(),
+                            o.obtenerEstadoString(),
+                            o.getBeneficiario() != null ? o.getBeneficiario().getNombre() + " " + o.getBeneficiario().getApellido() : "-",
+                            o.getVoluntario() != null ? o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido() : "-"
+                    ))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();

@@ -13,6 +13,8 @@ public interface OrdenEntregaDao {
     
     List<OrdenEntrega> findAllPendientes(Connection conn) throws SQLException;
     
+    List<OrdenEntrega> findAll(Connection conn) throws SQLException;
+    
     void update(OrdenEntrega orden, Connection conn) throws SQLException;
     
     OrdenEntrega findById(int id, Connection conn) throws SQLException;
