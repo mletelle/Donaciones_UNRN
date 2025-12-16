@@ -199,7 +199,7 @@ public class PersistenceApi implements IApi {
                     .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            throw new DataAccessException("Error al intentar recuperar los donantes de la base de datos.");
         } finally {
             ConnectionManager.disconnect();
         }
