@@ -88,26 +88,28 @@ public class MemoryApi implements IApi {
 
     @Override
     public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
-        if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
-        
+        if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido");
+
         Bien bienEncontrado = pedidos.stream()
                 .flatMap(p -> p.obtenerBienes().stream())
                 .filter(b -> b.getId() == bienDTO.getId())
                 .findFirst().orElse(null);
                 
-        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
-        if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
-        
+        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe");
+        if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa");
+
         if (bienDTO.getFechaVencimiento() != null) {
+            if (bienDTO.getCategoria() != BienDTO.CATEGORIA_ALIMENTOS) {
+                throw new ReglaNegocioException("Solo alimentos pueden tener vencimiento");
+            }
             if (bienDTO.getFechaVencimiento().isBefore(java.time.LocalDate.now())) {
-                throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + java.time.LocalDate.now() + ").");
+                throw new ReglaNegocioException("Esta vencido, necesariamente tiene que ser posterior a hoy.");
             }
         }
-
         bienEncontrado.setCantidad(bienDTO.getCantidad());
         bienEncontrado.setDescripcion(bienDTO.getDescripcion());
         
-        // Conversión DTO (LocalDate) -> Entidad (Date)
+  
         if (bienDTO.getFechaVencimiento() != null) {
             java.util.Date fechaConvertida = java.util.Date.from(
                 bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
@@ -121,17 +123,15 @@ public class MemoryApi implements IApi {
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
         String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
-        
         String vencimientoStr = "-";
         LocalDate fechaLocalDate = null;
-
         if (bien.getFecVec() != null) {
             fechaLocalDate = bien.getFecVec().toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
+            
             vencimientoStr = fechaLocalDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-        
         BienDTO dto = new BienDTO();
         dto.setId(bien.getId());
         dto.setDescripcion(bien.getDescripcion());
@@ -141,7 +141,7 @@ public class MemoryApi implements IApi {
         
         dto.setCategoriaTexto(categoriaStr);
         dto.setEstadoTexto(estadoStr);
-        dto.setFechaVencimiento(fechaLocalDate);
+        dto.setFechaVencimiento(fechaLocalDate); 
         dto.setVencimientoTexto(vencimientoStr);
         
         return dto;

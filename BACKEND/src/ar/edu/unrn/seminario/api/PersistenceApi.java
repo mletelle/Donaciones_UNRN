@@ -97,32 +97,42 @@ public class PersistenceApi implements IApi {
         try {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
-            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID invalido.");
 
+            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
+            
             Bien bienDb = bienDao.findById(bienDTO.getId(), conn);
-            if (bienDb == null) throw new ObjetoNuloException("El bien no existe");
+            if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
+            
             if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa");
+
             if (bienDTO.getFechaVencimiento() != null) {
-                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
-                    throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + LocalDate.now() + ").");
+                if (bienDTO.getCategoria() != BienDTO.CATEGORIA_ALIMENTOS) {
+                     throw new ReglaNegocioException("Error de integridad: ee intento asignar vencimiento a un bien que no es Alimento.");
+                }
+
+                if (bienDTO.getFechaVencimiento().isBefore(java.time.LocalDate.now())) {
+                    throw new ReglaNegocioException("Esta vencido. Necesariamente tiene que ser posterior a (" + java.time.LocalDate.now() + ").");
                 }
             }
+            
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
-            //convertimos: java.util.Date (DB) -> LocalDate (DTO)
+            
             if (bienDTO.getFechaVencimiento() != null) {
-                Date fechaDB = Date.from(
-                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                java.util.Date fechaDB = java.util.Date.from(
+                    bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
                 );
                 bienDb.setFecVec(fechaDB);
             } else {
                 bienDb.setFecVec(null);
             }
+            
             bienDao.update(bienDb, conn);
             conn.commit();
+            
         } catch (SQLException e) {
             rollback(conn);
-            throw new RuntimeException("Error en la caga del bien: " + e.getMessage(), e);
+            throw new RuntimeException("Error de base de datos: " + e.getMessage(), e);
         } finally {
             closeConnection(conn);
         }
