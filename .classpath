@@ -9,6 +9,6 @@
 	<classpathentry kind="src" path="COMMONS/src"/>
 	<classpathentry kind="src" path="ENTITIES/src"/>
 	<classpathentry kind="src" path="FRONTEND/src"/>
-	<classpathentry kind="lib" path="C:/Users/Ima/Documents/mysql-connector-j-9.5.0.jar"/>
+	<classpathentry kind="lib" path="I:/ojdbc17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

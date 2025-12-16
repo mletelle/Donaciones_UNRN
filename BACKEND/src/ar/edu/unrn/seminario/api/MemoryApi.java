@@ -430,12 +430,29 @@ public class MemoryApi implements IApi {
     @Override
     public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
         if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
-        Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == bienDTO.getId()).findFirst().orElse(null);
+        
+        //buscamos el bien real en la lista de pedidos
+        Bien bienEncontrado = pedidos.stream()
+            .flatMap(p -> p.obtenerBienes().stream())
+            .filter(b -> b.getId() == bienDTO.getId())
+            .findFirst()
+            .orElse(null);
+
         if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
         if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
         
+        //actualizamos los datos
         bienEncontrado.setCantidad(bienDTO.getCantidad());
         bienEncontrado.setDescripcion(bienDTO.getDescripcion());
+
+        if (bienDTO.getFechaVencimiento() != null) {
+            java.util.Date fechaConvertida = java.util.Date.from(
+                bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+            );
+            bienEncontrado.setFecVec(fechaConvertida); 
+        } else {
+            bienEncontrado.setFecVec(null);
+        }
     }
 
     @Override
@@ -492,7 +509,6 @@ public class MemoryApi implements IApi {
         return visitasDTO;
     }
 
-    // Helpers
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
         String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
