@@ -92,7 +92,7 @@ public class EditarBienDialog extends JDialog {
                     .toLocalDate();
 
                 if (fechaNueva.isBefore(java.time.LocalDate.now())) {
-                    throw new Exception("No se puede asignar un vencimiento anterior a la fecha actual (" + java.time.LocalDate.now() + ").");
+                    throw new Exception("Esta vencido para esa fecha. Debe ser posterior a (" + java.time.LocalDate.now() + ").");
                 }
             }
 
