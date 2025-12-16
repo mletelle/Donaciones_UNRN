@@ -51,7 +51,7 @@ public interface IApi {
 
     // inventario
     List<BienDTO> obtenerInventario();
-    void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException;
+    void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException, FechaVencimientoInvalidaException;
     void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException;
 
     // Ordenes entrega

@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +80,7 @@ public class PersistenceApi implements IApi {
     }
 
     public void actualizarBienInventario(BienDTO bienDTO)
-            throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+            throws ObjetoNuloException, CampoVacioException, ReglaNegocioException, FechaVencimientoInvalidaException {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
@@ -88,8 +90,29 @@ public class PersistenceApi implements IApi {
             if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
             if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
             
+            if (bienDTO.getFechaVencimiento() != null) {
+                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
+                    throw new FechaVencimientoInvalidaException("El producto ya se encuentra vencido (Fecha: " + bienDTO.getFechaVencimiento() + ").");
+                }
+            }
+            
+            boolean requiereVencimiento = (bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS);
+            if (requiereVencimiento && bienDTO.getFechaVencimiento() == null) {
+            	throw new FechaVencimientoInvalidaException("Para la categoría seleccionada es obligatorio indicar una fecha de vencimiento.");
+            	}
+            
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
+            
+            if (bienDTO.getFechaVencimiento() != null) {
+                java.util.Date fechaSql = java.util.Date.from(
+                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                );
+                bienDb.setFecVec(fechaSql);
+            } else {
+                bienDb.setFecVec(null);
+            }
+            
             bienDao.update(bienDb, conn);
             conn.commit();
         } catch (SQLException e) {
