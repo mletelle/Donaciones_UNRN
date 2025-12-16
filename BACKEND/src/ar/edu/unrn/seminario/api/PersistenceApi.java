@@ -194,8 +194,8 @@ public class PersistenceApi implements IApi {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
-            return usuarioDao.findByRol(3, conn).stream()
-                    .map(u -> new UsuarioDTO(u.getUsuario(), u.getNombre(), u.getApellido(), u.getDni(), u.obtenerDireccion() != null ? u.obtenerDireccion() : "", 3))
+            return usuarioDao.findByRol(Rol.CODIGO_DONANTE, conn).stream()
+                    .map(u -> new UsuarioDTO(u.getUsuario(), u.getNombre(), u.getApellido(), u.getDni(), u.obtenerDireccion() != null ? u.obtenerDireccion() : "", Rol.CODIGO_DONANTE))
                     .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -347,7 +347,7 @@ public class PersistenceApi implements IApi {
             }
 
             Usuario voluntario = usuarioDao.findByDni(idVoluntario, conn);
-            if (voluntario == null || voluntario.getRol().getCodigo() != 2) throw new ObjetoNuloException("Voluntario inválido.");
+            if (voluntario == null || voluntario.getRol().getCodigo() != Rol.CODIGO_VOLUNTARIO) throw new ObjetoNuloException("Voluntario inválido.");
 
             Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo, conn);
             if (vehiculo == null) throw new ReglaNegocioException("No hay vehículos disponibles.");
@@ -430,8 +430,8 @@ public class PersistenceApi implements IApi {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
-            return usuarioDao.findByRol(2, conn).stream()
-                    .map(v -> new UsuarioDTO(v.getUsuario(), v.getNombre(), v.getApellido(), v.getDni(), v.obtenerDireccion(), 2))
+            return usuarioDao.findByRol(Rol.CODIGO_VOLUNTARIO, conn).stream()
+                    .map(v -> new UsuarioDTO(v.getUsuario(), v.getNombre(), v.getApellido(), v.getDni(), v.obtenerDireccion(), Rol.CODIGO_VOLUNTARIO))
                     .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
@@ -446,8 +446,8 @@ public class PersistenceApi implements IApi {
         Connection conn = null;
         try {
             conn = ConnectionManager.getConnection();
-            return usuarioDao.findByRol(4, conn).stream()
-                    .map(b -> new UsuarioDTO(b.getUsuario(), b.getNombre(), b.getApellido(), b.getDni(), b.obtenerDireccion(), 4))
+            return usuarioDao.findByRol(Rol.CODIGO_BENEFICIARIO, conn).stream()
+                    .map(b -> new UsuarioDTO(b.getUsuario(), b.getNombre(), b.getApellido(), b.getDni(), b.obtenerDireccion(), Rol.CODIGO_BENEFICIARIO))
                     .collect(Collectors.toList());
         } catch (SQLException e) {
             e.printStackTrace();
