@@ -48,7 +48,9 @@ public class EditarBienDialog extends JDialog {
 
         formPanel.add(new JLabel("Vencimiento:"));
 
-        Date fechaInicial = new Date(); //default hoy
+        boolean requiereVencimiento = requiereVencimiento(bienDTO.getCategoria());
+
+        Date fechaInicial = new Date();
         if (bienDTO.getFechaVencimiento() != null) {
             fechaInicial = Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant());
         }
@@ -57,6 +59,7 @@ public class EditarBienDialog extends JDialog {
         spinnerVencimiento = new JSpinner(modelFecha);
         JSpinner.DateEditor editorFecha = new JSpinner.DateEditor(spinnerVencimiento, "dd/MM/yyyy");
         spinnerVencimiento.setEditor(editorFecha);
+        spinnerVencimiento.setEnabled(requiereVencimiento);
 
         formPanel.add(spinnerVencimiento);
 
@@ -79,18 +82,19 @@ public class EditarBienDialog extends JDialog {
             String desc = txtDescripcion.getText().trim();
             String cantStr = txtCantidad.getText().trim();
 
-            if (desc.isEmpty()) throw new CampoVacioException("Descripcion obligatoria.o");
+            if (desc.isEmpty()) throw new CampoVacioException("Descripcion obligatoria.");
             if (cantStr.isEmpty()) throw new CampoVacioException("Cantidad obligatoria");
 
             int cantidad = Integer.parseInt(cantStr);
             
-            Date fechaSwing = (Date) spinnerVencimiento.getValue();
             LocalDate fechaParaDTO = null;
-
-            if (fechaSwing != null) {
-                fechaParaDTO = fechaSwing.toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+            if (spinnerVencimiento.isEnabled()) {
+                Date fechaSwing = (Date) spinnerVencimiento.getValue();
+                if (fechaSwing != null) {
+                    fechaParaDTO = fechaSwing.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+                }
             }
 
             bienDTO.setDescripcion(desc);
@@ -109,5 +113,9 @@ public class EditarBienDialog extends JDialog {
 
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.WARNING_MESSAGE);
         }
+    }
+
+    private boolean requiereVencimiento(int categoria) {
+        return categoria == BienDTO.CATEGORIA_ALIMENTOS || categoria == BienDTO.CATEGORIA_MEDICAMENTOS;
     }
 }

@@ -102,14 +102,21 @@ public class PersistenceApi implements IApi {
             Bien bienDb = bienDao.findById(bienDTO.getId(), conn);
             if (bienDb == null) throw new ObjetoNuloException("El bien no existe");
             if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa");
-            if (bienDTO.getFechaVencimiento() != null) {
+            
+            boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
+                                        || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
+            
+            if (requiereVencimiento) {
+                if (bienDTO.getFechaVencimiento() == null) {
+                    throw new ReglaNegocioException("La fecha de vencimiento es obligatoria para alimentos y medicamentos.");
+                }
                 if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
                     throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + LocalDate.now() + ").");
                 }
             }
+            
             bienDb.setCantidad(bienDTO.getCantidad());
             bienDb.setDescripcion(bienDTO.getDescripcion());
-            //convertimos: java.util.Date (DB) -> LocalDate (DTO)
             if (bienDTO.getFechaVencimiento() != null) {
                 Date fechaDB = Date.from(
                     bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
@@ -122,7 +129,7 @@ public class PersistenceApi implements IApi {
             conn.commit();
         } catch (SQLException e) {
             rollback(conn);
-            throw new RuntimeException("Error en la caga del bien: " + e.getMessage(), e);
+            throw new RuntimeException("Error en la carga del bien: " + e.getMessage(), e);
         } finally {
             closeConnection(conn);
         }
@@ -632,6 +639,28 @@ public class PersistenceApi implements IApi {
                          : "Sin detalle";
                  return new OrdenEntregaDTO(o.getId(), o.getFechaGeneracion().toString(), o.obtenerEstadoString(), resumen);
             }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            ConnectionManager.disconnect();
+        }
+    }
+
+    @Override
+    public List<OrdenEntregaDTO> obtenerTodasOrdenesEntrega() {
+        Connection conn = null;
+        try {
+            conn = ConnectionManager.getConnection();
+            return ordenEntregaDao.findAll(conn).stream()
+                    .map(o -> new OrdenEntregaDTO(
+                            o.getId(),
+                            o.getFechaGeneracion().toString(),
+                            o.obtenerEstadoString(),
+                            o.getBeneficiario() != null ? o.getBeneficiario().getNombre() + " " + o.getBeneficiario().getApellido() : "-",
+                            o.getVoluntario() != null ? o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido() : "-"
+                    ))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();

@@ -98,7 +98,13 @@ public class MemoryApi implements IApi {
         if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
         if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
         
-        if (bienDTO.getFechaVencimiento() != null) {
+        boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
+                                    || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
+        
+        if (requiereVencimiento) {
+            if (bienDTO.getFechaVencimiento() == null) {
+                throw new ReglaNegocioException("La fecha de vencimiento es obligatoria para alimentos y medicamentos.");
+            }
             if (bienDTO.getFechaVencimiento().isBefore(java.time.LocalDate.now())) {
                 throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + java.time.LocalDate.now() + ").");
             }
@@ -107,7 +113,6 @@ public class MemoryApi implements IApi {
         bienEncontrado.setCantidad(bienDTO.getCantidad());
         bienEncontrado.setDescripcion(bienDTO.getDescripcion());
         
-        // Conversión DTO (LocalDate) -> Entidad (Date)
         if (bienDTO.getFechaVencimiento() != null) {
             java.util.Date fechaConvertida = java.util.Date.from(
                 bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
@@ -473,6 +478,20 @@ public class MemoryApi implements IApi {
                     }
                     return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.obtenerEstadoString(), resumen);
                 })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrdenEntregaDTO> obtenerTodasOrdenesEntrega() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        return ordenesEntrega.stream()
+                .map(o -> new OrdenEntregaDTO(
+                        o.getId(),
+                        sdf.format(o.getFechaGeneracion()),
+                        o.obtenerEstadoString(),
+                        o.getBeneficiario() != null ? o.getBeneficiario().getNombre() + " " + o.getBeneficiario().getApellido() : "-",
+                        o.getVoluntario() != null ? o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido() : "-"
+                ))
                 .collect(Collectors.toList());
     }
 
