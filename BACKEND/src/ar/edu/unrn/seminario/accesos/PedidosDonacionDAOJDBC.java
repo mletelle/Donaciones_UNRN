@@ -17,7 +17,6 @@ import ar.edu.unrn.seminario.modelo.OrdenRetiro;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.TipoVehiculo;
-import ar.edu.unrn.seminario.modelo.TipoBien;
 import ar.edu.unrn.seminario.modelo.CategoriaBien;
 
 public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
@@ -65,23 +64,22 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
             
             if (pedido.obtenerBienes() != null && !pedido.obtenerBienes().isEmpty()) {
                 stmtBienes = conn.prepareStatement(
-                    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)");
                 
                 for (Bien bien : pedido.obtenerBienes()) {
                     stmtBienes.setInt(1, idGenerado);
                     stmtBienes.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
                     stmtBienes.setInt(3, bien.obtenerCantidad());
-                    stmtBienes.setInt(4, mapTipoToId(bien.obtenerTipo()));
                     
-                    if (bien.getDescripcion() != null) stmtBienes.setString(5, bien.getDescripcion());
-                    else stmtBienes.setNull(5, java.sql.Types.VARCHAR);
+                    if (bien.getDescripcion() != null) stmtBienes.setString(4, bien.getDescripcion());
+                    else stmtBienes.setNull(4, java.sql.Types.VARCHAR);
                     
-                    if (bien.getFecVec() != null) stmtBienes.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
-                    else stmtBienes.setNull(6, java.sql.Types.DATE);
+                    if (bien.getFecVec() != null) stmtBienes.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
+                    else stmtBienes.setNull(5, java.sql.Types.DATE);
                     
                     String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario().name() : "PENDIENTE";
-                    stmtBienes.setString(7, estado);
+                    stmtBienes.setString(6, estado);
                     
                     stmtBienes.addBatch();
                 }
@@ -410,16 +408,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
     
 
     
-    private int mapTipoToId(TipoBien tipo) {
-        switch (tipo) {
-            case ALIMENTO: return 1;
-            case ROPA: return 2;
-            case MOBILIARIO: return 3;
-            case HIGIENE: return 4;
-            default: throw new IllegalArgumentException("tipo no mapeado: " + tipo);
-        }
-    }
-    
+
     private int mapCategoriaToId(CategoriaBien categoria) {
         switch (categoria) {
             case ROPA: return 1;

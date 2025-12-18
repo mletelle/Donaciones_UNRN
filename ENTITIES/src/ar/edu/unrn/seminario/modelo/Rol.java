@@ -4,10 +4,10 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Rol {
 	
-	public static final int CODIGO_ADMINISTRADOR = 1;
-    public static final int CODIGO_VOLUNTARIO = 2;
-    public static final int CODIGO_DONANTE = 3;
-    public static final int CODIGO_BENEFICIARIO = 4;
+	public static final int ROL_ADMINISTRADOR = 1;
+	public static final int ROL_VOLUNTARIO = 2;
+	public static final int ROL_DONANTE = 3;
+	public static final int ROL_BENEFICIARIO = 4;
 	
 	private Integer codigo;
 	private String nombre;

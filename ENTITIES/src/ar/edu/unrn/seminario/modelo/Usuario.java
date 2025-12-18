@@ -1,6 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
+import java.util.List;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
@@ -36,11 +37,11 @@ public class Usuario {
         if (rol == null) throw new ObjetoNuloException("El rol no puede ser nulo.");
         if (dni <= 0) throw new CampoVacioException("DNI inválido.");
 
-        if (rol.getCodigo() == 3 && esVacio(direccion)) {
+        if (rol.getCodigo() == Rol.ROL_DONANTE && esVacio(direccion)) {
             throw new CampoVacioException("La dirección es obligatoria para los Donantes.");
         }
 
-        if (rol.getCodigo() != 4 && esVacio(apellido)) {
+        if (rol.getCodigo() != Rol.ROL_BENEFICIARIO && esVacio(apellido)) {
             throw new CampoVacioException("El apellido es obligatorio.");
         }
 
@@ -164,11 +165,11 @@ public class Usuario {
     	}
 
     // Listas
-    public ArrayList<PedidosDonacion> getPedidos() {
-    	return pedidos;
+    public List<PedidosDonacion> getPedidos() {
+    	return pedidos != null ? java.util.Collections.unmodifiableList(pedidos) : java.util.Collections.emptyList();
     	}
-    public ArrayList<OrdenRetiro> getOrdenesAsignadas() {
-    	return ordenesAsignadas;
+    public List<OrdenRetiro> getOrdenesAsignadas() {
+    	return ordenesAsignadas != null ? java.util.Collections.unmodifiableList(ordenesAsignadas) : java.util.Collections.emptyList();
     	}
     public void agregarPedido(PedidosDonacion pedido) {
     	this.pedidos.add(pedido);
@@ -204,6 +205,6 @@ public class Usuario {
     }
     
     public boolean esDonante() {
-        return this.rol != null && this.rol.getCodigo() == 3;
+        return this.rol != null && this.rol.getCodigo() == Rol.ROL_DONANTE;
     }
 }
