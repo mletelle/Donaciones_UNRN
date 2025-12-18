@@ -56,12 +56,12 @@ public class MemoryApi implements IApi {
                 java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
                 PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, TipoVehiculo.AUTO, donantePrueba);
                 try {
-                    Bien b1 = new Bien(TipoBien.ALIMENTO, 10, CategoriaBien.ALIMENTOS);
+                    Bien b1 = new Bien(10, CategoriaBien.ALIMENTOS);
                     b1.setDescripcion("Paquete de arroz 1kg");
                     b1.setEstadoInventario(EstadoBien.EN_STOCK);
                     b1.setId(++secuenciaBien);
 
-                    Bien b2 = new Bien(TipoBien.ROPA, 5, CategoriaBien.ROPA);
+                    Bien b2 = new Bien(5, CategoriaBien.ROPA);
                     b2.setDescripcion("Camisas talla M");
                     b2.setEstadoInventario(EstadoBien.EN_STOCK);
                     b2.setId(++secuenciaBien);
@@ -125,7 +125,7 @@ public class MemoryApi implements IApi {
 
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
-        String estadoStr = (bien.obtenerTipo() == TipoBien.ALIMENTO) ? "Nuevo" : "Usado";
+        String estadoStr = "Usado";
         
         String vencimientoStr = "-";
         LocalDate fechaLocalDate = null;
@@ -142,7 +142,6 @@ public class MemoryApi implements IApi {
         dto.setDescripcion(bien.getDescripcion());
         dto.setCantidad(bien.obtenerCantidad());
         dto.setCategoria(mapEnumCategoriaToDTO(bien.obtenerCategoria()));
-        dto.setTipo(mapEnumTipoToDTO(bien.obtenerTipo()));
         
         dto.setCategoriaTexto(categoriaStr);
         dto.setEstadoTexto(estadoStr);
@@ -282,9 +281,8 @@ public class MemoryApi implements IApi {
 
         List<Bien> bienes = new ArrayList<>();
         for (BienDTO dto : pedidoDTO.getBienes()) {
-            TipoBien tipo = mapDTOTipoToEnum(dto.getTipo());
             CategoriaBien categoria = mapDTOCategoriaToEnum(dto.getCategoria());
-            Bien bien = new Bien(tipo, dto.getCantidad(), categoria);
+            Bien bien = new Bien(dto.getCantidad(), categoria);
             bien.setId(++secuenciaBien);
             if (dto.getDescripcion() != null) bien.setDescripcion(dto.getDescripcion());
             if (dto.getFechaVencimiento() != null) {
@@ -427,7 +425,7 @@ public class MemoryApi implements IApi {
                 bienesFinalesParaOrden.add(bienOriginal);
             } else {
                 bienOriginal.setCantidad(bienOriginal.getCantidad() - cantidadSolicitada);
-                Bien bienNuevo = new Bien(bienOriginal.obtenerTipo(), cantidadSolicitada, bienOriginal.obtenerCategoria());
+                Bien bienNuevo = new Bien(cantidadSolicitada, bienOriginal.obtenerCategoria());
                 bienNuevo.setId(++secuenciaBien);
                 bienNuevo.setDescripcion(bienOriginal.getDescripcion());
                 bienNuevo.setEstadoInventario(EstadoBien.ENTREGADO);
@@ -532,10 +530,6 @@ public class MemoryApi implements IApi {
     }
     
     // convertidores DTO<->Enum
-    private TipoBien mapDTOTipoToEnum(int tipo) {
-        return TipoBien.ALIMENTO;
-    }
-    
     private CategoriaBien mapDTOCategoriaToEnum(int categoria) {
         switch (categoria) {
             case BienDTO.CATEGORIA_ROPA: return CategoriaBien.ROPA;
@@ -564,10 +558,6 @@ public class MemoryApi implements IApi {
             case HIGIENE: return BienDTO.CATEGORIA_HIGIENE;
             default: return BienDTO.CATEGORIA_OTROS;
         }
-    }
-    
-    private int mapEnumTipoToDTO(TipoBien tipo) {
-        return BienDTO.TIPO_NUEVO;
     }
 
     private String mapCategoriaToString(CategoriaBien categoria) {
