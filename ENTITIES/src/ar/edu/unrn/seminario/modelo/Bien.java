@@ -131,7 +131,7 @@ public class Bien {
 	}
 
 	private void validarReglasDeInventario() throws ReglaNegocioException {
-	    // Desacoplamos la lógica de validación de la API
+
 	    boolean requiereVencimiento = (categoria == CategoriaBien.ALIMENTOS || categoria == CategoriaBien.MEDICAMENTOS);
 	    
 	    if (requiereVencimiento) {
