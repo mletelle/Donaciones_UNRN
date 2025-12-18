@@ -1,9 +1,9 @@
 package ar.edu.unrn.seminario.dto;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-import java.sql.Timestamp;
 
 public class OrdenRetiroDTO {
     
@@ -24,6 +24,12 @@ public class OrdenRetiroDTO {
         this.visitas = visitas;
         this.donante = donante;
         this.vehiculo = vehiculo;
+        this.voluntario = voluntario;
+    }
+    
+    public OrdenRetiroDTO(int id, String fecha, String estado, String voluntario, int cantidadPedidos) {
+        this.id = id;
+        this.estado = estado;
         this.voluntario = voluntario;
     }
 

@@ -59,6 +59,7 @@ public interface IApi {
            throws ObjetoNuloException, ReglaNegocioException, CampoVacioException;
            
     List<OrdenEntregaDTO> obtenerEntregasPorBeneficiario(String username);
+    List<OrdenEntregaDTO> obtenerTodasOrdenesEntrega();
     
     // Gestión Operativa de Entregas
     List<OrdenEntregaDTO> obtenerEntregasPendientes();

@@ -30,24 +30,19 @@ public class Usuario {
                    String apellido, int dni, String direccion, String necesidad, 
                    Integer personasACargo, String prioridad) throws CampoVacioException, ObjetoNuloException {
         
-        // Validaciones Generales
         if (esVacio(usuario)) throw new CampoVacioException("El usuario es obligatorio.");
         if (esVacio(contrasena)) throw new CampoVacioException("La contraseña es obligatoria.");
         if (esVacio(nombre)) throw new CampoVacioException("El nombre es obligatorio.");
         if (rol == null) throw new ObjetoNuloException("El rol no puede ser nulo.");
         if (dni <= 0) throw new CampoVacioException("DNI inválido.");
 
-        // Lógica de Negocio: DONANTE (3) requiere Dirección
         if (rol.getCodigo() == 3 && esVacio(direccion)) {
             throw new CampoVacioException("La dirección es obligatoria para los Donantes.");
         }
 
-        // Lógica de Negocio: APELLIDO obligatorio (EXCEPTO Beneficiarios Institucionales)
-        // Si NO es beneficiario (4), el apellido es obligatorio.
         if (rol.getCodigo() != 4 && esVacio(apellido)) {
             throw new CampoVacioException("El apellido es obligatorio.");
         }
-        //Si ES beneficiario (4) y el apellido está vacío, se asume que es una INSTITUCIÓN.
 
         this.usuario = usuario;
         this.contrasena = contrasena;
@@ -183,6 +178,7 @@ public class Usuario {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        // se usa solo DNI para identificar unicidad de usuarios en el dominio
         result = prime * result + dni; 
         return result;
     }
@@ -193,6 +189,7 @@ public class Usuario {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         Usuario other = (Usuario) obj;
+        // usuarios con mismo DNI se consideran iguales (unicidad por DNI)
         return this.dni == other.dni;
     }
 

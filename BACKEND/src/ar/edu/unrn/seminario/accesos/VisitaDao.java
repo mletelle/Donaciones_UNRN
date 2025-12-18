@@ -1,16 +1,17 @@
 package ar.edu.unrn.seminario.accesos;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
+import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Visita;
 
 public interface VisitaDao {
 	
-	void create(Visita visita, int idOrden, int idPedido, Connection conn) throws SQLException;
+	void create(Visita visita, int idOrden, int idPedido) throws PersistenceException;
 	
-	List<Visita> findByVoluntario(Usuario voluntario, Connection conn) throws SQLException;
+	void registrarVisitaCompleta(int idOrdenRetiro, int idPedido, String resultado, String observacion) throws PersistenceException;
+	
+	List<Visita> findByVoluntario(Usuario voluntario) throws PersistenceException;
 	
 }

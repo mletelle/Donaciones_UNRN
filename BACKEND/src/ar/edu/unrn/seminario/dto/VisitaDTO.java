@@ -1,7 +1,7 @@
 package ar.edu.unrn.seminario.dto;
 
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class VisitaDTO {
 
