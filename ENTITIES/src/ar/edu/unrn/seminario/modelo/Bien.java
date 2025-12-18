@@ -24,7 +24,7 @@ public class Bien {
     
     public Bien(int cantidad, CategoriaBien categoria) throws CampoVacioException {
         if (categoria == null) throw new CampoVacioException("La categoria no puede ser nula.");
-        if (cantidad <= 0) throw new CampoVacioException("La cantidad debe ser mayor a cero.");
+        if (cantidad < 0) throw new CampoVacioException("La cantidad debe ser mayor a cero.");
         
         this.cantidad = cantidad;
         this.categoria = categoria;

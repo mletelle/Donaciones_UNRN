@@ -2,6 +2,7 @@ package ar.edu.unrn.seminario.dto;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -16,15 +17,19 @@ public class OrdenRetiroDTO {
     private String vehiculo;
     private String voluntario;
 
+    private String fechaFormateada; // Para mostrar en la tabla (JTable)
+    
+    
+    
     // Constructores
-    public OrdenRetiroDTO(int id, String estado, LocalDateTime fechaCreacion, List<VisitaDTO> visitas, String donante, String vehiculo, String voluntario) {
+    public OrdenRetiroDTO(int id, Date fechaCreacion, String fechaFormateada, String estado, String voluntario, int cantidadPedidos, String donante, String vehiculo) {
         this.id = id;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaFormateada = fechaFormateada;
         this.estado = estado;
-        this.fechaCreacion = Timestamp.valueOf(fechaCreacion); 
-        this.visitas = visitas;
+        this.voluntario = voluntario;
         this.donante = donante;
         this.vehiculo = vehiculo;
-        this.voluntario = voluntario;
     }
     
     public OrdenRetiroDTO(int id, String fecha, String estado, String voluntario, int cantidadPedidos) {
@@ -64,6 +69,9 @@ public class OrdenRetiroDTO {
     
     public String getDescripcion() {
         return "Donante: " + donante + ", Vehiculo: " + vehiculo + ", Voluntario: " + voluntario;
+    }
+    public String getFechaFormateada() {
+        return fechaFormateada;
     }
     
     // Setters

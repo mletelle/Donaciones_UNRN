@@ -99,7 +99,7 @@ public class BienDAOJDBC implements BienDao {
         ResultSet rs = null;
         try {
             conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement("SELECT * FROM bienes WHERE estado_inventario = ?");
+            statement = conn.prepareStatement("SELECT * FROM bienes WHERE estado_inventario = ? AND cantidad > 0");
             statement.setString(1, estado);
             rs = statement.executeQuery();
             

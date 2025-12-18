@@ -21,7 +21,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     private UsuarioDao usuarioDao = new UsuarioDAOJDBC();
     private VehiculoDao vehiculoDao = new VehiculoDAOJDBC();
     private BienDao bienDao = new BienDAOJDBC();
-    // TODO: Inyectar estas DAOs en el constructor para desacoplar
 
     @Override
     public int create(OrdenEntrega orden) throws PersistenceException {
@@ -122,10 +121,11 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             }
             
             stmtFraccionar = conn.prepareStatement("UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?");
+            // el campo "tipo" estaba generando error
             stmtInsertBien = conn.prepareStatement(
-                "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario, id_orden_entrega) "
-                + "SELECT id_pedido_donacion, categoria, ?, tipo, descripcion, fecha_vencimiento, 'ENTREGADO', ? FROM bienes WHERE id = ?",
-                Statement.RETURN_GENERATED_KEYS);
+            	    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario, id_orden_entrega) "
+            	    + "SELECT id_pedido_donacion, categoria, ?, descripcion, fecha_vencimiento, 'ENTREGADO', ? FROM bienes WHERE id = ?",
+            	    Statement.RETURN_GENERATED_KEYS);
             stmtAsociar = conn.prepareStatement("UPDATE bienes SET id_orden_entrega = ?, estado_inventario = 'ENTREGADO' WHERE id = ?");
             
             for (java.util.Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
