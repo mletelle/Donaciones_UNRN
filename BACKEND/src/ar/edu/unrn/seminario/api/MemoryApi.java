@@ -154,12 +154,14 @@ public class MemoryApi implements IApi {
 
     @Override
     public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
-        Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBien).findFirst().orElse(null);
-        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
-        bienEncontrado.setEstadoInventario(EstadoBien.BAJA);
-        bienEncontrado.setDescripcion(bienEncontrado.getDescripcion() + " [BAJA: " + motivo + "]");
+        Bien bienEncontrado = pedidos.stream()
+                .flatMap(p -> p.obtenerBienes().stream())
+                .filter(b -> b.getId() == idBien)
+                .findFirst()
+                .orElseThrow(() -> new ObjetoNuloException("El bien no existe"));
+        bienEncontrado.darDeBaja(motivo);
     }
-
+    
     @Override
     public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
             String apellido, int dni, String direccion, String necesidad, int personasCargo, String prioridad)

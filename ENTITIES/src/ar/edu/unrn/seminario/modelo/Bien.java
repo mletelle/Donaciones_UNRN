@@ -144,6 +144,14 @@ public class Bien {
 	    }
 	}
     
+	public void darDeBaja(String motivo) throws ReglaNegocioException {
+	    if (this.estadoInventario == EstadoBien.ENTREGADO) {
+	        throw new ReglaNegocioException("No se puede dar de baja un bien que ya se entrgo");
+	    }
+	    this.estadoInventario = EstadoBien.BAJA;
+	    this.descripcion = this.descripcion + " [BAJA: " + motivo + "]";
+	}
+	
     @Override
     public String toString() {
         String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripcion";
