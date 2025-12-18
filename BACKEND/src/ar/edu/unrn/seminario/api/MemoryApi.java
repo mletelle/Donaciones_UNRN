@@ -2,7 +2,8 @@ package ar.edu.unrn.seminario.api;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId; //que dependan de esto las fechas
+import java.time.format.DateTimeFormatter;//por lo del vencimiento
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +19,7 @@ public class MemoryApi implements IApi {
     private List<Usuario> usuarios;
     private List<PedidosDonacion> pedidos;
     private List<OrdenRetiro> ordenes;
-    private List<OrdenEntrega> ordenesEntrega; // Nueva lista
+    private List<OrdenEntrega> ordenesEntrega;
     private List<Vehiculo> vehiculosDisponibles;
 
     private static int secuenciaBien = 0;
@@ -36,47 +37,39 @@ public class MemoryApi implements IApi {
 
     private void inicializarDatos() {
         try {
-            // Roles
             roles.add(new Rol(1, "ADMIN"));
             roles.add(new Rol(2, "VOLUNTARIO"));
             roles.add(new Rol(3, "DONANTE"));
             roles.add(new Rol(4, "BENEFICIARIO"));
 
-            // Vehículos
             vehiculosDisponibles.add(new Vehiculo("AE 123 CD", "Disponible", "Auto", 500));
             vehiculosDisponibles.add(new Vehiculo("AD 456 EF", "Disponible", "Camioneta", 1500));
             vehiculosDisponibles.add(new Vehiculo("AA 789 GH", "Disponible", "Camion", 4000));
 
-            // Usuarios Base (Con la firma nueva de 11 parámetros)
-            // Admin, Voluntario, Donante
             registrarUsuario("admin", "1234", "admin@unrn.edu.ar", "Admin", 1, "Sistema", 11111111, null, null, 0, null);
             registrarUsuario("clopez", "pass", "clopez@unrn.edu.ar", "Carlos", 2, "Lopez", 22222222, null, null, 0, null);
             registrarUsuario("jperez", "pass", "jperez@unrn.edu.ar", "Juan", 3, "Perez", 55555555, "Calle Falsa 123", null, 0, null);
-            
-            // Beneficiario de prueba
             registrarUsuario("inst_comedor", "1234", "comedor@mail.com", "Comedor", 4, "", 99999999, "Calle Solidaria 10", "Alimentos", 100, "ALTA");
 
-            // crear algunos bienes ya en inventario para pruebas
             Usuario donantePrueba = usuarios.stream().filter(u -> u.getUsuario().equals("jperez")).findFirst().orElse(null);
             if (donantePrueba != null) {
                 java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
-                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, 1, donantePrueba);
+                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, TipoVehiculo.AUTO, donantePrueba);
                 try {
-                    Bien b1 = new Bien(BienDTO.TIPO_NUEVO, 10, BienDTO.CATEGORIA_ALIMENTOS);
+                    Bien b1 = new Bien(TipoBien.ALIMENTO, 10, CategoriaBien.ALIMENTOS);
                     b1.setDescripcion("Paquete de arroz 1kg");
-                    b1.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b1.setEstadoInventario(EstadoBien.EN_STOCK);
                     b1.setId(++secuenciaBien);
 
-                    Bien b2 = new Bien(BienDTO.TIPO_NUEVO, 5, BienDTO.CATEGORIA_ROPA);
+                    Bien b2 = new Bien(TipoBien.ROPA, 5, CategoriaBien.ROPA);
                     b2.setDescripcion("Camisas talla M");
-                    b2.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b2.setEstadoInventario(EstadoBien.EN_STOCK);
                     b2.setId(++secuenciaBien);
 
                     pd.obtenerBienes().add(b1);
                     pd.obtenerBienes().add(b2);
                     pedidos.add(pd);
                 } catch (CampoVacioException e) {
-                    // no deberia ocurrir, pero imprimimos para debug
                     e.printStackTrace();
                 }
             }
@@ -86,24 +79,99 @@ public class MemoryApi implements IApi {
         }
     }
 
-    // Usuarios
+    @Override
+    public List<BienDTO> obtenerInventario() {
+        return pedidos.stream().flatMap(p -> p.obtenerBienes().stream())
+                .filter(b -> EstadoBien.EN_STOCK.equals(b.getEstadoInventario()))
+                .map(this::convertirEntidadADTOVisual).collect(Collectors.toList());
+    }
+
+    @Override
+    public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+        if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
+        
+        Bien bienEncontrado = pedidos.stream()
+                .flatMap(p -> p.obtenerBienes().stream())
+                .filter(b -> b.getId() == bienDTO.getId())
+                .findFirst().orElse(null);
+                
+        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
+        if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
+        
+        boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
+                                    || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
+        
+        if (requiereVencimiento) {
+            if (bienDTO.getFechaVencimiento() == null) {
+                throw new ReglaNegocioException("La fecha de vencimiento es obligatoria para alimentos y medicamentos.");
+            }
+            if (bienDTO.getFechaVencimiento().isBefore(java.time.LocalDate.now())) {
+                throw new ReglaNegocioException("Esa fecha esta vencida. Debe ser posterior a (" + java.time.LocalDate.now() + ").");
+            }
+        }
+
+        bienEncontrado.setCantidad(bienDTO.getCantidad());
+        bienEncontrado.setDescripcion(bienDTO.getDescripcion());
+        
+        if (bienDTO.getFechaVencimiento() != null) {
+            java.util.Date fechaConvertida = java.util.Date.from(
+                bienDTO.getFechaVencimiento().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+            );
+            bienEncontrado.setFecVec(fechaConvertida); 
+        } else {
+            bienEncontrado.setFecVec(null);
+        }
+    }
+
+    private BienDTO convertirEntidadADTOVisual(Bien bien) {
+        String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
+        String estadoStr = (bien.obtenerTipo() == TipoBien.ALIMENTO) ? "Nuevo" : "Usado";
+        
+        String vencimientoStr = "-";
+        LocalDate fechaLocalDate = null;
+
+        if (bien.getFecVec() != null) {
+            fechaLocalDate = bien.getFecVec().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            vencimientoStr = fechaLocalDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        
+        BienDTO dto = new BienDTO();
+        dto.setId(bien.getId());
+        dto.setDescripcion(bien.getDescripcion());
+        dto.setCantidad(bien.obtenerCantidad());
+        dto.setCategoria(mapEnumCategoriaToDTO(bien.obtenerCategoria()));
+        dto.setTipo(mapEnumTipoToDTO(bien.obtenerTipo()));
+        
+        dto.setCategoriaTexto(categoriaStr);
+        dto.setEstadoTexto(estadoStr);
+        dto.setFechaVencimiento(fechaLocalDate);
+        dto.setVencimientoTexto(vencimientoStr);
+        
+        return dto;
+    }
+
+    @Override
+    public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
+        Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBien).findFirst().orElse(null);
+        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
+        bienEncontrado.setEstadoInventario(EstadoBien.BAJA);
+        bienEncontrado.setDescripcion(bienEncontrado.getDescripcion() + " [BAJA: " + motivo + "]");
+    }
 
     @Override
     public void registrarUsuario(String username, String password, String email, String nombre, Integer codigoRol,
             String apellido, int dni, String direccion, String necesidad, int personasCargo, String prioridad)
             throws CampoVacioException, ObjetoNuloException, UsuarioInvalidoException {
-
         if (usuarios.stream().anyMatch(u -> u.getUsuario().equalsIgnoreCase(username))) {
             throw new UsuarioInvalidoException("El nombre de usuario ya existe.");
         }
         if (usuarios.stream().anyMatch(u -> u.getDni() == dni)) {
             throw new UsuarioInvalidoException("Ya existe un usuario con el DNI " + dni);
         }
-
         Rol rol = roles.stream().filter(r -> r.getCodigo().equals(codigoRol)).findFirst().orElse(null);
         if (rol == null) throw new ObjetoNuloException("Rol no encontrado.");
-
-        // Constructor actualizado
         Usuario nuevoUsuario = new Usuario(username, password, nombre, email, rol, apellido, dni, direccion, 
                                            necesidad, personasCargo, prioridad);
         usuarios.add(nuevoUsuario);
@@ -166,8 +234,6 @@ public class MemoryApi implements IApi {
         return usuarios.stream().filter(u -> u.getDni() == dni).findFirst().orElse(null);
     }
 
-    // Roles
-
     @Override
     public List<RolDTO> obtenerRoles() {
         return roles.stream().map(r -> new RolDTO(r.getCodigo(), r.getNombre(), r.isActivo())).collect(Collectors.toList());
@@ -207,8 +273,6 @@ public class MemoryApi implements IApi {
         roles.stream().filter(r -> r.getCodigo().equals(codigo)).findFirst().ifPresent(Rol::desactivar);
     }
 
-    // Pedidos
-
     @Override
     public void registrarPedidoDonacion(PedidoDonacionDTO pedidoDTO) throws CampoVacioException, ObjetoNuloException {
         Usuario donante = buscarUsuarioPorDni(pedidoDTO.getDonanteId());
@@ -216,7 +280,9 @@ public class MemoryApi implements IApi {
 
         List<Bien> bienes = new ArrayList<>();
         for (BienDTO dto : pedidoDTO.getBienes()) {
-            Bien bien = new Bien(dto.getTipo(), dto.getCantidad(), dto.getCategoria());
+            TipoBien tipo = mapDTOTipoToEnum(dto.getTipo());
+            CategoriaBien categoria = mapDTOCategoriaToEnum(dto.getCategoria());
+            Bien bien = new Bien(tipo, dto.getCantidad(), categoria);
             bien.setId(++secuenciaBien);
             if (dto.getDescripcion() != null) bien.setDescripcion(dto.getDescripcion());
             if (dto.getFechaVencimiento() != null) {
@@ -228,10 +294,12 @@ public class MemoryApi implements IApi {
 
         LocalDateTime fecha = LocalDate.parse(pedidoDTO.getFecha(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
         
+        TipoVehiculo tipoVehiculo = TipoVehiculo.valueOf(pedidoDTO.getTipoVehiculo().toUpperCase());
+        
         PedidosDonacion pedido = new PedidosDonacion(
             fecha, 
             (ArrayList<Bien>) bienes, 
-            PedidosDonacion.convertirVehiculoAInt(pedidoDTO.getTipoVehiculo()), 
+            tipoVehiculo, 
             donante
         );
 
@@ -271,8 +339,6 @@ public class MemoryApi implements IApi {
     private PedidosDonacion buscarPedidoPorId(int id) {
         return pedidos.stream().filter(p -> p.getId() == id).findFirst().orElse(null);
     }
-
-    // Ordenes retiro
 
     @Override
     public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
@@ -330,8 +396,6 @@ public class MemoryApi implements IApi {
         return new OrdenRetiroDTO(o.getId(), o.obtenerNombreEstado(), o.obtenerFechaCreacion(), new ArrayList<>(), don, veh, vol);
     }
 
-    // Ordenes entrega
-
     @Override
     public void crearOrdenEntrega(String userBeneficiario, Map<Integer, Integer> bienesYCantidades, String userVoluntario)
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
@@ -350,23 +414,21 @@ public class MemoryApi implements IApi {
             int idBienOriginal = entry.getKey();
             int cantidadSolicitada = entry.getValue();
 
-            // Buscamos el bien en los pedidos cargados
             Bien bienOriginal = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBienOriginal).findFirst().orElse(null);
             
             if (bienOriginal == null) throw new ObjetoNuloException("Bien no encontrado.");
-            if (!Bien.ESTADO_EN_STOCK.equals(bienOriginal.getEstadoInventario())) throw new ReglaNegocioException("Bien no disponible.");
+            if (!EstadoBien.EN_STOCK.equals(bienOriginal.getEstadoInventario())) throw new ReglaNegocioException("Bien no disponible.");
             if (cantidadSolicitada > bienOriginal.getCantidad()) throw new ReglaNegocioException("Stock insuficiente.");
 
             if (cantidadSolicitada == bienOriginal.getCantidad()) {
-                bienOriginal.setEstadoInventario(Bien.ESTADO_ENTREGADO);
+                bienOriginal.setEstadoInventario(EstadoBien.ENTREGADO);
                 bienesFinalesParaOrden.add(bienOriginal);
             } else {
-                // Split
                 bienOriginal.setCantidad(bienOriginal.getCantidad() - cantidadSolicitada);
                 Bien bienNuevo = new Bien(bienOriginal.obtenerTipo(), cantidadSolicitada, bienOriginal.obtenerCategoria());
                 bienNuevo.setId(++secuenciaBien);
                 bienNuevo.setDescripcion(bienOriginal.getDescripcion());
-                bienNuevo.setEstadoInventario(Bien.ESTADO_ENTREGADO);
+                bienNuevo.setEstadoInventario(EstadoBien.ENTREGADO);
                 bienesFinalesParaOrden.add(bienNuevo);
             }
         }
@@ -388,7 +450,7 @@ public class MemoryApi implements IApi {
                     String resumen = (o.getBienes() != null && !o.getBienes().isEmpty()) 
                             ? o.getBienes().stream().map(Object::toString).collect(Collectors.joining(", ")) 
                             : "Sin detalle";
-                    return new OrdenEntregaDTO(o.getId(), fechaStr, o.obtenerEstadoString(), resumen);
+                    return new OrdenEntregaDTO(o.getId(), fechaStr, o.getEstado().toString(), resumen);
                 })
                 .collect(Collectors.toList());
     }
@@ -397,14 +459,28 @@ public class MemoryApi implements IApi {
     public List<OrdenEntregaDTO> obtenerEntregasPendientes() {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
         return ordenesEntrega.stream()
-                .filter(o -> o.getEstado() == OrdenEntrega.ESTADO_PENDIENTE)
+                .filter(o -> o.getEstado() == EstadoEntrega.PENDIENTE)
                 .map(o -> {
                     String resumen = "Sin detalle";
                     if (o.getBienes() != null && !o.getBienes().isEmpty()) {
                         resumen = o.getBienes().stream().map(Object::toString).collect(Collectors.joining(", "));
                     }
-                    return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.obtenerEstadoString(), resumen);
+                    return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.getEstado().toString(), resumen);
                 })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrdenEntregaDTO> obtenerTodasOrdenesEntrega() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        return ordenesEntrega.stream()
+                .map(o -> new OrdenEntregaDTO(
+                        o.getId(),
+                        sdf.format(o.getFechaGeneracion()),
+                        o.getEstado().toString(),
+                        o.getBeneficiario() != null ? o.getBeneficiario().getNombre() + " " + o.getBeneficiario().getApellido() : "-",
+                        o.getVoluntario() != null ? o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido() : "-"
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -415,38 +491,8 @@ public class MemoryApi implements IApi {
         
         Usuario vol = usuarios.stream().filter(u -> u.getUsuario().equals(usuarioVoluntario)).findFirst().orElse(null);
         orden.setVoluntario(vol);
-        orden.setEstado(OrdenEntrega.ESTADO_COMPLETADO);
+        orden.marcarComoCompletada();
     }
-
-    // Inventario
-
-    @Override
-    public List<BienDTO> obtenerInventario() {
-        return pedidos.stream().flatMap(p -> p.obtenerBienes().stream())
-                .filter(b -> Bien.ESTADO_EN_STOCK.equals(b.getEstadoInventario()))
-                .map(this::convertirEntidadADTOVisual).collect(Collectors.toList());
-    }
-
-    @Override
-    public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
-        if (bienDTO.getId() <= 0) throw new ObjetoNuloException("ID inválido.");
-        Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == bienDTO.getId()).findFirst().orElse(null);
-        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
-        if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("La cantidad no puede ser negativa.");
-        
-        bienEncontrado.setCantidad(bienDTO.getCantidad());
-        bienEncontrado.setDescripcion(bienDTO.getDescripcion());
-    }
-
-    @Override
-    public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
-        Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBien).findFirst().orElse(null);
-        if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
-        bienEncontrado.setEstadoInventario(Bien.ESTADO_BAJA);
-        bienEncontrado.setDescripcion(bienEncontrado.getDescripcion() + " [BAJA: " + motivo + "]");
-    }
-
-    // Visitas
 
     @Override
     public void registrarVisita(int idOrdenRetiro, int idPedido, LocalDateTime fechaHora, String resultado, String observacion)
@@ -461,17 +507,8 @@ public class MemoryApi implements IApi {
         visita.setPedidoRelacionado(pedido);
         orden.agregarVisita(visita);
 
-        if (resEnum == ResultadoVisita.RECOLECCION_EXITOSA) {
-            pedido.marcarCompletado();
-            if (pedido.obtenerBienes() != null) {
-                pedido.obtenerBienes().forEach(b -> b.setEstadoInventario(Bien.ESTADO_EN_STOCK));
-            }
-        } else if (resEnum == ResultadoVisita.CANCELADO) {
-            pedido.marcarCompletado();
-        } else {
-            pedido.marcarEnEjecucion();
-        }
-        orden.actualizarEstadoAutomatico();
+        // polimorfismo: el enum sabe que efectos aplicar
+        resEnum.aplicarEfectos(pedido);
     }
 
     @Override
@@ -491,35 +528,47 @@ public class MemoryApi implements IApi {
                 });
         return visitasDTO;
     }
-
-    // Helpers
-    private BienDTO convertirEntidadADTOVisual(Bien bien) {
-        String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
-        String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
-        String vencimientoStr = "-";
-        if (bien.getFecVec() != null) {
-            LocalDate localDate = new java.sql.Date(bien.getFecVec().getTime()).toLocalDate();
-            vencimientoStr = localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    
+    // convertidores DTO<->Enum
+    private TipoBien mapDTOTipoToEnum(int tipo) {
+        return TipoBien.ALIMENTO;
+    }
+    
+    private CategoriaBien mapDTOCategoriaToEnum(int categoria) {
+        switch (categoria) {
+            case BienDTO.CATEGORIA_ROPA: return CategoriaBien.ROPA;
+            case BienDTO.CATEGORIA_MUEBLES: return CategoriaBien.MUEBLES;
+            case BienDTO.CATEGORIA_ALIMENTOS: return CategoriaBien.ALIMENTOS;
+            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return CategoriaBien.ELECTRODOMESTICOS;
+            case BienDTO.CATEGORIA_HERRAMIENTAS: return CategoriaBien.HERRAMIENTAS;
+            case BienDTO.CATEGORIA_JUGUETES: return CategoriaBien.JUGUETES;
+            case BienDTO.CATEGORIA_LIBROS: return CategoriaBien.LIBROS;
+            case BienDTO.CATEGORIA_MEDICAMENTOS: return CategoriaBien.MEDICAMENTOS;
+            case BienDTO.CATEGORIA_HIGIENE: return CategoriaBien.HIGIENE;
+            default: return CategoriaBien.OTROS;
         }
-        BienDTO dto = new BienDTO(categoriaStr, bien.getDescripcion(), bien.obtenerCantidad(), estadoStr, vencimientoStr);
-        dto.setId(bien.getId());
-        dto.setCategoria(bien.obtenerCategoria());
-        dto.setTipo(bien.obtenerTipo());
-        return dto;
+    }
+    
+    private int mapEnumCategoriaToDTO(CategoriaBien categoria) {
+        switch (categoria) {
+            case ROPA: return BienDTO.CATEGORIA_ROPA;
+            case MUEBLES: return BienDTO.CATEGORIA_MUEBLES;
+            case ALIMENTOS: return BienDTO.CATEGORIA_ALIMENTOS;
+            case ELECTRODOMESTICOS: return BienDTO.CATEGORIA_ELECTRODOMESTICOS;
+            case HERRAMIENTAS: return BienDTO.CATEGORIA_HERRAMIENTAS;
+            case JUGUETES: return BienDTO.CATEGORIA_JUGUETES;
+            case LIBROS: return BienDTO.CATEGORIA_LIBROS;
+            case MEDICAMENTOS: return BienDTO.CATEGORIA_MEDICAMENTOS;
+            case HIGIENE: return BienDTO.CATEGORIA_HIGIENE;
+            default: return BienDTO.CATEGORIA_OTROS;
+        }
+    }
+    
+    private int mapEnumTipoToDTO(TipoBien tipo) {
+        return BienDTO.TIPO_NUEVO;
     }
 
-    private String mapCategoriaToString(int idCategoria) {
-        switch (idCategoria) {
-            case BienDTO.CATEGORIA_ROPA: return "Ropa";
-            case BienDTO.CATEGORIA_MUEBLES: return "Muebles";
-            case BienDTO.CATEGORIA_ALIMENTOS: return "Alimentos";
-            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return "Electrodomésticos";
-            case BienDTO.CATEGORIA_HERRAMIENTAS: return "Herramientas";
-            case BienDTO.CATEGORIA_JUGUETES: return "Juguetes";
-            case BienDTO.CATEGORIA_LIBROS: return "Libros";
-            case BienDTO.CATEGORIA_MEDICAMENTOS: return "Medicamentos";
-            case BienDTO.CATEGORIA_HIGIENE: return "Higiene";
-            default: return "Otros";
-        }
+    private String mapCategoriaToString(CategoriaBien categoria) {
+        return categoria.toString();
     }
 }

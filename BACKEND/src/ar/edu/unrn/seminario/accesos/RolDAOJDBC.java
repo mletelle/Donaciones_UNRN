@@ -8,16 +8,19 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Rol;
 
 public class RolDAOJDBC implements RolDao {
 
 	@Override
-	public Rol find(Integer codigo, Connection conn) throws SQLException {
+	public Rol find(Integer codigo) throws PersistenceException {
+		Connection conn = null;
 		Rol rol = null;
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
+			conn = ConnectionManager.getConnection();
 			statement = conn.prepareStatement(
 					"SELECT r.codigo, r.nombre, r.activo FROM roles r WHERE r.codigo = ?");
 
@@ -28,22 +31,32 @@ public class RolDAOJDBC implements RolDao {
 					rol = new Rol(rs.getInt("codigo"), rs.getString("nombre"));
 					rol.setActivo(rs.getBoolean("activo"));
 				} catch (Exception e) {
-					throw new SQLException("Error Rol", e);
+					throw new PersistenceException("Error al mapear rol: " + e.getMessage(), e);
 				}
 			}
+		} catch (SQLException e) {
+			throw new PersistenceException("Error al buscar rol por código: " + e.getMessage(), e);
 		} finally {
-			if (rs != null) rs.close();
-			if (statement != null) statement.close();
+			if (rs != null) try { rs.close(); } catch (SQLException e) {}
+			if (statement != null) try { statement.close(); } catch (SQLException e) {}
+			if (conn != null) try { conn.close(); } catch (SQLException e) {}
 		}
 		return rol;
 	}
+	
+	@Override
+	public Rol findById(Integer codigo) throws PersistenceException {
+		return find(codigo);
+	}
 
 	@Override
-	public List<Rol> findAll(Connection conn) throws SQLException {
+	public List<Rol> findAll() throws PersistenceException {
+		Connection conn = null;
 		List<Rol> listado = new ArrayList<Rol>();
 		Statement sentencia = null;
 		ResultSet resultado = null;
 		try {
+			conn = ConnectionManager.getConnection();
 			sentencia = conn.createStatement();
 			resultado = sentencia.executeQuery("SELECT r.nombre, r.codigo, r.activo FROM roles r");
 
@@ -55,12 +68,15 @@ public class RolDAOJDBC implements RolDao {
 					rol.setActivo(resultado.getBoolean("activo"));
 					listado.add(rol);
 				} catch (Exception e) {
-					System.err.println("Error Rol: " + e.getMessage());
+					System.err.println("error rol: " + e.getMessage());
 				}
 			}
+		} catch (SQLException e) {
+			throw new PersistenceException("Error al buscar todos los roles: " + e.getMessage(), e);
 		} finally {
-			if (resultado != null) resultado.close();
-			if (sentencia != null) sentencia.close();
+			if (resultado != null) try { resultado.close(); } catch (SQLException e) {}
+			if (sentencia != null) try { sentencia.close(); } catch (SQLException e) {}
+			if (conn != null) try { conn.close(); } catch (SQLException e) {}
 		}
 		return listado;
 	}

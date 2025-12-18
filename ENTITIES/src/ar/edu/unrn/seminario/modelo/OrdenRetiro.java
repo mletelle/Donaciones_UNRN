@@ -9,13 +9,12 @@ import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
 public class OrdenRetiro {
 
-    // variables
-    private static int secuencia = 0;//para el id
+    private static int secuencia = 0;
 
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
     private EstadoOrden estado;
     private Ubicacion destino;
-    private ArrayList<Usuario> voluntarios; // ahora es Usuario, antes voluntario
+    private ArrayList<Usuario> voluntarios;
     private List<PedidosDonacion> pedidos;
     private ArrayList<Visita> visitas;
     private int id;
@@ -29,15 +28,14 @@ public class OrdenRetiro {
         this.estado = EstadoOrden.PENDIENTE;
         this.destino = dest;
         this.pedidos = new ArrayList<>(pedidos);
-        this.voluntarios = new ArrayList<Usuario>(); // MODIFICADO ahora anda
+        this.voluntarios = new ArrayList<Usuario>();
         this.visitas = new ArrayList<Visita>();
-        // asignar esta orden a cada pedido
+        // cada pedido debe saber que pertenece a esta orden para mantener la coherencia
         for (PedidosDonacion pedido : this.pedidos) {
             pedido.asignarOrden(this);
         }
     }
     
-    // constructor jdbc - permite crear orden temporal con solo id para mantener referencias
     public OrdenRetiro(int id) {
         this.id = id;
         this.pedidos = new ArrayList<>();
@@ -46,12 +44,11 @@ public class OrdenRetiro {
         this.estado = EstadoOrden.PENDIENTE;
     }
 
-    // Constructor para JDBC (Hidratación)
     public OrdenRetiro(int id, LocalDateTime fechaGeneracion, EstadoOrden estado, Ubicacion dest, List<PedidosDonacion> pedidos) throws ObjetoNuloException {
         if (pedidos == null) {
              throw new ObjetoNuloException("La lista de pedidos no puede ser nula.");
         }
-        this.id = id; // Asigna ID de la BD
+        this.id = id;
         this.fechaGeneracion = fechaGeneracion;
         this.estado = estado;
         this.destino = dest;
@@ -59,7 +56,6 @@ public class OrdenRetiro {
         this.voluntarios = new ArrayList<Usuario>();
         this.visitas = new ArrayList<Visita>();
         
-        // Asignar esta orden a los pedidos hijos
         for (PedidosDonacion pedido : this.pedidos) {
             pedido.asignarOrden(this);
         }
@@ -79,9 +75,9 @@ public class OrdenRetiro {
     
     public Usuario obtenerPrimerVoluntario() { 
         if (voluntarios.isEmpty()) {
-            return null; // no hay voluntarios disponibles
+            return null;
         }
-        return voluntarios.get(0); // devuelve el primero de la lista
+        return voluntarios.get(0);
       }
     
       public int obtenerId() {
@@ -96,7 +92,7 @@ public class OrdenRetiro {
           return this.visitas;
       }
       
-      public Usuario obtenerDonante() { // ahora devuelve Usuario
+      public Usuario obtenerDonante() {
           return (!this.pedidos.isEmpty() && this.pedidos.get(0) != null) ? this.pedidos.get(0).obtenerDonante() : null;
       }
       
@@ -141,13 +137,33 @@ public class OrdenRetiro {
           return obtenerVehiculo();
       }
       
-      // Setters
+      // setters
       public void setId(int id) {
           this.id = id;
       }
       
-      public void setEstado(EstadoOrden estado) {
+      // eliminado setestado publico - usar transicionara() privado
+      
+      /**
+       * metodo exclusivo para hidratacion desde bd
+       * publico porque dao esta en otro proyecto
+       */
+      public void forzarEstadoDesdeBD(EstadoOrden estado) {
           this.estado = estado;
+      }
+      
+      /**
+       * unico punto de entrada para cambios de estado
+       * garantiza que nadie viole las reglas del enum
+       */
+      private void transicionarA(EstadoOrden nuevoEstado) {
+          if (!this.estado.esTransicionValida(nuevoEstado)) {
+              throw new IllegalStateException(
+                  String.format("no se puede pasar la orden %d de %s a %s", 
+                  this.id, this.estado, nuevoEstado)
+              );
+          }
+          this.estado = nuevoEstado;
       }
       
       public void asignarVehiculo(Vehiculo vehiculo) {
@@ -165,37 +181,16 @@ public class OrdenRetiro {
 
     
     //  para actualizar el estado automaticamente basado en los pedidos hijos
-    public void actualizarEstadoAutomatico() {
+    private void verificarCompletitud() {
         if (this.pedidos == null || this.pedidos.isEmpty()) {
-            return; // si no hay pedidos, no se actualiza
+            return;
         }
         
-        boolean todosCompletados = true;
-        boolean algunoNoPendiente = false;
+        boolean todosCompletados = this.pedidos.stream()
+            .allMatch(p -> p.obtenerEstadoPedido() == EstadoPedido.COMPLETADO);
         
-        for (PedidosDonacion pedido : this.pedidos) {
-            EstadoPedido estadoPedido = pedido.obtenerEstadoPedido();
-            
-            if (estadoPedido != EstadoPedido.COMPLETADO) {
-                todosCompletados = false;
-            }
-            
-            if (estadoPedido != EstadoPedido.PENDIENTE) {
-                algunoNoPendiente = true;
-            }
-        }
-        
-        // si todos los pedidos estan completados, la orden esta completada
-        if (todosCompletados) {
-            this.estado = EstadoOrden.COMPLETADO;
-        }
-        // si al menos uno no esta pendiente (en ejecucion o completado), la orden esta en ejecucion
-        else if (algunoNoPendiente) {
-            this.estado = EstadoOrden.EN_EJECUCION;
-        }
-        // si todos estan pendientes, la orden permanece pendiente
-        else {
-            this.estado = EstadoOrden.PENDIENTE;
+        if (todosCompletados && this.estado != EstadoOrden.COMPLETADO) {
+            transicionarA(EstadoOrden.COMPLETADO);
         }
     }
 
@@ -207,10 +202,11 @@ public class OrdenRetiro {
 	// metodo para agregar una visita
     public void agregarVisita(Visita visita) {
         this.visitas.add(visita);
-        // cambiar a EN_EJECUCION si estaba PENDIENTE
+        // cambiar a en_ejecucion si estaba pendiente usando transicion segura
         if (this.estado == EstadoOrden.PENDIENTE) {
-            this.estado = EstadoOrden.EN_EJECUCION;
+            transicionarA(EstadoOrden.EN_EJECUCION);
         }
+        verificarCompletitud();
     }
 
     // metodo para registrar una visita
@@ -226,13 +222,11 @@ public class OrdenRetiro {
             this.visitas = new ArrayList<>();
         }
         this.visitas.add(nuevaVisita);
-        // cambiar a EN_EJECUCION si estaba PENDIENTE
+        // cambiar a en_ejecucion si estaba pendiente usando transicion segura
         if (this.estado == EstadoOrden.PENDIENTE) {
-            this.estado = EstadoOrden.EN_EJECUCION;
+            transicionarA(EstadoOrden.EN_EJECUCION);
         }
-    }
-    
-    // metodo de ayuda para el toString
+        verificarCompletitud();}
     public String describirEstado() {
         return this.estado.name();
     }

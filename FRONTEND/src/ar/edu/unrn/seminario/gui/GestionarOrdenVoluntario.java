@@ -78,7 +78,6 @@ public class GestionarOrdenVoluntario extends JFrame {
         cargarPedidos();
     }
     
-    // constructor que recibe la ventana padre para notificarla
     public GestionarOrdenVoluntario(IApi api, int idOrden, ListadoOrdenesAsignadasVoluntario ventanaPadre) {
         this(api, idOrden);
         this.ventanaPadre = ventanaPadre;
@@ -90,8 +89,6 @@ public class GestionarOrdenVoluntario extends JFrame {
 
         try {
             List<PedidoDonacionDTO> pedidos = api.obtenerPedidosDeOrden(idOrden);
-
-            System.out.println("[DEBUG] idOrden=" + idOrden + " | pedidos.size=" + (pedidos == null ? "null" : pedidos.size()));
 
             if (pedidos == null) {
                 throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de pedidos.");

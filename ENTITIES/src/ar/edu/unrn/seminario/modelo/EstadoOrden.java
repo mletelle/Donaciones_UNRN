@@ -2,10 +2,27 @@ package ar.edu.unrn.seminario.modelo;
 
 public enum EstadoOrden {
 	
-	// Constantes
-	PENDIENTE("Pendiente"),
-	EN_EJECUCION("En Ejecucion"),
-	COMPLETADO("Completado");
+	// constantes con logica de transicion
+	PENDIENTE("Pendiente") {
+		@Override
+		public boolean esTransicionValida(EstadoOrden nuevoEstado) {
+			// solo puede pasar a en ejecucion al iniciar visitas
+			return nuevoEstado == EN_EJECUCION;
+		}
+	},
+	EN_EJECUCION("En Ejecucion") {
+		@Override
+		public boolean esTransicionValida(EstadoOrden nuevoEstado) {
+			// puede completarse pero no volver a pendiente
+			return nuevoEstado == COMPLETADO;
+		}
+	},
+	COMPLETADO("Completado") {
+		@Override
+		public boolean esTransicionValida(EstadoOrden nuevoEstado) {
+			return false; // estado terminal
+		}
+	};
 
 	private String descripcion;
 	
@@ -13,25 +30,12 @@ public enum EstadoOrden {
 		this.descripcion = descripcion;
 	}
 	
+	// metodo abstracto que obliga a cada constante a definir sus reglas
+	public abstract boolean esTransicionValida(EstadoOrden nuevoEstado);
+	
 	@Override
 	public String toString() {
 		return descripcion;
-	}
-	
-	public static EstadoOrden fromString(String texto) {
-	    if (texto == null || texto.isEmpty()) {
-	        throw new IllegalArgumentException("El estado no puede ser nulo o vacio");
-	    }
-	    
-	    String textoNormalizado = texto.trim().toUpperCase();
-
-
-	    for (EstadoOrden e : EstadoOrden.values()) {
-	        if (e.name().equals(textoNormalizado)) {
-	            return e;
-	        }
-	    }
-	    throw new IllegalArgumentException("Estado de orden desconocido: " + texto);
 	}
 	
 } 

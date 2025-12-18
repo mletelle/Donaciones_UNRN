@@ -2,8 +2,6 @@ package ar.edu.unrn.seminario.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -16,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 
+import javax.swing.JSeparator;
 import ar.edu.unrn.seminario.api.IApi;
 import ar.edu.unrn.seminario.dto.UsuarioDTO;
 import ar.edu.unrn.seminario.dto.VisitaDTO;
@@ -85,6 +84,21 @@ public class VentanaPrincipal extends JFrame {
         mnDonaciones = new JMenu("Donaciones");
         menuBar.add(mnDonaciones);
 
+        // GRUPO 1: CREACIONES
+        JMenuItem generarEntregaItem = new JMenuItem("Generar Orden de Entrega");
+        generarEntregaItem.addActionListener(e -> {
+            CrearOrdenEntrega dialog = new CrearOrdenEntrega(VentanaPrincipal.this, api);
+            dialog.setVisible(true);
+        });
+        mnDonaciones.add(generarEntregaItem);
+
+        crearOrdenMenuItem = new JMenuItem("Generar Orden de Retiro");
+        crearOrdenMenuItem.addActionListener(e -> {
+            CrearOrdenRetiro dialog = new CrearOrdenRetiro(VentanaPrincipal.this, api);
+            dialog.setVisible(true);
+        });
+        mnDonaciones.add(crearOrdenMenuItem);
+
         JMenuItem mntmRegistrarPedido = new JMenuItem("Generar Pedido de Donación");
         mntmRegistrarPedido.addActionListener(e -> {
             if ("DONANTE".equals(rolActual)) {
@@ -102,6 +116,10 @@ public class VentanaPrincipal extends JFrame {
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
         });
+        mnDonaciones.add(mntmRegistrarPedido);
+
+        // GRUPO 2: GESTIÓN
+        mnDonaciones.add(new JSeparator());
 
         JMenuItem listadoInventarioItem = new JMenuItem("Gestión de Inventario");
         listadoInventarioItem.addActionListener(e -> {
@@ -110,7 +128,17 @@ public class VentanaPrincipal extends JFrame {
             listado.setVisible(true);
         });
         mnDonaciones.add(listadoInventarioItem);
-        mnDonaciones.add(mntmRegistrarPedido);
+
+        // GRUPO 3: LISTADOS
+        mnDonaciones.add(new JSeparator());
+
+        JMenuItem listadoEntregasItem = new JMenuItem("Listado de Órdenes de Entrega");
+        listadoEntregasItem.addActionListener(e -> {
+            ListadoOrdenesEntrega listado = new ListadoOrdenesEntrega(api);
+            listado.setLocationRelativeTo(null);
+            listado.setVisible(true);
+        });
+        mnDonaciones.add(listadoEntregasItem);
 
         listadoOrdenesMenuItem = new JMenuItem("Listado de Órdenes de Retiro");
         listadoOrdenesMenuItem.addActionListener(e -> {
@@ -127,20 +155,6 @@ public class VentanaPrincipal extends JFrame {
             listadoPedidos.setVisible(true);
         });
         mnDonaciones.add(listadoPedidosMenuItem);
-
-        crearOrdenMenuItem = new JMenuItem("Generar Orden de Retiro");
-        crearOrdenMenuItem.addActionListener(e -> {
-            CrearOrdenRetiro dialog = new CrearOrdenRetiro(VentanaPrincipal.this, api);
-            dialog.setVisible(true);
-        });
-        mnDonaciones.add(crearOrdenMenuItem);
-        
-        JMenuItem generarEntregaItem = new JMenuItem("Generar Orden de Entrega");
-        generarEntregaItem.addActionListener(e -> {
-            CrearOrdenEntrega dialog = new CrearOrdenEntrega(VentanaPrincipal.this, api);
-            dialog.setVisible(true);
-        });
-        mnDonaciones.add(generarEntregaItem);
 
         // Voluntarios
         voluntarioMenu = new JMenu("Voluntario");
@@ -282,18 +296,29 @@ public class VentanaPrincipal extends JFrame {
         beneficiarioMenu.setVisible(esBeneficiario);
         
 
-        //  Gestión de Inventario (solo admin)
-        if (mnDonaciones.getItemCount() > 0) mnDonaciones.getItem(0).setVisible(isAdmin);
-        //  Registrar Pedido de Donación (admin o donante)
-        if (mnDonaciones.getItemCount() > 1) mnDonaciones.getItem(1).setVisible(isAdmin || esDonante);
-        //  Listado de Órdenes de Retiro (solo admin)
-        if (mnDonaciones.getItemCount() > 2) mnDonaciones.getItem(2).setVisible(isAdmin);
-        //  Listado de Pedidos de Donación (solo admin)
-        if (mnDonaciones.getItemCount() > 3) mnDonaciones.getItem(3).setVisible(isAdmin);
-        // Generar/Crear Orden de Retiro (solo admin)
-        if (mnDonaciones.getItemCount() > 4) mnDonaciones.getItem(4).setVisible(isAdmin);
+        // Grupo 1: Creaciones (items 0-2)
         // Generar Orden de Entrega (solo admin)
-        if (mnDonaciones.getItemCount() > 5) mnDonaciones.getItem(5).setVisible(isAdmin);
+        if (mnDonaciones.getItemCount() > 0) mnDonaciones.getItem(0).setVisible(isAdmin);
+        // Generar Orden de Retiro (solo admin)
+        if (mnDonaciones.getItemCount() > 1) mnDonaciones.getItem(1).setVisible(isAdmin);
+        // Generar Pedido de Donación (admin o donante)
+        if (mnDonaciones.getItemCount() > 2) mnDonaciones.getItem(2).setVisible(isAdmin || esDonante);
+
+        // Separador (item 3)
+        
+        // Grupo 2: Gestión (item 4)
+        // Gestión de Inventario (solo admin)
+        if (mnDonaciones.getItemCount() > 4) mnDonaciones.getItem(4).setVisible(isAdmin);
+
+        // Separador (item 5)
+        
+        // Grupo 3: Listados (items 6-8)
+        // Listado de Órdenes de Entrega (solo admin)
+        if (mnDonaciones.getItemCount() > 6) mnDonaciones.getItem(6).setVisible(isAdmin);
+        // Listado de Órdenes de Retiro (solo admin)
+        if (mnDonaciones.getItemCount() > 7) mnDonaciones.getItem(7).setVisible(isAdmin);
+        // Listado de Pedidos de Donación (solo admin)
+        if (mnDonaciones.getItemCount() > 8) mnDonaciones.getItem(8).setVisible(isAdmin);
 
         voluntarioLabel.setVisible(esVoluntario);
         voluntarioSelectorComboBox.setVisible(esVoluntario);
