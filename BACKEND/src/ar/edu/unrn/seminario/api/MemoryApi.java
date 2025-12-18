@@ -54,16 +54,16 @@ public class MemoryApi implements IApi {
             Usuario donantePrueba = usuarios.stream().filter(u -> u.getUsuario().equals("jperez")).findFirst().orElse(null);
             if (donantePrueba != null) {
                 java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
-                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, 1, donantePrueba);
+                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, TipoVehiculo.AUTO, donantePrueba);
                 try {
-                    Bien b1 = new Bien(BienDTO.TIPO_NUEVO, 10, BienDTO.CATEGORIA_ALIMENTOS);
+                    Bien b1 = new Bien(TipoBien.ALIMENTO, 10, CategoriaBien.ALIMENTOS);
                     b1.setDescripcion("Paquete de arroz 1kg");
-                    b1.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b1.setEstadoInventario(EstadoBien.EN_STOCK);
                     b1.setId(++secuenciaBien);
 
-                    Bien b2 = new Bien(BienDTO.TIPO_NUEVO, 5, BienDTO.CATEGORIA_ROPA);
+                    Bien b2 = new Bien(TipoBien.ROPA, 5, CategoriaBien.ROPA);
                     b2.setDescripcion("Camisas talla M");
-                    b2.setEstadoInventario(Bien.ESTADO_EN_STOCK);
+                    b2.setEstadoInventario(EstadoBien.EN_STOCK);
                     b2.setId(++secuenciaBien);
 
                     pd.obtenerBienes().add(b1);
@@ -82,7 +82,7 @@ public class MemoryApi implements IApi {
     @Override
     public List<BienDTO> obtenerInventario() {
         return pedidos.stream().flatMap(p -> p.obtenerBienes().stream())
-                .filter(b -> Bien.ESTADO_EN_STOCK.equals(b.getEstadoInventario()))
+                .filter(b -> EstadoBien.EN_STOCK.equals(b.getEstadoInventario()))
                 .map(this::convertirEntidadADTOVisual).collect(Collectors.toList());
     }
 
@@ -125,7 +125,7 @@ public class MemoryApi implements IApi {
 
     private BienDTO convertirEntidadADTOVisual(Bien bien) {
         String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
-        String estadoStr = (bien.obtenerTipo() == BienDTO.TIPO_NUEVO) ? "Nuevo" : "Usado";
+        String estadoStr = (bien.obtenerTipo() == TipoBien.ALIMENTO) ? "Nuevo" : "Usado";
         
         String vencimientoStr = "-";
         LocalDate fechaLocalDate = null;
@@ -141,8 +141,8 @@ public class MemoryApi implements IApi {
         dto.setId(bien.getId());
         dto.setDescripcion(bien.getDescripcion());
         dto.setCantidad(bien.obtenerCantidad());
-        dto.setCategoria(bien.obtenerCategoria());
-        dto.setTipo(bien.obtenerTipo());
+        dto.setCategoria(mapEnumCategoriaToDTO(bien.obtenerCategoria()));
+        dto.setTipo(mapEnumTipoToDTO(bien.obtenerTipo()));
         
         dto.setCategoriaTexto(categoriaStr);
         dto.setEstadoTexto(estadoStr);
@@ -152,26 +152,11 @@ public class MemoryApi implements IApi {
         return dto;
     }
 
-    private String mapCategoriaToString(int idCategoria) {
-        switch (idCategoria) {
-            case BienDTO.CATEGORIA_ROPA: return "Ropa";
-            case BienDTO.CATEGORIA_MUEBLES: return "Muebles";
-            case BienDTO.CATEGORIA_ALIMENTOS: return "Alimentos";
-            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return "Electrodomésticos";
-            case BienDTO.CATEGORIA_HERRAMIENTAS: return "Herramientas";
-            case BienDTO.CATEGORIA_JUGUETES: return "Juguetes";
-            case BienDTO.CATEGORIA_LIBROS: return "Libros";
-            case BienDTO.CATEGORIA_MEDICAMENTOS: return "Medicamentos";
-            case BienDTO.CATEGORIA_HIGIENE: return "Higiene";
-            default: return "Otros";
-        }
-    }
-    
     @Override
     public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
         Bien bienEncontrado = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBien).findFirst().orElse(null);
         if (bienEncontrado == null) throw new ObjetoNuloException("El bien no existe.");
-        bienEncontrado.setEstadoInventario(Bien.ESTADO_BAJA);
+        bienEncontrado.setEstadoInventario(EstadoBien.BAJA);
         bienEncontrado.setDescripcion(bienEncontrado.getDescripcion() + " [BAJA: " + motivo + "]");
     }
 
@@ -295,7 +280,9 @@ public class MemoryApi implements IApi {
 
         List<Bien> bienes = new ArrayList<>();
         for (BienDTO dto : pedidoDTO.getBienes()) {
-            Bien bien = new Bien(dto.getTipo(), dto.getCantidad(), dto.getCategoria());
+            TipoBien tipo = mapDTOTipoToEnum(dto.getTipo());
+            CategoriaBien categoria = mapDTOCategoriaToEnum(dto.getCategoria());
+            Bien bien = new Bien(tipo, dto.getCantidad(), categoria);
             bien.setId(++secuenciaBien);
             if (dto.getDescripcion() != null) bien.setDescripcion(dto.getDescripcion());
             if (dto.getFechaVencimiento() != null) {
@@ -307,10 +294,12 @@ public class MemoryApi implements IApi {
 
         LocalDateTime fecha = LocalDate.parse(pedidoDTO.getFecha(), DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
         
+        TipoVehiculo tipoVehiculo = TipoVehiculo.valueOf(pedidoDTO.getTipoVehiculo().toUpperCase());
+        
         PedidosDonacion pedido = new PedidosDonacion(
             fecha, 
             (ArrayList<Bien>) bienes, 
-            PedidosDonacion.convertirVehiculoAInt(pedidoDTO.getTipoVehiculo()), 
+            tipoVehiculo, 
             donante
         );
 
@@ -428,18 +417,18 @@ public class MemoryApi implements IApi {
             Bien bienOriginal = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBienOriginal).findFirst().orElse(null);
             
             if (bienOriginal == null) throw new ObjetoNuloException("Bien no encontrado.");
-            if (!Bien.ESTADO_EN_STOCK.equals(bienOriginal.getEstadoInventario())) throw new ReglaNegocioException("Bien no disponible.");
+            if (!EstadoBien.EN_STOCK.equals(bienOriginal.getEstadoInventario())) throw new ReglaNegocioException("Bien no disponible.");
             if (cantidadSolicitada > bienOriginal.getCantidad()) throw new ReglaNegocioException("Stock insuficiente.");
 
             if (cantidadSolicitada == bienOriginal.getCantidad()) {
-                bienOriginal.setEstadoInventario(Bien.ESTADO_ENTREGADO);
+                bienOriginal.setEstadoInventario(EstadoBien.ENTREGADO);
                 bienesFinalesParaOrden.add(bienOriginal);
             } else {
                 bienOriginal.setCantidad(bienOriginal.getCantidad() - cantidadSolicitada);
                 Bien bienNuevo = new Bien(bienOriginal.obtenerTipo(), cantidadSolicitada, bienOriginal.obtenerCategoria());
                 bienNuevo.setId(++secuenciaBien);
                 bienNuevo.setDescripcion(bienOriginal.getDescripcion());
-                bienNuevo.setEstadoInventario(Bien.ESTADO_ENTREGADO);
+                bienNuevo.setEstadoInventario(EstadoBien.ENTREGADO);
                 bienesFinalesParaOrden.add(bienNuevo);
             }
         }
@@ -461,7 +450,7 @@ public class MemoryApi implements IApi {
                     String resumen = (o.getBienes() != null && !o.getBienes().isEmpty()) 
                             ? o.getBienes().stream().map(Object::toString).collect(Collectors.joining(", ")) 
                             : "Sin detalle";
-                    return new OrdenEntregaDTO(o.getId(), fechaStr, o.obtenerEstadoString(), resumen);
+                    return new OrdenEntregaDTO(o.getId(), fechaStr, o.getEstado().toString(), resumen);
                 })
                 .collect(Collectors.toList());
     }
@@ -470,13 +459,13 @@ public class MemoryApi implements IApi {
     public List<OrdenEntregaDTO> obtenerEntregasPendientes() {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
         return ordenesEntrega.stream()
-                .filter(o -> o.getEstado() == OrdenEntrega.ESTADO_PENDIENTE)
+                .filter(o -> o.getEstado() == EstadoEntrega.PENDIENTE)
                 .map(o -> {
                     String resumen = "Sin detalle";
                     if (o.getBienes() != null && !o.getBienes().isEmpty()) {
                         resumen = o.getBienes().stream().map(Object::toString).collect(Collectors.joining(", "));
                     }
-                    return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.obtenerEstadoString(), resumen);
+                    return new OrdenEntregaDTO(o.getId(), sdf.format(o.getFechaGeneracion()), o.getEstado().toString(), resumen);
                 })
                 .collect(Collectors.toList());
     }
@@ -488,7 +477,7 @@ public class MemoryApi implements IApi {
                 .map(o -> new OrdenEntregaDTO(
                         o.getId(),
                         sdf.format(o.getFechaGeneracion()),
-                        o.obtenerEstadoString(),
+                        o.getEstado().toString(),
                         o.getBeneficiario() != null ? o.getBeneficiario().getNombre() + " " + o.getBeneficiario().getApellido() : "-",
                         o.getVoluntario() != null ? o.getVoluntario().getNombre() + " " + o.getVoluntario().getApellido() : "-"
                 ))
@@ -502,7 +491,7 @@ public class MemoryApi implements IApi {
         
         Usuario vol = usuarios.stream().filter(u -> u.getUsuario().equals(usuarioVoluntario)).findFirst().orElse(null);
         orden.setVoluntario(vol);
-        orden.setEstado(OrdenEntrega.ESTADO_COMPLETADO);
+        orden.marcarComoCompletada();
     }
 
     @Override
@@ -518,17 +507,8 @@ public class MemoryApi implements IApi {
         visita.setPedidoRelacionado(pedido);
         orden.agregarVisita(visita);
 
-        if (resEnum == ResultadoVisita.RECOLECCION_EXITOSA) {
-            pedido.marcarCompletado();
-            if (pedido.obtenerBienes() != null) {
-                pedido.obtenerBienes().forEach(b -> b.setEstadoInventario(Bien.ESTADO_EN_STOCK));
-            }
-        } else if (resEnum == ResultadoVisita.CANCELADO) {
-            pedido.marcarCompletado();
-        } else {
-            pedido.marcarEnEjecucion();
-        }
-        orden.actualizarEstadoAutomatico();
+        // polimorfismo: el enum sabe que efectos aplicar
+        resEnum.aplicarEfectos(pedido);
     }
 
     @Override
@@ -547,5 +527,48 @@ public class MemoryApi implements IApi {
                     });
                 });
         return visitasDTO;
+    }
+    
+    // convertidores DTO<->Enum
+    private TipoBien mapDTOTipoToEnum(int tipo) {
+        return TipoBien.ALIMENTO;
+    }
+    
+    private CategoriaBien mapDTOCategoriaToEnum(int categoria) {
+        switch (categoria) {
+            case BienDTO.CATEGORIA_ROPA: return CategoriaBien.ROPA;
+            case BienDTO.CATEGORIA_MUEBLES: return CategoriaBien.MUEBLES;
+            case BienDTO.CATEGORIA_ALIMENTOS: return CategoriaBien.ALIMENTOS;
+            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return CategoriaBien.ELECTRODOMESTICOS;
+            case BienDTO.CATEGORIA_HERRAMIENTAS: return CategoriaBien.HERRAMIENTAS;
+            case BienDTO.CATEGORIA_JUGUETES: return CategoriaBien.JUGUETES;
+            case BienDTO.CATEGORIA_LIBROS: return CategoriaBien.LIBROS;
+            case BienDTO.CATEGORIA_MEDICAMENTOS: return CategoriaBien.MEDICAMENTOS;
+            case BienDTO.CATEGORIA_HIGIENE: return CategoriaBien.HIGIENE;
+            default: return CategoriaBien.OTROS;
+        }
+    }
+    
+    private int mapEnumCategoriaToDTO(CategoriaBien categoria) {
+        switch (categoria) {
+            case ROPA: return BienDTO.CATEGORIA_ROPA;
+            case MUEBLES: return BienDTO.CATEGORIA_MUEBLES;
+            case ALIMENTOS: return BienDTO.CATEGORIA_ALIMENTOS;
+            case ELECTRODOMESTICOS: return BienDTO.CATEGORIA_ELECTRODOMESTICOS;
+            case HERRAMIENTAS: return BienDTO.CATEGORIA_HERRAMIENTAS;
+            case JUGUETES: return BienDTO.CATEGORIA_JUGUETES;
+            case LIBROS: return BienDTO.CATEGORIA_LIBROS;
+            case MEDICAMENTOS: return BienDTO.CATEGORIA_MEDICAMENTOS;
+            case HIGIENE: return BienDTO.CATEGORIA_HIGIENE;
+            default: return BienDTO.CATEGORIA_OTROS;
+        }
+    }
+    
+    private int mapEnumTipoToDTO(TipoBien tipo) {
+        return BienDTO.TIPO_NUEVO;
+    }
+
+    private String mapCategoriaToString(CategoriaBien categoria) {
+        return categoria.toString();
     }
 }

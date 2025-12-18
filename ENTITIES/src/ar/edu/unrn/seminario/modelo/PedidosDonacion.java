@@ -11,20 +11,18 @@ public class PedidosDonacion {
     private int id;
     private LocalDateTime fecha;
     private ArrayList<Bien> bienes;
-    private int tipoVehiculo; // 1:Auto, 2:Camioneta, 3:Camion
+    private TipoVehiculo tipoVehiculo;
     
     private Usuario donante; 
     private OrdenRetiro ordenRetiro; 
     private EstadoPedido estadoPedido;
 
-    public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, int tipoVehiculo, Usuario donante) throws CampoVacioException, ObjetoNuloException {
+    public PedidosDonacion(LocalDateTime fecha, ArrayList<Bien> bienes, TipoVehiculo tipoVehiculo, Usuario donante) throws CampoVacioException, ObjetoNuloException {
         if (fecha == null) throw new ObjetoNuloException("La fecha no puede ser nula.");
         if (bienes == null || bienes.isEmpty()) throw new CampoVacioException("La lista de bienes no puede estar vacía.");
+        if (tipoVehiculo == null) throw new ObjetoNuloException("El tipo de vehiculo no puede ser nulo.");
         if (donante == null) throw new ObjetoNuloException("El donante no puede ser nulo.");
         
-        // Validación opcional
-        // if (!donante.esDonante()) throw new IllegalArgumentException("El usuario asignado no tiene rol de Donante.");
-
         this.id = ++secuencia;
         this.fecha = fecha;
         this.bienes = bienes;
@@ -33,8 +31,7 @@ public class PedidosDonacion {
         this.estadoPedido = EstadoPedido.PENDIENTE;
     }
 
-    // Este permite crear el objeto sin validar bienes al inicio y seteando el ID
-    public PedidosDonacion(int id, LocalDateTime fecha, int tipoVehiculo, Usuario donante) {
+    public PedidosDonacion(int id, LocalDateTime fecha, TipoVehiculo tipoVehiculo, Usuario donante) {
         this.id = id;
         this.fecha = fecha;
         this.tipoVehiculo = tipoVehiculo;
@@ -65,25 +62,21 @@ public class PedidosDonacion {
     public void marcarCompletado() { this.estadoPedido = EstadoPedido.COMPLETADO; }
     public void marcarEnEjecucion() { this.estadoPedido = EstadoPedido.EN_EJECUCION; }
     
+    public void actualizarInventario(EstadoBien nuevoEstado) {
+        if (this.bienes != null) {
+            this.bienes.forEach(b -> b.setEstadoInventario(nuevoEstado));
+        }
+    }
+    
     public String obtenerEstado() {
         return estadoPedido != null ? estadoPedido.toString() : "DESCONOCIDO";
     }
 
     public String describirTipoVehiculo() {
-        switch (tipoVehiculo) {
-            case 1: return "AUTO";
-            case 2: return "CAMIONETA";
-            case 3: return "CAMION";
-            default: return "DESCONOCIDO";
-        }
+        return tipoVehiculo != null ? tipoVehiculo.toString() : "DESCONOCIDO";
     }
-
-    public static int convertirVehiculoAInt(String tipo) {
-        if (tipo == null) return 0;
-        String t = tipo.trim().toUpperCase();
-        if ("AUTO".equals(t)) return 1;
-        if ("CAMIONETA".equals(t)) return 2;
-        if ("CAMION".equals(t)) return 3;
-        return 0; 
+    
+    public TipoVehiculo getTipoVehiculo() {
+        return tipoVehiculo;
     }
 }

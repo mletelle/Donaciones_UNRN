@@ -42,9 +42,6 @@ public class Visita {
         this.bienesRetirados = new ArrayList<>();
     }
 
-    // helper formateador de fecha: dia/mes/anioo hora:minuto
-    // se evita crear una clase extra 
-    // solo tiene sentido dentro de Visita
     private static final java.text.SimpleDateFormat fecha = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     public String obtenerFechaFormateada() {

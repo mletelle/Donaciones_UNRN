@@ -6,28 +6,10 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Bien {
 
-    // constantes tipo
-	private static final int TIPO_ALIMENTO = 1;
-	private static final int TIPO_ROPA = 2;
-	private static final int TIPO_MOBILIARIO = 3;
-	private static final int TIPO_HIGIENE = 4;
-
-	// constantes categoria (tipo de bien)
-	private static final int CATEGORIA_ROPA = 1;
-	private static final int CATEGORIA_MUEBLES = 2;
-	private static final int CATEGORIA_ALIMENTOS = 3;
-	private static final int CATEGORIA_ELECTRODOMESTICOS = 4;
-	private static final int CATEGORIA_HERRAMIENTAS = 5;
-	private static final int CATEGORIA_JUGUETES = 6;
-	private static final int CATEGORIA_LIBROS = 7;
-	private static final int CATEGORIA_MEDICAMENTOS = 8;
-	private static final int CATEGORIA_HIGIENE = 9;
-	private static final int CATEGORIA_OTROS = 10;
-    
-	private int id; // nuevo atributo
-    private int tipo;
-	private int cantidad;
-    private int categoria;
+    private int id;
+    private TipoBien tipo;
+    private int cantidad;
+    private CategoriaBien categoria;
     private boolean perecedero;
     private Date fecVec = null;
     private Date fechaIngreso = new Date();
@@ -35,45 +17,34 @@ public class Bien {
     private String descripcion;
     private Vehiculo vehiculo;
     
-
-    
-    // Estados del inventario
-    public static final String ESTADO_PENDIENTE = "PENDIENTE";
-    public static final String ESTADO_EN_STOCK = "EN_STOCK";
-    public static final String ESTADO_ENTREGADO = "ENTREGADO";
-    public static final String ESTADO_BAJA = "BAJA";
-
-    private String estadoInventario; 
+    private EstadoBien estadoInventario; 
     
     
-    public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
-        if (cantidad <= 0) {
-            throw new CampoVacioException("La cantidad debe ser mayor a cero.");
-        }
-        if (categoria < CATEGORIA_ROPA || categoria > CATEGORIA_OTROS) {
-            throw new CampoVacioException("La categoria es invalida.");
-        }
+    public Bien(TipoBien tipo, int cantidad, CategoriaBien categoria) throws CampoVacioException {
+        if (tipo == null) throw new CampoVacioException("El tipo no puede ser nulo.");
+        if (categoria == null) throw new CampoVacioException("La categoria no puede ser nula.");
+        if (cantidad <= 0) throw new CampoVacioException("La cantidad debe ser mayor a cero.");
+        
         this.tipo = tipo;
         this.cantidad = cantidad;
         this.categoria = categoria;
-        this.estadoInventario = ESTADO_PENDIENTE;
+        this.estadoInventario = EstadoBien.PENDIENTE;
     }
 
-    public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
+    public Bien(TipoBien tipo, int cantidad, CategoriaBien categoria, Vehiculo vehiculo) throws CampoVacioException {
         this(tipo, cantidad, categoria);
         this.vehiculo = vehiculo;
     }
     
-    public String getEstadoInventario() {
+    public EstadoBien getEstadoInventario() {
         return estadoInventario;
     }
 
-    public void setEstadoInventario(String estadoInventario) {
+    public void setEstadoInventario(EstadoBien estadoInventario) {
         this.estadoInventario = estadoInventario;
     }
     
-    
-    public int obtenerTipo() {
+    public TipoBien obtenerTipo() {
         return tipo;
     }
 
@@ -81,7 +52,7 @@ public class Bien {
         return cantidad;
     }
 
-    public int obtenerCategoria() {
+    public CategoriaBien obtenerCategoria() {
         return categoria;
     }
     
@@ -147,63 +118,21 @@ public class Bien {
 		this.cantidad = cantidad;
 	}
     
-    
-    //metodos de ayuda para el toString
-    private String describirTipo() {
-        switch (tipo) {
-            case TIPO_ALIMENTO:
-                return "ALIMENTO";
-            case TIPO_ROPA:
-                return "ROPA";
-            case TIPO_MOBILIARIO:
-                return "MOBILIARIO";
-            case TIPO_HIGIENE:
-                return "HIGIENE";
-            default:
-                return "OTRO";
-        }
-    }
-  
-    private String describirCategoria() {
-        switch (categoria) {
-            case CATEGORIA_ROPA:
-                return "Ropa";
-            case CATEGORIA_MUEBLES:
-                return "Muebles";
-            case CATEGORIA_ALIMENTOS:
-                return "Alimentos";
-            case CATEGORIA_ELECTRODOMESTICOS:
-                return "Electrodomesticos";
-            case CATEGORIA_HERRAMIENTAS:
-                return "Herramientas";
-            case CATEGORIA_JUGUETES:
-                return "Juguetes";
-            case CATEGORIA_LIBROS:
-                return "Libros";
-            case CATEGORIA_MEDICAMENTOS:
-                return "Medicamentos";
-            case CATEGORIA_HIGIENE:
-                return "Higiene";
-            default:
-                return "Otros";
-        }
-    }
-    
     @Override
     public String toString() {
-        // Formato: "Descripción (Categoría) x Cantidad"
-        // Ejemplo: "Paquete de Arroz (Alimentos) x 2"
-        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripción";
-        return desc + " (" + describirCategoria() + ") x " + cantidad;
+        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripcion";
+        return desc + " (" + categoria.toString() + ") x " + cantidad;
     }
 
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
+		if (obj == null)
+			return false;
 		Bien other = (Bien) obj;
+		// dos bienes se consideran iguales si tienen el mismo tipo, cantidad y categoria
 		return cantidad == other.cantidad && categoria == other.categoria && tipo == other.tipo;
 	}
 
-    
 }

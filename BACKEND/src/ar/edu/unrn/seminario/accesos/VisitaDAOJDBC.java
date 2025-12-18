@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.PedidosDonacion;
 import ar.edu.unrn.seminario.modelo.ResultadoVisita;
 import ar.edu.unrn.seminario.modelo.Usuario;
@@ -19,9 +20,85 @@ public class VisitaDAOJDBC implements VisitaDao {
 	private PedidosDonacionDao pedidoDao = new PedidosDonacionDAOJDBC();
 
 	@Override
-	public void create(Visita visita, int idOrden, int idPedido, Connection conn) throws SQLException {
+	public void registrarVisitaCompleta(int idOrdenRetiro, int idPedido, String resultado, String observacion) throws PersistenceException {
+		Connection conn = null;
+		PreparedStatement stmtVisita = null;
+		PreparedStatement stmtBien = null;
+		PreparedStatement stmtPedido = null;
+		PreparedStatement stmtOrden = null;
+		try {
+			conn = ConnectionManager.getConnection();
+			conn.setAutoCommit(false);
+			
+			stmtVisita = conn.prepareStatement(
+					"INSERT INTO visitas(id_orden_retiro, id_pedido_donacion, fecha_visita, resultado, observacion) "
+					+ "VALUES (?, ?, ?, ?, ?)");
+			
+			stmtVisita.setInt(1, idOrdenRetiro);
+			stmtVisita.setInt(2, idPedido);
+			stmtVisita.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+			stmtVisita.setString(4, resultado);
+			stmtVisita.setString(5, observacion);
+			stmtVisita.executeUpdate();
+			
+			String nuevoEstadoPedido;
+			if ("RECOLECCION_EXITOSA".equals(resultado)) {
+				nuevoEstadoPedido = "COMPLETADO";
+				stmtBien = conn.prepareStatement("UPDATE bienes SET estado_inventario = 'EN_STOCK' WHERE id_pedido_donacion = ?");
+				stmtBien.setInt(1, idPedido);
+				stmtBien.executeUpdate();
+			} else if ("CANCELADO".equals(resultado)) {
+				nuevoEstadoPedido = "COMPLETADO";
+			} else {
+				nuevoEstadoPedido = "EN_EJECUCION";
+			}
+			
+			stmtPedido = conn.prepareStatement("UPDATE pedidos_donacion SET estado = ? WHERE id = ?");
+			stmtPedido.setString(1, nuevoEstadoPedido);
+			stmtPedido.setInt(2, idPedido);
+			stmtPedido.executeUpdate();
+			
+			stmtOrden = conn.prepareStatement(
+				"UPDATE ordenes_retiro o SET o.estado = ( "
+				+ "CASE "
+				+ "  WHEN NOT EXISTS (SELECT 1 FROM pedidos_donacion p WHERE p.id_orden_retiro = o.id AND p.estado = 'PENDIENTE') "
+				+ "  AND NOT EXISTS (SELECT 1 FROM pedidos_donacion p WHERE p.id_orden_retiro = o.id AND p.estado = 'EN_EJECUCION') "
+				+ "  THEN 'COMPLETADO' "
+				+ "  WHEN EXISTS (SELECT 1 FROM pedidos_donacion p WHERE p.id_orden_retiro = o.id AND p.estado = 'EN_EJECUCION') "
+				+ "  THEN 'EN_EJECUCION' "
+				+ "  ELSE o.estado "
+				+ "END) "
+				+ "WHERE o.id = ?");
+			stmtOrden.setInt(1, idOrdenRetiro);
+			stmtOrden.executeUpdate();
+			
+			conn.commit();
+		} catch (SQLException e) {
+			if (conn != null) {
+				try {
+					conn.rollback();
+				} catch (SQLException ex) {
+					ex.printStackTrace();
+				}
+			}
+			throw new PersistenceException("Error al registrar visita completa: " + e.getMessage(), e);
+		} finally {
+			if (stmtVisita != null) try { stmtVisita.close(); } catch (SQLException e) {}
+			if (stmtBien != null) try { stmtBien.close(); } catch (SQLException e) {}
+			if (stmtPedido != null) try { stmtPedido.close(); } catch (SQLException e) {}
+			if (stmtOrden != null) try { stmtOrden.close(); } catch (SQLException e) {}
+			if (conn != null) try { conn.close(); } catch (SQLException e) {}
+		}
+	}
+
+	@Override
+	public void create(Visita visita, int idOrden, int idPedido) throws PersistenceException {
+		Connection conn = null;
 		PreparedStatement statement = null;
 		try {
+			conn = ConnectionManager.getConnection();
+			conn.setAutoCommit(false);
+			
 			statement = conn.prepareStatement(
 					"INSERT INTO visitas(id_orden_retiro, id_pedido_donacion, fecha_visita, resultado, observacion) "
 					+ "VALUES (?, ?, ?, ?, ?)");
@@ -33,18 +110,31 @@ public class VisitaDAOJDBC implements VisitaDao {
 			statement.setString(5, visita.obtenerObservacion());
 			
 			statement.executeUpdate();
+			
+			conn.commit();
+		} catch (SQLException e) {
+			if (conn != null) {
+				try {
+					conn.rollback();
+				} catch (SQLException ex) {
+					ex.printStackTrace();
+				}
+			}
+			throw new PersistenceException("error al crear visita: " + e.getMessage(), e);
 		} finally {
-			if (statement != null) statement.close();
+			if (statement != null) try { statement.close(); } catch (SQLException e) {}
+			if (conn != null) try { conn.close(); } catch (SQLException e) {}
 		}
 	}
 
 	@Override
-	public List<Visita> findByVoluntario(Usuario voluntario, Connection conn) throws SQLException {
+	public List<Visita> findByVoluntario(Usuario voluntario) throws PersistenceException {
+		Connection conn = null;
 		List<Visita> visitas = new ArrayList<Visita>();
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
-			// join para obtener las visitas asociadas a las ordenes de retiro del voluntario
+			conn = ConnectionManager.getConnection();
 			statement = conn.prepareStatement(
 					"SELECT v.id, v.fecha_visita, v.resultado, v.observacion, v.id_pedido_donacion "
 					+ "FROM visitas v "
@@ -62,13 +152,11 @@ public class VisitaDAOJDBC implements VisitaDao {
 					String resultadoStr = rs.getString("resultado");
 					int idPedido = rs.getInt("id_pedido_donacion");
 					
-					// convertir el string a enum
 					ResultadoVisita resultado = ResultadoVisita.fromString(resultadoStr);
 					Visita visita = new Visita(fechaHora, resultado, observacion);
 					
-					// cargar el pedido asociado
 					if (idPedido > 0) {
-						PedidosDonacion pedido = pedidoDao.findById(idPedido, conn);
+						PedidosDonacion pedido = pedidoDao.findById(idPedido);
 						if (pedido != null) {
 							visita.setPedidoRelacionado(pedido);
 						}
@@ -76,13 +164,16 @@ public class VisitaDAOJDBC implements VisitaDao {
 					
 					visitas.add(visita);
 				} catch (Exception e) {
-					System.err.println("Error creando Visita: " + e.getMessage());
+					System.err.println("error creando visita: " + e.getMessage());
 					e.printStackTrace();
 				}
 			}
+		} catch (SQLException e) {
+			throw new PersistenceException("Error al buscar visitas por voluntario: " + e.getMessage(), e);
 		} finally {
-			if (rs != null) rs.close();
-			if (statement != null) statement.close();
+			if (rs != null) try { rs.close(); } catch (SQLException e) {}
+			if (statement != null) try { statement.close(); } catch (SQLException e) {}
+			if (conn != null) try { conn.close(); } catch (SQLException e) {}
 		}
 		return visitas;
 	}
