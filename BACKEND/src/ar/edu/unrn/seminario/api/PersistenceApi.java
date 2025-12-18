@@ -2,8 +2,6 @@ package ar.edu.unrn.seminario.api;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,27 +12,41 @@ import ar.edu.unrn.seminario.accesos.*;
 import ar.edu.unrn.seminario.dto.*;
 import ar.edu.unrn.seminario.exception.*;
 import ar.edu.unrn.seminario.modelo.*;
+import ar.edu.unrn.seminario.servicios.BienMapper;
 
 public class PersistenceApi implements IApi {
 
-    private RolDao rolDao;
-    private UsuarioDao usuarioDao;
-    private PedidosDonacionDao pedidoDao;
-    private BienDao bienDao;
-    private OrdenRetiroDao ordenDao;
-    private OrdenEntregaDao ordenEntregaDao;
-    private VehiculoDao vehiculoDao;
-    private VisitaDao visitaDao;
+    private final RolDao rolDao;
+    private final UsuarioDao usuarioDao;
+    private final PedidosDonacionDao pedidoDao;
+    private final BienDao bienDao;
+    private final OrdenRetiroDao ordenDao;
+    private final OrdenEntregaDao ordenEntregaDao;
+    private final VehiculoDao vehiculoDao;
+    private final VisitaDao visitaDao;
 
     public PersistenceApi() {
-        rolDao = new RolDAOJDBC();
-        usuarioDao = new UsuarioDAOJDBC();
-        pedidoDao = new PedidosDonacionDAOJDBC();
-        bienDao = new BienDAOJDBC();
-        ordenDao = new OrdenRetiroDAOJDBC();
-        ordenEntregaDao = new OrdenEntregaDAOJDBC();
-        vehiculoDao = new VehiculoDAOJDBC();
-        visitaDao = new VisitaDAOJDBC();
+        this.rolDao = new RolDAOJDBC();
+        this.usuarioDao = new UsuarioDAOJDBC();
+        this.pedidoDao = new PedidosDonacionDAOJDBC();
+        this.bienDao = new BienDAOJDBC();
+        this.ordenDao = new OrdenRetiroDAOJDBC();
+        this.ordenEntregaDao = new OrdenEntregaDAOJDBC();
+        this.vehiculoDao = new VehiculoDAOJDBC();
+        this.visitaDao = new VisitaDAOJDBC();
+    }
+
+    public PersistenceApi(RolDao rolDao, UsuarioDao usuarioDao, PedidosDonacionDao pedidoDao,
+                          BienDao bienDao, OrdenRetiroDao ordenDao, OrdenEntregaDao ordenEntregaDao,
+                          VehiculoDao vehiculoDao, VisitaDao visitaDao) {
+        this.rolDao = rolDao;
+        this.usuarioDao = usuarioDao;
+        this.pedidoDao = pedidoDao;
+        this.bienDao = bienDao;
+        this.ordenDao = ordenDao;
+        this.ordenEntregaDao = ordenEntregaDao;
+        this.vehiculoDao = vehiculoDao;
+        this.visitaDao = visitaDao;
     }
 
     @Override
@@ -42,41 +54,11 @@ public class PersistenceApi implements IApi {
         try {
             List<Bien> bienesEnStock = bienDao.findByEstadoInventario(EstadoBien.EN_STOCK.name());
             return bienesEnStock.stream()
-                    .map(this::convertirEntidadADTOVisual)
+                    .map(BienMapper::entidadADTOVisual)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener inventario: " + e.getMessage(), e);
         }
-    }
-
-    private BienDTO convertirEntidadADTOVisual(Bien bien) {
-        String categoriaStr = mapCategoriaToString(bien.obtenerCategoria());
-        String estadoStr = (bien.obtenerTipo() == TipoBien.ALIMENTO) ? "Nuevo" : "Usado";
-        
-        String vencimientoStr = "-";
-        LocalDate fechaLocalDate = null; 
-
-        if (bien.getFecVec() != null) {
-            fechaLocalDate = bien.getFecVec().toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-
-            vencimientoStr = fechaLocalDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        }
-        BienDTO dto = new BienDTO();
-        dto.setId(bien.getId());
-        dto.setDescripcion(bien.getDescripcion());
-        dto.setCantidad(bien.obtenerCantidad());
-        dto.setCategoria(mapEnumCategoriaToDTO(bien.obtenerCategoria()));
-        dto.setTipo(mapEnumTipoToDTO(bien.obtenerTipo()));
-        
-        dto.setCategoriaTexto(categoriaStr);
-        dto.setEstadoTexto(estadoStr);
-        dto.setFechaVencimiento(fechaLocalDate); 
-        dto.setVencimientoTexto(vencimientoStr); 
-        
-        return dto;
     }
 
     @Override
@@ -87,32 +69,8 @@ public class PersistenceApi implements IApi {
 
             Bien bienDb = bienDao.findById(bienDTO.getId());
             if (bienDb == null) throw new ObjetoNuloException("el bien no existe");
-            if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("la cantidad no puede ser negativa");
             
-            boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
-                                        || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
-            
-            if (requiereVencimiento) {
-                if (bienDTO.getFechaVencimiento() == null) {
-                    throw new ReglaNegocioException("la fecha de vencimiento es obligatoria para alimentos y medicamentos");
-                }
-                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
-                    throw new ReglaNegocioException("esa fecha esta vencida, debe ser posterior a " + LocalDate.now());
-                }
-            }
-            
-            bienDb.setCantidad(bienDTO.getCantidad());
-            bienDb.setDescripcion(bienDTO.getDescripcion());
-            if (bienDTO.getFechaVencimiento() != null) {
-                // conversion LocalDate -> java.util.Date para persistencia
-                Date fechaDB = Date.from(
-                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
-                );
-                bienDb.setFecVec(fechaDB);
-            } else {
-                bienDb.setFecVec(null);
-            }
-            
+            bienDb.actualizarDatos(bienDTO.getCantidad(), bienDTO.getDescripcion(), bienDTO.getFechaVencimiento());
             bienDao.update(bienDb);
         } catch (Exception e) {
             throw new RuntimeException("error en la carga del bien: " + e.getMessage(), e);
@@ -125,27 +83,10 @@ public class PersistenceApi implements IApi {
             Bien bienDb = bienDao.findById(idBien);
             if (bienDb == null) throw new ObjetoNuloException("el bien no existe");
             
-            bienDb.setEstadoInventario(EstadoBien.BAJA);
-            bienDb.setDescripcion(bienDb.getDescripcion() + " [baja: " + motivo + "]");
-            
+            bienDb.darDeBaja(motivo);
             bienDao.update(bienDb);
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private String mapCategoriaToString(int idCategoria) {
-        switch (idCategoria) {
-            case BienDTO.CATEGORIA_ROPA: return "Ropa";
-            case BienDTO.CATEGORIA_MUEBLES: return "Muebles";
-            case BienDTO.CATEGORIA_ALIMENTOS: return "Alimentos";
-            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return "Electrodomesticos";
-            case BienDTO.CATEGORIA_HERRAMIENTAS: return "Herramientas";
-            case BienDTO.CATEGORIA_JUGUETES: return "Juguetes";
-            case BienDTO.CATEGORIA_LIBROS: return "Libros";
-            case BienDTO.CATEGORIA_MEDICAMENTOS: return "Medicamentos";
-            case BienDTO.CATEGORIA_HIGIENE: return "Higiene";
-            default: return "Otros";
         }
     }
 
@@ -167,8 +108,7 @@ public class PersistenceApi implements IApi {
                     .map(u -> new UsuarioDTO(u.getUsuario(), u.getNombre(), u.getApellido(), u.getDni(), u.obtenerDireccion() != null ? u.obtenerDireccion() : "", 3))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener donantes: " + e.getMessage(), e);
         }
     }
 
@@ -185,9 +125,7 @@ public class PersistenceApi implements IApi {
                             p.obtenerEstado()))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            // en caso de error, devolvemos lista vacia para que la UI no falle
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener pedidos: " + e.getMessage(), e);
         }
     }
 
@@ -197,32 +135,21 @@ public class PersistenceApi implements IApi {
             Usuario donante = usuarioDao.findByDni(pedidoDTO.getDonanteId());
             if (donante == null) throw new ObjetoNuloException("donante no encontrado");
 
-            List<Bien> bienes = new ArrayList<>();
-            for (ar.edu.unrn.seminario.dto.BienDTO dto : pedidoDTO.getBienes()) {
-                TipoBien tipo = mapDTOTipoToEnum(dto.getTipo());
-                CategoriaBien categoria = mapDTOCategoriaToEnum(dto.getCategoria());
-                Bien bien = new Bien(tipo, dto.getCantidad(), categoria);
-                if (dto.getDescripcion() != null) bien.setDescripcion(dto.getDescripcion());
-                if (dto.getFechaVencimiento() != null) {
-                    java.time.ZoneId zoneId = java.time.ZoneId.systemDefault();
-                    bien.setFecVec(java.util.Date.from(dto.getFechaVencimiento().atStartOfDay(zoneId).toInstant()));
-                }
-                bienes.add(bien);
-            }
+            List<Bien> bienes = pedidoDTO.getBienes().stream()
+                    .map(dto -> {
+                        try {
+                            return BienMapper.toEntity(dto);
+                        } catch (Exception e) {
+                            throw new RuntimeException("error al convertir bien: " + e.getMessage(), e);
+                        }
+                    })
+                    .collect(Collectors.toList());
 
-            // las fechas vienen como string dd/MM/yyyy desde la gui
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDateTime fecha = java.time.LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
-
+            LocalDateTime fecha = LocalDate.parse(pedidoDTO.getFecha(), formatter).atStartOfDay();
             TipoVehiculo tipoVehiculo = TipoVehiculo.valueOf(pedidoDTO.getTipoVehiculo().toUpperCase());
 
-            PedidosDonacion pedido = new PedidosDonacion(
-                fecha, 
-                (ArrayList<Bien>) bienes, 
-                tipoVehiculo, 
-                donante
-            );
-
+            PedidosDonacion pedido = new PedidosDonacion(fecha, (ArrayList<Bien>) bienes, tipoVehiculo, donante);
             pedidoDao.create(pedido);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -241,8 +168,7 @@ public class PersistenceApi implements IApi {
                             p.getDonante().getNombre() + " " + p.getDonante().getApellido()))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener pedidos pendientes: " + e.getMessage(), e);
         }
     }
 
@@ -257,8 +183,7 @@ public class PersistenceApi implements IApi {
                             p.obtenerEstado()))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener pedidos de orden: " + e.getMessage(), e);
         }
     }
 
@@ -269,10 +194,10 @@ public class PersistenceApi implements IApi {
             if (pedido != null && pedido.getDonante() != null) {
                 return pedido.getDonante().getNombre() + " " + pedido.getDonante().getApellido();
             }
+            return "";
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("error al obtener nombre de donante: " + e.getMessage(), e);
         }
-        return "";
     }
 
     @Override
@@ -318,8 +243,7 @@ public class PersistenceApi implements IApi {
                     .map(this::mapearOrdenADTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener ordenes de retiro: " + e.getMessage(), e);
         }
     }
 
@@ -330,8 +254,7 @@ public class PersistenceApi implements IApi {
                     .map(this::mapearOrdenADTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener todas las ordenes de retiro: " + e.getMessage(), e);
         }
     }
 
@@ -342,8 +265,7 @@ public class PersistenceApi implements IApi {
                     .map(this::mapearOrdenADTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener ordenes asignadas: " + e.getMessage(), e);
         }
     }
 
@@ -365,8 +287,7 @@ public class PersistenceApi implements IApi {
                     .map(v -> new UsuarioDTO(v.getUsuario(), v.getNombre(), v.getApellido(), v.getDni(), v.obtenerDireccion(), 2))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener voluntarios: " + e.getMessage(), e);
         }
     }
 
@@ -377,8 +298,7 @@ public class PersistenceApi implements IApi {
                     .map(b -> new UsuarioDTO(b.getUsuario(), b.getNombre(), b.getApellido(), b.getDni(), b.obtenerDireccion(), 4))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener beneficiarios: " + e.getMessage(), e);
         }
     }
 
@@ -396,10 +316,10 @@ public class PersistenceApi implements IApi {
                     dtos.add(new VisitaDTO(v.obtenerFechaFormateada(), v.obtenerObservacion(), v.obtenerResultado().toString(), donante));
                 }
             }
+            return dtos;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("error al obtener visitas: " + e.getMessage(), e);
         }
-        return dtos;
     }
 
     // Ordenes de entrega
@@ -417,6 +337,8 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
+            List<Bien> bienesFraccionados = new ArrayList<>();
+            
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
                 int idBienOriginal = entry.getKey();
                 int cantidadSolicitada = entry.getValue();
@@ -424,16 +346,16 @@ public class PersistenceApi implements IApi {
                 Bien bienOriginal = bienDao.findById(idBienOriginal);
                 if (bienOriginal == null) throw new ObjetoNuloException("bien id " + idBienOriginal + " no existe");
                 
-                if (bienOriginal.getEstadoInventario() != EstadoBien.EN_STOCK) {
-                    throw new ReglaNegocioException("el bien " + bienOriginal.getDescripcion() + " no esta disponible");
-                }
-
-                if (cantidadSolicitada > bienOriginal.getCantidad()) {
-                    throw new ReglaNegocioException("stock insuficiente para: " + bienOriginal.getDescripcion());
-                }
+                Bien bienFraccionado = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
+                
+                bienDao.update(bienOriginal);
+                int idBienNuevo = bienDao.create(bienFraccionado, bienDao.obtenerIdPedidoDeBien(idBienOriginal));
+                bienFraccionado.setId(idBienNuevo);
+                
+                bienesFraccionados.add(bienFraccionado);
             }
 
-            OrdenEntrega orden = new OrdenEntrega(beneficiario, new ArrayList<>());
+            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesFraccionados);
             
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
@@ -460,8 +382,7 @@ public class PersistenceApi implements IApi {
                 return new OrdenEntregaDTO(o.getId(), fechaStr, o.getEstado().toString(), resumenBienes);
             }).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener entregas de beneficiario: " + e.getMessage(), e);
         }
     }
 
@@ -475,8 +396,7 @@ public class PersistenceApi implements IApi {
                  return new OrdenEntregaDTO(o.getId(), o.getFechaGeneracion().toString(), o.getEstado().toString(), resumen);
             }).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener entregas pendientes: " + e.getMessage(), e);
         }
     }
 
@@ -493,8 +413,7 @@ public class PersistenceApi implements IApi {
                     ))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener todas las ordenes de entrega: " + e.getMessage(), e);
         }
     }
 
@@ -542,8 +461,7 @@ public class PersistenceApi implements IApi {
                 u.getRol().getNombre(), u.isActivo(), u.obtenerEstado()
             )).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener usuarios: " + e.getMessage(), e);
         }
     }
 
@@ -555,10 +473,10 @@ public class PersistenceApi implements IApi {
                 return new UsuarioDTO(u.getUsuario(), u.getContrasena(), u.getNombre(), 
                     u.getEmail(), u.getRol().getNombre(), u.isActivo(), u.obtenerEstado());
             }
+            return null;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("error al obtener usuario: " + e.getMessage(), e);
         }
-        return null;
     }
 
     @Override 
@@ -571,8 +489,7 @@ public class PersistenceApi implements IApi {
                 .map(r -> new RolDTO(r.getCodigo(), r.getNombre(), r.isActivo()))
                 .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener roles: " + e.getMessage(), e);
         }
     }
     
@@ -584,8 +501,7 @@ public class PersistenceApi implements IApi {
                 .map(r -> new RolDTO(r.getCodigo(), r.getNombre(), r.isActivo()))
                 .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("error al obtener roles activos: " + e.getMessage(), e);
         }
     }
     
@@ -606,51 +522,8 @@ public class PersistenceApi implements IApi {
                 usuarioDao.update(usuario);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("error al cambiar estado de usuario: " + e.getMessage(), e);
         }
     }
     
-    // convertidores DTO<->Enum
-    private TipoBien mapDTOTipoToEnum(int tipo) {
-        return TipoBien.ALIMENTO;
-    }
-    
-    private CategoriaBien mapDTOCategoriaToEnum(int categoria) {
-        switch (categoria) {
-            case BienDTO.CATEGORIA_ROPA: return CategoriaBien.ROPA;
-            case BienDTO.CATEGORIA_MUEBLES: return CategoriaBien.MUEBLES;
-            case BienDTO.CATEGORIA_ALIMENTOS: return CategoriaBien.ALIMENTOS;
-            case BienDTO.CATEGORIA_ELECTRODOMESTICOS: return CategoriaBien.ELECTRODOMESTICOS;
-            case BienDTO.CATEGORIA_HERRAMIENTAS: return CategoriaBien.HERRAMIENTAS;
-            case BienDTO.CATEGORIA_JUGUETES: return CategoriaBien.JUGUETES;
-            case BienDTO.CATEGORIA_LIBROS: return CategoriaBien.LIBROS;
-            case BienDTO.CATEGORIA_MEDICAMENTOS: return CategoriaBien.MEDICAMENTOS;
-            case BienDTO.CATEGORIA_HIGIENE: return CategoriaBien.HIGIENE;
-            default: return CategoriaBien.OTROS;
-        }
-    }
-    
-    private int mapEnumCategoriaToDTO(CategoriaBien categoria) {
-        switch (categoria) {
-            case ROPA: return BienDTO.CATEGORIA_ROPA;
-            case MUEBLES: return BienDTO.CATEGORIA_MUEBLES;
-            case ALIMENTOS: return BienDTO.CATEGORIA_ALIMENTOS;
-            case ELECTRODOMESTICOS: return BienDTO.CATEGORIA_ELECTRODOMESTICOS;
-            case HERRAMIENTAS: return BienDTO.CATEGORIA_HERRAMIENTAS;
-            case JUGUETES: return BienDTO.CATEGORIA_JUGUETES;
-            case LIBROS: return BienDTO.CATEGORIA_LIBROS;
-            case MEDICAMENTOS: return BienDTO.CATEGORIA_MEDICAMENTOS;
-            case HIGIENE: return BienDTO.CATEGORIA_HIGIENE;
-            default: return BienDTO.CATEGORIA_OTROS;
-        }
-    }
-    
-    private int mapEnumTipoToDTO(TipoBien tipo) {
-        return BienDTO.TIPO_NUEVO;
-    }
-
-    private String mapCategoriaToString(CategoriaBien categoria) {
-        return categoria.toString();
-    }
-
 }

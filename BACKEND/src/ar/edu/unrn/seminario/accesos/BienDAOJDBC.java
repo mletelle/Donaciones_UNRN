@@ -11,7 +11,6 @@ import java.util.List;
 import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Bien;
 import ar.edu.unrn.seminario.modelo.EstadoBien;
-import ar.edu.unrn.seminario.modelo.TipoBien;
 import ar.edu.unrn.seminario.modelo.CategoriaBien;
 
 public class BienDAOJDBC implements BienDao {
@@ -25,23 +24,22 @@ public class BienDAOJDBC implements BienDao {
             conn.setAutoCommit(false);
             
             statement = conn.prepareStatement(
-                    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)");
             
             for (Bien bien : bienes) {
                 statement.setInt(1, idPedido);
                 statement.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
                 statement.setInt(3, bien.obtenerCantidad());
-                statement.setInt(4, mapTipoToId(bien.obtenerTipo()));
                 
-                if (bien.getDescripcion() != null) statement.setString(5, bien.getDescripcion());
-                else statement.setNull(5, java.sql.Types.VARCHAR);
+                if (bien.getDescripcion() != null) statement.setString(4, bien.getDescripcion());
+                else statement.setNull(4, java.sql.Types.VARCHAR);
                 
-                if (bien.getFecVec() != null) statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
-                else statement.setNull(6, java.sql.Types.DATE);
+                if (bien.getFecVec() != null) statement.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
+                else statement.setNull(5, java.sql.Types.DATE);
                 
                 String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario().name() : "PENDIENTE";
-                statement.setString(7, estado);
+                statement.setString(6, estado);
 
                 statement.addBatch();
             }
@@ -215,10 +213,9 @@ public class BienDAOJDBC implements BienDao {
 
     private Bien mapearBien(ResultSet rs) throws SQLException {
         try {
-            TipoBien tipo = mapIdToTipo(rs.getInt("tipo"));
             CategoriaBien categoria = mapIdToCategoria(rs.getInt("categoria"));
             
-            Bien bien = new Bien(tipo, rs.getInt("cantidad"), categoria);
+            Bien bien = new Bien(rs.getInt("cantidad"), categoria);
             bien.setId(rs.getInt("id")); 
             
             bien.setDescripcion(rs.getString("descripcion"));
@@ -261,8 +258,8 @@ public class BienDAOJDBC implements BienDao {
     @Override
     public int create(Bien bien, int idPedidoOriginal) throws PersistenceException {
         Connection conn = null;
-        String sql = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
         
         PreparedStatement stmt = null;
         ResultSet generatedKeys = null;
@@ -274,15 +271,14 @@ public class BienDAOJDBC implements BienDao {
             stmt.setInt(1, idPedidoOriginal); 
             stmt.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
             stmt.setInt(3, bien.obtenerCantidad());
-            stmt.setInt(4, mapTipoToId(bien.obtenerTipo()));
             
-            if (bien.getDescripcion() != null) stmt.setString(5, bien.getDescripcion());
-            else stmt.setNull(5, java.sql.Types.VARCHAR);
+            if (bien.getDescripcion() != null) stmt.setString(4, bien.getDescripcion());
+            else stmt.setNull(4, java.sql.Types.VARCHAR);
             
-            if (bien.getFecVec() != null) stmt.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
-            else stmt.setNull(6, java.sql.Types.DATE);
+            if (bien.getFecVec() != null) stmt.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
+            else stmt.setNull(5, java.sql.Types.DATE);
             
-            stmt.setString(7, bien.getEstadoInventario().name());
+            stmt.setString(6, bien.getEstadoInventario().name());
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) throw new SQLException("no se pudo crear el bien fraccionado");
@@ -318,12 +314,12 @@ public class BienDAOJDBC implements BienDao {
             stmtUpdate.executeUpdate();
             
             stmtInsert = conn.prepareStatement(
-                "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, tipo, descripcion, fecha_vencimiento, estado_inventario) " +
-                "SELECT id_pedido_donacion, categoria, ?, tipo, descripcion, fecha_vencimiento, ? FROM bienes WHERE id = ?",
+                "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) " +
+                "SELECT id_pedido_donacion, categoria, ?, descripcion, fecha_vencimiento, ? FROM bienes WHERE id = ?",
                 Statement.RETURN_GENERATED_KEYS
             );
             stmtInsert.setInt(1, cantidadSolicitada);
-            stmtInsert.setString(2, "EN_STOCK");
+            stmtInsert.setString(2, EstadoBien.EN_STOCK.name());
             stmtInsert.setInt(3, idBienOriginal);
             stmtInsert.executeUpdate();
             
@@ -376,26 +372,6 @@ public class BienDAOJDBC implements BienDao {
     }
     
 
-    
-    private int mapTipoToId(TipoBien tipo) {
-        switch (tipo) {
-            case ALIMENTO: return 1;
-            case ROPA: return 2;
-            case MOBILIARIO: return 3;
-            case HIGIENE: return 4;
-            default: throw new IllegalArgumentException("tipo no mapeado: " + tipo);
-        }
-    }
-    
-    private TipoBien mapIdToTipo(int id) {
-        switch (id) {
-            case 1: return TipoBien.ALIMENTO;
-            case 2: return TipoBien.ROPA;
-            case 3: return TipoBien.MOBILIARIO;
-            case 4: return TipoBien.HIGIENE;
-            default: throw new IllegalArgumentException("id tipo desconocido: " + id);
-        }
-    }
     
     private int mapCategoriaToId(CategoriaBien categoria) {
         switch (categoria) {

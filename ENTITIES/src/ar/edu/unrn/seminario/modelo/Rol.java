@@ -4,6 +4,11 @@ import ar.edu.unrn.seminario.exception.CampoVacioException;
 
 public class Rol {
 	
+	public static final int ROL_ADMINISTRADOR = 1;
+	public static final int ROL_VOLUNTARIO = 2;
+	public static final int ROL_DONANTE = 3;
+	public static final int ROL_BENEFICIARIO = 4;
+	
 	private Integer codigo;
 	private String nombre;
 	private boolean activo;

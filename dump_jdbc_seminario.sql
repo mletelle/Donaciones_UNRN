@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `seminario_2025_1` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `seminario_2025_1`;
--- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Linux (x86_64)
 --
 -- Host: 127.0.0.1    Database: seminario_2025_1
 -- ------------------------------------------------------
--- Server version	8.0.44-0ubuntu0.24.04.1
+-- Server version	8.0.44-0ubuntu0.24.04.2
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -29,7 +29,6 @@ CREATE TABLE `bienes` (
   `id_pedido_donacion` int NOT NULL,
   `categoria` int NOT NULL,
   `cantidad` int NOT NULL,
-  `tipo` int NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
   `estado_inventario` varchar(20) DEFAULT 'PENDIENTE',
@@ -48,7 +47,7 @@ CREATE TABLE `bienes` (
 
 LOCK TABLES `bienes` WRITE;
 /*!40000 ALTER TABLE `bienes` DISABLE KEYS */;
-INSERT INTO `bienes` VALUES (17,13,1,1,1,'Remera',NULL,'ENTREGADO',1),(18,13,1,2,2,'Pantalon',NULL,'EN_STOCK',NULL),(19,14,2,1,1,'Alacena',NULL,'PENDIENTE',NULL),(20,14,5,4,1,'Clavos',NULL,'PENDIENTE',NULL),(21,15,3,12,1,'Latas','2025-11-16','PENDIENTE',NULL),(22,16,6,1,1,'Jugete',NULL,'PENDIENTE',NULL),(23,16,9,2,1,'Herramienta',NULL,'PENDIENTE',NULL),(24,17,1,1,1,'Remera',NULL,'PENDIENTE',NULL),(25,18,5,1,1,'Torno',NULL,'PENDIENTE',NULL),(26,19,1,12,1,'Medias',NULL,'PENDIENTE',NULL),(27,19,3,6,1,'Cerveza','2025-12-16','PENDIENTE',NULL),(28,20,1,18,1,'Medias',NULL,'EN_STOCK',NULL),(29,20,3,14,1,'Latas','2025-12-20','EN_STOCK',NULL),(30,20,1,6,1,'Medias',NULL,'ENTREGADO',1),(31,20,3,2,1,'Latas','2025-12-20','ENTREGADO',1);
+INSERT INTO `bienes` VALUES (17,13,1,1,'Remera',NULL,'ENTREGADO',1),(18,13,1,2,'Pantalon',NULL,'EN_STOCK',NULL),(19,14,2,1,'Alacena',NULL,'PENDIENTE',NULL),(20,14,5,4,'Clavos',NULL,'PENDIENTE',NULL),(21,15,3,12,'Latas','2025-11-16','PENDIENTE',NULL),(22,16,6,1,'Jugete',NULL,'PENDIENTE',NULL),(23,16,9,2,'Herramienta',NULL,'PENDIENTE',NULL),(24,17,1,1,'Remera',NULL,'PENDIENTE',NULL),(25,18,5,1,'Torno',NULL,'PENDIENTE',NULL),(26,19,1,12,'Medias',NULL,'PENDIENTE',NULL),(27,19,3,6,'Cerveza','2025-12-16','PENDIENTE',NULL),(28,20,1,18,'Medias',NULL,'EN_STOCK',NULL),(29,20,3,14,'Latas','2025-12-20','EN_STOCK',NULL),(30,20,1,6,'Medias',NULL,'ENTREGADO',1),(31,20,3,2,'Latas','2025-12-20','ENTREGADO',1);
 /*!40000 ALTER TABLE `bienes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -287,4 +286,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-16 11:23:21
+-- Dump completed on 2025-12-18 16:20:14
