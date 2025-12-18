@@ -375,9 +375,7 @@ public class BienDAOJDBC implements BienDao {
         }
     }
     
-    // ---------------------------------------------------------
-    // CONVERTIDORES (desacoplamiento dominio-persistencia)
-    // ---------------------------------------------------------
+
     
     private int mapTipoToId(TipoBien tipo) {
         switch (tipo) {

@@ -408,9 +408,7 @@ public class PedidosDonacionDAOJDBC implements PedidosDonacionDao {
         }
     }
     
-    // ---------------------------------------------------------
-    // CONVERTIDORES (reutilizados de BienDAOJDBC)
-    // ---------------------------------------------------------
+
     
     private int mapTipoToId(TipoBien tipo) {
         switch (tipo) {
