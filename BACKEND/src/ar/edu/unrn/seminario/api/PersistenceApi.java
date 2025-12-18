@@ -1,19 +1,15 @@
 package ar.edu.unrn.seminario.api;
 
-import java.time.LocalDateTime;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import ar.edu.unrn.seminario.accesos.*;
 import ar.edu.unrn.seminario.dto.*;
 import ar.edu.unrn.seminario.exception.*;
 import ar.edu.unrn.seminario.modelo.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PersistenceApi implements IApi {
 
@@ -27,6 +23,7 @@ public class PersistenceApi implements IApi {
     private VisitaDao visitaDao;
 
     public PersistenceApi() {
+        // Nota: Idealmente usar una Factoría para no instanciar directamente
         rolDao = new RolDAOJDBC();
         usuarioDao = new UsuarioDAOJDBC();
         pedidoDao = new PedidosDonacionDAOJDBC();
@@ -78,44 +75,24 @@ public class PersistenceApi implements IApi {
         
         return dto;
     }
-
+    
     @Override
-    public void actualizarBienInventario(BienDTO bienDTO)
-            throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
+    public void actualizarBienInventario(BienDTO bienDTO) throws ObjetoNuloException, CampoVacioException, ReglaNegocioException {
         try {
-            if (bienDTO.getId() <= 0) throw new ObjetoNuloException("id invalido");
-
             Bien bienDb = bienDao.findById(bienDTO.getId());
-            if (bienDb == null) throw new ObjetoNuloException("el bien no existe");
-            if (bienDTO.getCantidad() < 0) throw new ReglaNegocioException("la cantidad no puede ser negativa");
-            
-            boolean requiereVencimiento = bienDTO.getCategoria() == BienDTO.CATEGORIA_ALIMENTOS 
-                                        || bienDTO.getCategoria() == BienDTO.CATEGORIA_MEDICAMENTOS;
-            
-            if (requiereVencimiento) {
-                if (bienDTO.getFechaVencimiento() == null) {
-                    throw new ReglaNegocioException("la fecha de vencimiento es obligatoria para alimentos y medicamentos");
-                }
-                if (bienDTO.getFechaVencimiento().isBefore(LocalDate.now())) {
-                    throw new ReglaNegocioException("esa fecha esta vencida, debe ser posterior a " + LocalDate.now());
-                }
-            }
-            
-            bienDb.setCantidad(bienDTO.getCantidad());
-            bienDb.setDescripcion(bienDTO.getDescripcion());
-            if (bienDTO.getFechaVencimiento() != null) {
-                // conversion LocalDate -> java.util.Date para persistencia
-                Date fechaDB = Date.from(
-                    bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()
-                );
-                bienDb.setFecVec(fechaDB);
-            } else {
-                bienDb.setFecVec(null);
-            }
+            if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
+
+            // Convertimos la fecha de DTO a Date
+            Date fechaVenc = (bienDTO.getFechaVencimiento() != null) 
+                ? Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()) 
+                : null;
+
+            // Delegamos la lógica de negocio y validación a la ENTIDAD
+            bienDb.actualizarDatos(bienDTO.getCantidad(), bienDTO.getDescripcion(), fechaVenc);
             
             bienDao.update(bienDb);
-        } catch (Exception e) {
-            throw new RuntimeException("error en la carga del bien: " + e.getMessage(), e);
+        } catch (PersistenceException e) {
+            throw new RuntimeException("Error en la base de datos: " + e.getMessage());
         }
     }
 
@@ -276,38 +253,40 @@ public class PersistenceApi implements IApi {
     }
 
     @Override
-    public void crearOrdenRetiro(List<Integer> idsPedidos, int idVoluntario, String tipoVehiculo)
+    public void crearOrdenRetiro(List<Integer> idsPedidos, int dniVoluntario, String tipoVehiculo)
             throws ReglaNegocioException, ObjetoNuloException {
         try {
+            // Encapsulamos las búsquedas manuales en métodos privados o el modelo
             List<PedidosDonacion> pedidos = pedidoDao.findByIds(idsPedidos);
-            if (pedidos == null || pedidos.size() != idsPedidos.size()) {
-                throw new ObjetoNuloException("no se encontraron todos los pedidos");
-            }
-            
-            for (PedidosDonacion p : pedidos) {
-                if (p.obtenerEstadoPedido() != EstadoPedido.PENDIENTE) {
-                    throw new ReglaNegocioException("pedido " + p.getId() + " no esta pendiente");
-                }
-                if (p.obtenerOrden() != null) {
-                    throw new ReglaNegocioException("pedido " + p.getId() + " ya tiene orden");
-                }
-            }
+            validarEstadoPedidosParaOrden(pedidos, idsPedidos.size());
 
-            Usuario voluntario = usuarioDao.findByDni(idVoluntario);
+            Usuario voluntario = usuarioDao.findByDni(dniVoluntario);
             if (voluntario == null || voluntario.getRol().getCodigo() != 2) {
-                throw new ObjetoNuloException("voluntario invalido");
+                throw new ObjetoNuloException("El voluntario no es válido o no existe.");
             }
 
             Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo);
-            if (vehiculo == null) throw new ReglaNegocioException("no hay vehiculos disponibles");
+            if (vehiculo == null) throw new ReglaNegocioException("No hay vehículos disponibles del tipo: " + tipoVehiculo);
 
+            // La lógica de creación se mantiene atómica en el DAO
             OrdenRetiro orden = new OrdenRetiro(pedidos, null);
             orden.asignarVehiculo(vehiculo);
             orden.asignarVoluntario(voluntario);
 
             ordenDao.crearOrdenConPedidos(orden, idsPedidos);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (PersistenceException e) {
+            throw new RuntimeException("Error al persistir la orden: " + e.getMessage());
+        }
+    }
+    
+    private void validarEstadoPedidosParaOrden(List<PedidosDonacion> pedidos, int totalEsperado) throws ReglaNegocioException, ObjetoNuloException {
+        if (pedidos == null || pedidos.size() != totalEsperado) {
+            throw new ObjetoNuloException("No se encontraron todos los pedidos seleccionados.");
+        }
+        for (PedidosDonacion p : pedidos) {
+            if (p.obtenerEstadoPedido() != EstadoPedido.PENDIENTE || p.obtenerOrden() != null) {
+                throw new ReglaNegocioException("El pedido " + p.getId() + " ya no está disponible para una nueva orden.");
+            }
         }
     }
 
@@ -610,9 +589,20 @@ public class PersistenceApi implements IApi {
         }
     }
     
-    // convertidores DTO<->Enum
-    private TipoBien mapDTOTipoToEnum(int tipo) {
-        return TipoBien.ALIMENTO;
+    private TipoBien mapDTOTipoToEnum(int categoriaDto) {
+        switch (categoriaDto) {
+            case BienDTO.CATEGORIA_ALIMENTOS:
+            case BienDTO.CATEGORIA_MEDICAMENTOS:
+                return TipoBien.ALIMENTO;
+            case BienDTO.CATEGORIA_ROPA:
+                return TipoBien.ROPA;
+            case BienDTO.CATEGORIA_MUEBLES:
+                return TipoBien.MOBILIARIO;
+            case BienDTO.CATEGORIA_HIGIENE:
+                return TipoBien.HIGIENE;
+            default:
+                return TipoBien.ALIMENTO; // tippo por defecto
+        }
     }
     
     private CategoriaBien mapDTOCategoriaToEnum(int categoria) {
@@ -654,3 +644,4 @@ public class PersistenceApi implements IApi {
     }
 
 }
+
