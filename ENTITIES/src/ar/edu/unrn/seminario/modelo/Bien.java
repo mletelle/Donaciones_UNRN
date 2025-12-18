@@ -3,6 +3,7 @@ package ar.edu.unrn.seminario.modelo;
 import java.util.Date;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class Bien {
 
@@ -118,6 +119,14 @@ public class Bien {
 		this.cantidad = cantidad;
 	}
     
+	public void darDeBaja(String motivo) throws ReglaNegocioException {
+	    if (this.estadoInventario == EstadoBien.ENTREGADO) {
+	        throw new ReglaNegocioException("No se puede dar de baja un bien que ya se entrgo");
+	    }
+	    this.estadoInventario = EstadoBien.BAJA;
+	    this.descripcion = this.descripcion + " [BAJA: " + motivo + "]";
+	}
+	
     @Override
     public String toString() {
         String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripcion";

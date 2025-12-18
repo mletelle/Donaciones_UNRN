@@ -123,11 +123,8 @@ public class PersistenceApi implements IApi {
     public void darDeBajaBien(int idBien, String motivo) throws ObjetoNuloException, ReglaNegocioException {
         try {
             Bien bienDb = bienDao.findById(idBien);
-            if (bienDb == null) throw new ObjetoNuloException("el bien no existe");
-            
-            bienDb.setEstadoInventario(EstadoBien.BAJA);
-            bienDb.setDescripcion(bienDb.getDescripcion() + " [baja: " + motivo + "]");
-            
+            if (bienDb == null) throw new ObjetoNuloException("El bien no existe");
+            bienDb.darDeBaja(motivo);
             bienDao.update(bienDb);
         } catch (Exception e) {
             throw new RuntimeException(e);
