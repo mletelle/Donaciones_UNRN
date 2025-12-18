@@ -268,18 +268,46 @@ public class PersistenceApi implements IApi {
             throw new RuntimeException("error al obtener ordenes asignadas: " + e.getMessage(), e);
         }
     }
-
+    
     private OrdenRetiroDTO mapearOrdenADTO(OrdenRetiro orden) {
         Usuario voluntario = orden.obtenerVoluntarioPrincipal();
         String nombreVol = (voluntario != null) ? voluntario.getNombre() + " " + voluntario.getApellido() : "Sin asignar";
         
         String estado = orden.obtenerNombreEstado();
-        String fecha = orden.obtenerFechaCreacion().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        int cantidadPedidos = orden.obtenerPedidos().size();
-        
-        return new OrdenRetiroDTO(orden.obtenerId(), fecha, estado, nombreVol, cantidadPedidos);
-    }
+        int cantidadPedidos = (orden.obtenerPedidos() != null) ? orden.obtenerPedidos().size() : 0;
 
+        java.time.LocalDateTime ldt = orden.obtenerFechaCreacion();
+        
+        java.sql.Timestamp fechaReal = java.sql.Timestamp.valueOf(ldt);
+        
+
+        String fechaVisual = ldt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+        String vehiculoStr = "Sin Vehículo";
+        if (orden.obtenerVehiculo() != null) {
+            vehiculoStr = orden.obtenerVehiculo().getPatente() + " (" + orden.obtenerVehiculo().getTipoVeh() + ")";
+        }
+
+        String donanteStr = "Sin Donante";
+        if (orden.obtenerPedidos() != null && !orden.obtenerPedidos().isEmpty()) {
+            donanteStr = orden.obtenerPedidos().stream()
+                .map(p -> p.getDonante().getNombre() + " " + p.getDonante().getApellido())
+                .distinct()
+                .collect(Collectors.joining(", "));
+        }
+        
+        return new OrdenRetiroDTO(
+            orden.obtenerId(), 
+            fechaReal,      
+            fechaVisual,    
+            estado, 
+            nombreVol, 
+            cantidadPedidos, 
+            donanteStr, 
+            vehiculoStr
+        );
+    }
+    
     @Override
     public List<UsuarioDTO> obtenerVoluntarios() {
         try {
@@ -337,8 +365,8 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
-            List<Bien> bienesFraccionados = new ArrayList<>();
-            
+            List<Bien> bienesParaLaOrden = new ArrayList<>();
+
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
                 int idBienOriginal = entry.getKey();
                 int cantidadSolicitada = entry.getValue();
@@ -346,22 +374,27 @@ public class PersistenceApi implements IApi {
                 Bien bienOriginal = bienDao.findById(idBienOriginal);
                 if (bienOriginal == null) throw new ObjetoNuloException("bien id " + idBienOriginal + " no existe");
                 
-                Bien bienFraccionado = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
+                Bien bienAEntregar = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
                 
                 bienDao.update(bienOriginal);
-                int idBienNuevo = bienDao.create(bienFraccionado, bienDao.obtenerIdPedidoDeBien(idBienOriginal));
-                bienFraccionado.setId(idBienNuevo);
                 
-                bienesFraccionados.add(bienFraccionado);
+                int idBienNuevo = bienDao.create(bienAEntregar, bienDao.obtenerIdPedidoDeBien(idBienOriginal));
+                bienAEntregar.setId(idBienNuevo);
+                
+                bienesParaLaOrden.add(bienAEntregar);
             }
 
-            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesFraccionados);
-            
+            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesParaLaOrden);
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
             }
+            
+            int idOrdenGenerada = ordenEntregaDao.create(orden); 
+            
+            for (Bien b : bienesParaLaOrden) {
+                bienDao.asociarAOrdenEntrega(b.getId(), idOrdenGenerada, "ENTREGADO");
+            }
 
-            ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
