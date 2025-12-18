@@ -31,12 +31,6 @@ public class OrdenRetiroDTO {
         this.donante = donante;
         this.vehiculo = vehiculo;
     }
-    
-    public OrdenRetiroDTO(int id, String fecha, String estado, String voluntario, int cantidadPedidos) {
-        this.id = id;
-        this.estado = estado;
-        this.voluntario = voluntario;
-    }
 
     // Getters
     public int getId() {

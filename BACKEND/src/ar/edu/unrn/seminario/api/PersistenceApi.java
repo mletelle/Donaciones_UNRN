@@ -365,35 +365,20 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
-            List<Bien> bienesParaLaOrden = new ArrayList<>();
-
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
-                int idBienOriginal = entry.getKey();
-                int cantidadSolicitada = entry.getValue();
-
-                Bien bienOriginal = bienDao.findById(idBienOriginal);
-                if (bienOriginal == null) throw new ObjetoNuloException("bien id " + idBienOriginal + " no existe");
-                
-                Bien bienAEntregar = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
-                
-                bienDao.update(bienOriginal);
-                
-                int idBienNuevo = bienDao.create(bienAEntregar, bienDao.obtenerIdPedidoDeBien(idBienOriginal));
-                bienAEntregar.setId(idBienNuevo);
-                
-                bienesParaLaOrden.add(bienAEntregar);
+                Bien bienOriginal = bienDao.findById(entry.getKey());
+                if (bienOriginal == null) throw new ObjetoNuloException("bien id " + entry.getKey() + " no existe");
+                if (bienOriginal.getCantidad() < entry.getValue()) {
+                    throw new ReglaNegocioException("stock insuficiente para el bien " + entry.getKey());
+                }
             }
 
-            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesParaLaOrden);
+            OrdenEntrega orden = new OrdenEntrega(beneficiario, new ArrayList<>());
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
             }
             
-            int idOrdenGenerada = ordenEntregaDao.create(orden); 
-            
-            for (Bien b : bienesParaLaOrden) {
-                bienDao.asociarAOrdenEntrega(b.getId(), idOrdenGenerada, "ENTREGADO");
-            }
+            ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
