@@ -48,7 +48,7 @@ public enum ResultadoVisita {
 	
 	public static ResultadoVisita fromString(String texto) {
 		for (ResultadoVisita r : ResultadoVisita.values()) {
-			if (r.descripcion.equalsIgnoreCase(texto)) {
+			if (r.descripcion.equalsIgnoreCase(texto) || r.name().equalsIgnoreCase(texto)) {
 				return r;
 			}
 		}

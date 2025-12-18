@@ -1,5 +1,6 @@
 package ar.edu.unrn.seminario.api;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId; //que dependan de esto las fechas
@@ -387,11 +388,40 @@ public class MemoryApi implements IApi {
         return ordenes.stream().filter(o -> o.getId() == id).findFirst().orElse(null);
     }
 
-    private OrdenRetiroDTO mapearOrdenADTO(OrdenRetiro o) {
-        String vol = o.obtenerVoluntarioPrincipal() != null ? o.obtenerVoluntarioPrincipal().getNombre() + " " + o.obtenerVoluntarioPrincipal().getApellido() : "Sin Voluntario";
-        String don = o.obtenerDonante() != null ? o.obtenerDonante().getNombre() + " " + o.obtenerDonante().getApellido() : "Sin Donante";
-        String veh = o.obtenerVehiculo() != null ? o.obtenerVehiculo().getDescripcion() : "Sin Vehículo";
-        return new OrdenRetiroDTO(o.getId(), o.obtenerNombreEstado(), o.obtenerFechaCreacion(), new ArrayList<>(), don, veh, vol);
+    private OrdenRetiroDTO mapearOrdenADTO(OrdenRetiro orden) {
+        Usuario voluntario = orden.obtenerVoluntarioPrincipal();
+        String nombreVol = (voluntario != null) ? voluntario.getNombre() + " " + voluntario.getApellido() : "Sin asignar";
+        
+        String estado = orden.obtenerNombreEstado();
+        int cantidadPedidos = (orden.obtenerPedidos() != null) ? orden.obtenerPedidos().size() : 0;
+
+        java.time.LocalDateTime ldt = orden.obtenerFechaCreacion();
+        java.sql.Timestamp fechaReal = java.sql.Timestamp.valueOf(ldt);
+        String fechaVisual = ldt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+        String vehiculoStr = "Sin Vehículo";
+        if (orden.obtenerVehiculo() != null) {
+            vehiculoStr = orden.obtenerVehiculo().getPatente() + " (" + orden.obtenerVehiculo().getTipoVeh() + ")";
+        }
+
+        String donanteStr = "Sin Donante";
+        if (orden.obtenerPedidos() != null && !orden.obtenerPedidos().isEmpty()) {
+            donanteStr = orden.obtenerPedidos().stream()
+                .map(p -> p.getDonante().getNombre() + " " + p.getDonante().getApellido())
+                .distinct()
+                .collect(Collectors.joining(", "));
+        }
+
+        return new OrdenRetiroDTO(
+            orden.obtenerId(), 
+            fechaReal,      
+            fechaVisual,    
+            estado, 
+            nombreVol, 
+            cantidadPedidos, 
+            donanteStr, 
+            vehiculoStr
+        );
     }
 
     @Override
