@@ -118,6 +118,31 @@ public class Bien {
 	public void setCantidad(int cantidad) {
 		this.cantidad = cantidad;
 	}
+	
+	public void actualizarDatos(int cantidad, String descripcion, Date fechaVencimiento) throws ReglaNegocioException {
+	    if (cantidad < 0) 
+	        throw new ReglaNegocioException("La cantidad no puede ser negativa.");
+	    
+	    this.cantidad = cantidad;
+	    this.descripcion = descripcion;
+	    this.fecVec = fechaVencimiento;
+	    
+	    validarReglasDeInventario();
+	}
+
+	private void validarReglasDeInventario() throws ReglaNegocioException {
+
+	    boolean requiereVencimiento = (categoria == CategoriaBien.ALIMENTOS || categoria == CategoriaBien.MEDICAMENTOS);
+	    
+	    if (requiereVencimiento) {
+	        if (fecVec == null) {
+	            throw new ReglaNegocioException("La fecha de vencimiento es obligatoria para alimentos y medicamentos.");
+	        }
+	        if (fecVec.before(new Date())) {
+	            throw new ReglaNegocioException("El bien está vencido. Debe ser una fecha posterior a hoy.");
+	        }
+	    }
+	}
     
 	public void darDeBaja(String motivo) throws ReglaNegocioException {
 	    if (this.estadoInventario == EstadoBien.ENTREGADO) {

@@ -40,7 +40,7 @@ public class BienDAOJDBC implements BienDao {
                 if (bien.getFecVec() != null) statement.setDate(6, new java.sql.Date(bien.getFecVec().getTime()));
                 else statement.setNull(6, java.sql.Types.DATE);
                 
-                String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario().name() : "PENDIENTE";
+                String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario().name() : EstadoBien.PENDIENTE.name();
                 statement.setString(7, estado);
 
                 statement.addBatch();
@@ -323,7 +323,7 @@ public class BienDAOJDBC implements BienDao {
                 Statement.RETURN_GENERATED_KEYS
             );
             stmtInsert.setInt(1, cantidadSolicitada);
-            stmtInsert.setString(2, "EN_STOCK");
+            stmtInsert.setString(2, EstadoBien.EN_STOCK.name());
             stmtInsert.setInt(3, idBienOriginal);
             stmtInsert.executeUpdate();
             
