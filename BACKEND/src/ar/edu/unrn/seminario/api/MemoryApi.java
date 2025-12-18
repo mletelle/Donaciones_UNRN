@@ -347,25 +347,27 @@ public class MemoryApi implements IApi {
             throws ReglaNegocioException, ObjetoNuloException {
 
         Usuario voluntario = buscarUsuarioPorDni(idVoluntario);
-        if (voluntario == null || voluntario.getRol().getCodigo() != 2) throw new ObjetoNuloException("Voluntario inválido.");
-
+        if (voluntario == null || !"VOLUNTARIO".equalsIgnoreCase(voluntario.getRol().getNombre())) {
+            throw new ObjetoNuloException("El usuario indicado no es un Voluntario");
+        }
         Vehiculo vehiculo = vehiculosDisponibles.stream()
-                .filter(v -> v.getTipoVeh().equalsIgnoreCase(tipoVehiculo) && "Disponible".equals(v.getEstado()))
+                .filter(v -> v.getTipoVeh().equalsIgnoreCase(tipoVehiculo) && "Disponible".equalsIgnoreCase(v.getEstado()))
                 .findFirst().orElse(null);
-
-        if (vehiculo == null) throw new ReglaNegocioException("No hay vehículos disponibles de tipo " + tipoVehiculo);
-
+        if (vehiculo == null) throw new ReglaNegocioException("No hay vehiculos disponibles de tipo " + tipoVehiculo);
         List<PedidosDonacion> pedidosParaOrden = new ArrayList<>();
         for (Integer id : idsPedidos) {
             PedidosDonacion p = buscarPedidoPorId(id);
             if (p == null) throw new ObjetoNuloException("Pedido ID " + id + " no encontrado.");
-            if (p.obtenerOrden() != null) throw new ReglaNegocioException("El pedido ID " + id + " ya tiene una orden asignada.");
+            if (p.obtenerEstadoPedido() != EstadoPedido.PENDIENTE || p.obtenerOrden() != null) {
+                throw new ReglaNegocioException("El pedido ID " + id + " no está en condiciones de ser retirado");
+            }
             pedidosParaOrden.add(p);
         }
-
         OrdenRetiro orden = new OrdenRetiro(pedidosParaOrden, null);
         orden.asignarVoluntario(voluntario);
         orden.asignarVehiculo(vehiculo);
+        
+        orden.setId(ordenes.size() + 1); 
         ordenes.add(orden);
     }
 
@@ -402,35 +404,35 @@ public class MemoryApi implements IApi {
     public void crearOrdenEntrega(String userBeneficiario, Map<Integer, Integer> bienesYCantidades, String userVoluntario)
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
         
-        Usuario beneficiario = usuarios.stream().filter(u -> u.getUsuario().equals(userBeneficiario)).findFirst().orElse(null);
-        if (beneficiario == null) throw new ObjetoNuloException("Beneficiario no encontrado.");
-
+        Usuario beneficiario = usuarios.stream()
+                .filter(u -> u.getUsuario().equals(userBeneficiario))
+                .findFirst()
+                .orElseThrow(() -> new ObjetoNuloException("Beneficiario no encontrado."));
         Usuario voluntario = null;
         if (userVoluntario != null) {
-            voluntario = usuarios.stream().filter(u -> u.getUsuario().equals(userVoluntario)).findFirst().orElse(null);
+            voluntario = usuarios.stream()
+                    .filter(u -> u.getUsuario().equals(userVoluntario))
+                    .findFirst()
+                    .orElse(null);
         }
 
         List<Bien> bienesFinalesParaOrden = new ArrayList<>();
-
         for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
             int idBienOriginal = entry.getKey();
             int cantidadSolicitada = entry.getValue();
 
-            Bien bienOriginal = pedidos.stream().flatMap(p -> p.obtenerBienes().stream()).filter(b -> b.getId() == idBienOriginal).findFirst().orElse(null);
-            
-            if (bienOriginal == null) throw new ObjetoNuloException("Bien no encontrado.");
-            if (!EstadoBien.EN_STOCK.equals(bienOriginal.getEstadoInventario())) throw new ReglaNegocioException("Bien no disponible.");
-            if (cantidadSolicitada > bienOriginal.getCantidad()) throw new ReglaNegocioException("Stock insuficiente.");
+            Bien bienOriginal = pedidos.stream()
+                    .flatMap(p -> p.obtenerBienes().stream())
+                    .filter(b -> b.getId() == idBienOriginal)
+                    .findFirst()
+                    .orElseThrow(() -> new ObjetoNuloException("Bien ID " + idBienOriginal + " no encontrado"));
 
             if (cantidadSolicitada == bienOriginal.getCantidad()) {
-                bienOriginal.setEstadoInventario(EstadoBien.ENTREGADO);
+                bienOriginal.entregar();
                 bienesFinalesParaOrden.add(bienOriginal);
             } else {
-                bienOriginal.setCantidad(bienOriginal.getCantidad() - cantidadSolicitada);
-                Bien bienNuevo = new Bien(bienOriginal.obtenerTipo(), cantidadSolicitada, bienOriginal.obtenerCategoria());
+                Bien bienNuevo = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
                 bienNuevo.setId(++secuenciaBien);
-                bienNuevo.setDescripcion(bienOriginal.getDescripcion());
-                bienNuevo.setEstadoInventario(EstadoBien.ENTREGADO);
                 bienesFinalesParaOrden.add(bienNuevo);
             }
         }
@@ -441,7 +443,7 @@ public class MemoryApi implements IApi {
         
         ordenesEntrega.add(nuevaOrden);
     }
-
+    
     @Override
     public List<OrdenEntregaDTO> obtenerEntregasPorBeneficiario(String username) {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");

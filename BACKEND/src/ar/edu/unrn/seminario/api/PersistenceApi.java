@@ -23,7 +23,6 @@ public class PersistenceApi implements IApi {
     private VisitaDao visitaDao;
 
     public PersistenceApi() {
-        // Nota: Idealmente usar una Factoría para no instanciar directamente
         rolDao = new RolDAOJDBC();
         usuarioDao = new UsuarioDAOJDBC();
         pedidoDao = new PedidosDonacionDAOJDBC();
@@ -82,12 +81,10 @@ public class PersistenceApi implements IApi {
             Bien bienDb = bienDao.findById(bienDTO.getId());
             if (bienDb == null) throw new ObjetoNuloException("El bien no existe.");
 
-            // Convertimos la fecha de DTO a Date
             Date fechaVenc = (bienDTO.getFechaVencimiento() != null) 
                 ? Date.from(bienDTO.getFechaVencimiento().atStartOfDay(ZoneId.systemDefault()).toInstant()) 
                 : null;
 
-            // Delegamos la lógica de negocio y validación a la ENTIDAD
             bienDb.actualizarDatos(bienDTO.getCantidad(), bienDTO.getDescripcion(), fechaVenc);
             
             bienDao.update(bienDb);
@@ -253,37 +250,29 @@ public class PersistenceApi implements IApi {
     public void crearOrdenRetiro(List<Integer> idsPedidos, int dniVoluntario, String tipoVehiculo)
             throws ReglaNegocioException, ObjetoNuloException {
         try {
-            // Encapsulamos las búsquedas manuales en métodos privados o el modelo
-            List<PedidosDonacion> pedidos = pedidoDao.findByIds(idsPedidos);
-            validarEstadoPedidosParaOrden(pedidos, idsPedidos.size());
-
             Usuario voluntario = usuarioDao.findByDni(dniVoluntario);
-            if (voluntario == null || voluntario.getRol().getCodigo() != 2) {
-                throw new ObjetoNuloException("El voluntario no es válido o no existe.");
+            if (voluntario == null || !"VOLUNTARIO".equalsIgnoreCase(voluntario.getRol().getNombre())) {
+                throw new ObjetoNuloException("El usuario ingresado no es un Voluntario vAlido");
             }
-
             Vehiculo vehiculo = vehiculoDao.findDisponible(tipoVehiculo);
-            if (vehiculo == null) throw new ReglaNegocioException("No hay vehículos disponibles del tipo: " + tipoVehiculo);
-
-            // La lógica de creación se mantiene atómica en el DAO
+            if (vehiculo == null) {
+                throw new ReglaNegocioException("No hay vehiculos disponibles del tipo: " + tipoVehiculo);
+            }
+            List<PedidosDonacion> pedidos = pedidoDao.findByIds(idsPedidos);
+            if (pedidos == null || pedidos.size() != idsPedidos.size()) {
+                throw new ObjetoNuloException("Algunos pedidos no fueron encontrados");
+            }
+            for (PedidosDonacion p : pedidos) {
+                if (p.obtenerEstadoPedido() != EstadoPedido.PENDIENTE || p.obtenerOrden() != null) {
+                    throw new ReglaNegocioException("El pedido " + p.getId() + " no esta disponible para retiro");
+                }
+            }
             OrdenRetiro orden = new OrdenRetiro(pedidos, null);
             orden.asignarVehiculo(vehiculo);
             orden.asignarVoluntario(voluntario);
-
             ordenDao.crearOrdenConPedidos(orden, idsPedidos);
         } catch (PersistenceException e) {
-            throw new RuntimeException("Error al persistir la orden: " + e.getMessage());
-        }
-    }
-    
-    private void validarEstadoPedidosParaOrden(List<PedidosDonacion> pedidos, int totalEsperado) throws ReglaNegocioException, ObjetoNuloException {
-        if (pedidos == null || pedidos.size() != totalEsperado) {
-            throw new ObjetoNuloException("No se encontraron todos los pedidos seleccionados.");
-        }
-        for (PedidosDonacion p : pedidos) {
-            if (p.obtenerEstadoPedido() != EstadoPedido.PENDIENTE || p.obtenerOrden() != null) {
-                throw new ReglaNegocioException("El pedido " + p.getId() + " ya no está disponible para una nueva orden.");
-            }
+            throw new RuntimeException("Error de base de datos al crear Orden de Retiro: " + e.getMessage());
         }
     }
 
@@ -385,39 +374,41 @@ public class PersistenceApi implements IApi {
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
         try {
             Usuario beneficiario = usuarioDao.find(userBeneficiario);
-            if (beneficiario == null) throw new ObjetoNuloException("beneficiario no existe");
-
+            if (beneficiario == null) throw new ObjetoNuloException("Beneficiario no encontrado");
             Usuario voluntario = null;
             if (userVoluntario != null && !userVoluntario.isEmpty()) {
                 voluntario = usuarioDao.find(userVoluntario);
-                if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
-
+            List<Bien> bienesParaOrden = new ArrayList<>();
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
                 int idBienOriginal = entry.getKey();
                 int cantidadSolicitada = entry.getValue();
-
                 Bien bienOriginal = bienDao.findById(idBienOriginal);
-                if (bienOriginal == null) throw new ObjetoNuloException("bien id " + idBienOriginal + " no existe");
-                
-                if (bienOriginal.getEstadoInventario() != EstadoBien.EN_STOCK) {
-                    throw new ReglaNegocioException("el bien " + bienOriginal.getDescripcion() + " no esta disponible");
-                }
-
-                if (cantidadSolicitada > bienOriginal.getCantidad()) {
-                    throw new ReglaNegocioException("stock insuficiente para: " + bienOriginal.getDescripcion());
+                if (bienOriginal == null) throw new ObjetoNuloException("Bien ID " + idBienOriginal + " no existe.");
+                if (cantidadSolicitada == bienOriginal.getCantidad()) {
+                    bienOriginal.entregar(); 
+                    bienDao.update(bienOriginal);
+                    bienesParaOrden.add(bienOriginal);
+                } else {
+                    int idPedidoPadre = bienDao.obtenerIdPedidoDeBien(idBienOriginal);
+                    Bien bienNuevo = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
+                    int nuevoId = bienDao.create(bienNuevo, idPedidoPadre); 
+                    bienNuevo.setId(nuevoId);
+                    bienDao.update(bienOriginal);                  
+                    bienesParaOrden.add(bienNuevo);
                 }
             }
 
-            OrdenEntrega orden = new OrdenEntrega(beneficiario, new ArrayList<>());
-            
+            OrdenEntrega orden = new OrdenEntrega(beneficiario, bienesParaOrden);
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
             }
-
             ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
+            
+        } catch (ObjetoNuloException | ReglaNegocioException | CampoVacioException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("error al procesar la entrega: " + e.getMessage(), e);
         }
     }
     

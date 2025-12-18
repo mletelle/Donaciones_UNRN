@@ -21,8 +21,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     private UsuarioDao usuarioDao = new UsuarioDAOJDBC();
     private VehiculoDao vehiculoDao = new VehiculoDAOJDBC();
     private BienDao bienDao = new BienDAOJDBC();
-    // TODO: Inyectar estas DAOs en el constructor para desacoplar
-
+    
     @Override
     public int create(OrdenEntrega orden) throws PersistenceException {
         Connection conn = null;

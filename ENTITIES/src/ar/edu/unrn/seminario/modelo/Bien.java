@@ -131,7 +131,7 @@ public class Bien {
 	}
 
 	private void validarReglasDeInventario() throws ReglaNegocioException {
-	    // Desacoplamos la lógica de validación de la API
+	    //desacoplamos la lógica de validacion de la API
 	    boolean requiereVencimiento = (categoria == CategoriaBien.ALIMENTOS || categoria == CategoriaBien.MEDICAMENTOS);
 	    
 	    if (requiereVencimiento) {
@@ -142,6 +142,24 @@ public class Bien {
 	            throw new ReglaNegocioException("El bien está vencido. Debe ser una fecha posterior a hoy.");
 	        }
 	    }
+	}
+	
+	public void entregar() throws ReglaNegocioException {
+	    if (this.estadoInventario != EstadoBien.EN_STOCK) {
+	        throw new ReglaNegocioException("solo se pueden entregar bienes en stock. Estado actual: " + this.estadoInventario);
+	    }
+	    this.estadoInventario = EstadoBien.ENTREGADO;
+	}
+
+	public Bien fraccionarParaEntrega(int cantidadSolicitada) throws CampoVacioException, ReglaNegocioException {
+	    if (cantidadSolicitada > this.cantidad) {
+	        throw new ReglaNegocioException("Stock insuficiente para fraccionar");
+	    }
+	    this.cantidad -= cantidadSolicitada;
+	    Bien nuevo = new Bien(this.tipo, cantidadSolicitada, this.categoria);
+	    nuevo.setDescripcion(this.descripcion);
+	    nuevo.entregar(); 
+	    return nuevo;
 	}
     
 	public void darDeBaja(String motivo) throws ReglaNegocioException {
@@ -165,7 +183,7 @@ public class Bien {
 		if (obj == null)
 			return false;
 		Bien other = (Bien) obj;
-		// dos bienes se consideran iguales si tienen el mismo tipo, cantidad y categoria
+		//dos bienes se consideran iguales si tienen el mismo tipo, cantidad y categoria
 		return cantidad == other.cantidad && categoria == other.categoria && tipo == other.tipo;
 	}
 
