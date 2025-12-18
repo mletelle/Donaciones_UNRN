@@ -104,7 +104,7 @@ public class PersistenceApi implements IApi {
     @Override
     public List<UsuarioDTO> obtenerDonantes() {
         try {
-            return usuarioDao.findByRol(3).stream()
+            return usuarioDao.findByRol(Rol.ROL_DONANTE).stream()
                     .map(u -> new UsuarioDTO(u.getUsuario(), u.getNombre(), u.getApellido(), u.getDni(), u.obtenerDireccion() != null ? u.obtenerDireccion() : "", 3))
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -311,7 +311,7 @@ public class PersistenceApi implements IApi {
     @Override
     public List<UsuarioDTO> obtenerVoluntarios() {
         try {
-            return usuarioDao.findByRol(2).stream()
+            return usuarioDao.findByRol(Rol.ROL_VOLUNTARIO).stream()
                     .map(v -> new UsuarioDTO(v.getUsuario(), v.getNombre(), v.getApellido(), v.getDni(), v.obtenerDireccion(), 2))
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -322,7 +322,7 @@ public class PersistenceApi implements IApi {
     @Override
     public List<UsuarioDTO> obtenerBeneficiarios() {
         try {
-            return usuarioDao.findByRol(4).stream()
+            return usuarioDao.findByRol(Rol.ROL_BENEFICIARIO).stream()
                     .map(b -> new UsuarioDTO(b.getUsuario(), b.getNombre(), b.getApellido(), b.getDni(), b.obtenerDireccion(), 4))
                     .collect(Collectors.toList());
         } catch (Exception e) {

@@ -1,6 +1,5 @@
 package ar.edu.unrn.seminario.api;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId; //que dependan de esto las fechas

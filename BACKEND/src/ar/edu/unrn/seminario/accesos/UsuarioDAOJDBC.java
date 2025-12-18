@@ -227,7 +227,7 @@ public class UsuarioDAOJDBC implements UsuarioDao {
                 rs.getString("direccion"),
                 rs.getString("necesidad"),
                 rs.getObject("personas_cargo") != null ? rs.getInt("personas_cargo") : 0,
-                rs.getString("prioridad") // Nuevo campo
+                rs.getString("prioridad") 
         );
         
         if (!rs.getBoolean("activo")) {

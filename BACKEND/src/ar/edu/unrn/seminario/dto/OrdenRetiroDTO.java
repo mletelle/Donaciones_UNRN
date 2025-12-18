@@ -1,8 +1,5 @@
 package ar.edu.unrn.seminario.dto;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -17,7 +14,7 @@ public class OrdenRetiroDTO {
     private String vehiculo;
     private String voluntario;
 
-    private String fechaFormateada; // Para mostrar en la tabla (JTable)
+    private String fechaFormateada; // Para mostrar en la tabla
     
     
     
