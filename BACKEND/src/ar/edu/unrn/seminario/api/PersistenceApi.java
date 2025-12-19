@@ -352,7 +352,6 @@ public class PersistenceApi implements IApi {
 
     // Ordenes de entrega
 
-    @Override
     public void crearOrdenEntrega(String userBeneficiario, Map<Integer, Integer> bienesYCantidades, String userVoluntario)
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
         try {
@@ -365,19 +364,11 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
-            for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
-                Bien bienOriginal = bienDao.findById(entry.getKey());
-                if (bienOriginal == null) throw new ObjetoNuloException("bien id " + entry.getKey() + " no existe");
-                if (bienOriginal.getCantidad() < entry.getValue()) {
-                    throw new ReglaNegocioException("stock insuficiente para el bien " + entry.getKey());
-                }
-            }
-
             OrdenEntrega orden = new OrdenEntrega(beneficiario, new ArrayList<>());
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
             }
-            
+            // Se delega todo al DAO (Transacción única)
             ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
 
         } catch (Exception e) {
