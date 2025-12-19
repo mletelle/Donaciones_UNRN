@@ -27,7 +27,7 @@ public class BienDAOJDBC implements BienDao {
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement statement = conn.prepareStatement(SQL_INSERT)) {
             
-            conn.setAutoCommit(false); // Inicio de transacción explícita para el batch
+            conn.setAutoCommit(false); 
 
             try {
                 for (Bien bien : bienes) {
@@ -35,10 +35,10 @@ public class BienDAOJDBC implements BienDao {
                     statement.addBatch();
                 }
                 statement.executeBatch();
-                conn.commit(); // Confirmar transacción
+                conn.commit(); 
             } catch (SQLException e) {
-                conn.rollback(); // Rollback en caso de error en el batch
-                throw e; // Re-lanzar para que sea manejada por el bloque externo
+                conn.rollback(); 
+                throw e; 
             }
 
         } catch (SQLException e) {
@@ -285,7 +285,7 @@ public class BienDAOJDBC implements BienDao {
     }
 
     private int mapCategoriaToId(CategoriaBien categoria) {
-        if (categoria == null) return 10; // Default a OTROS si es nulo
+        if (categoria == null) return 10; 
         switch (categoria) {
             case ROPA: return 1;
             case MUEBLES: return 2;
@@ -313,7 +313,7 @@ public class BienDAOJDBC implements BienDao {
             case 8: return CategoriaBien.MEDICAMENTOS;
             case 9: return CategoriaBien.HIGIENE;
             case 10: return CategoriaBien.OTROS;
-            default: return CategoriaBien.OTROS; // Manejo seguro por defecto
+            default: return CategoriaBien.OTROS; 
         }
     }
 }
