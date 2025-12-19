@@ -114,14 +114,6 @@ public class Bien {
 		this.cantidad = cantidad;
 	}
     
-    public void darDeBaja(String motivo) {
-        if (motivo == null || motivo.trim().isEmpty()) {
-            throw new IllegalArgumentException("el motivo de baja es obligatorio");
-        }
-        this.estadoInventario = EstadoBien.BAJA;
-        this.descripcion = (this.descripcion != null ? this.descripcion : "") + " [baja: " + motivo + "]";
-    }
-    
     public void descontarStock(int cantidadSolicitada) throws ReglaNegocioException {
         if (cantidadSolicitada <= 0) {
             throw new IllegalArgumentException("la cantidad debe ser positiva");
@@ -133,33 +125,6 @@ public class Bien {
             throw new ReglaNegocioException("stock insuficiente para: " + this.descripcion);
         }
         this.cantidad -= cantidadSolicitada;
-    }
-    
-    public Bien fraccionarParaEntrega(int cantidadSolicitada) throws ReglaNegocioException, CampoVacioException {
-        if (cantidadSolicitada <= 0) {
-            throw new IllegalArgumentException("cantidad debe ser positiva");
-        }
-        if (this.estadoInventario != EstadoBien.EN_STOCK) {
-            throw new ReglaNegocioException("bien no disponible para fraccionamiento");
-        }
-        if (cantidadSolicitada > this.cantidad) {
-            throw new ReglaNegocioException("stock insuficiente: solicitado=" + cantidadSolicitada + ", disponible=" + this.cantidad);
-        }
-        
-        this.cantidad -= cantidadSolicitada;
-        
-        Bien bienFraccionado = new Bien(cantidadSolicitada, this.categoria);
-        bienFraccionado.setDescripcion(this.descripcion);
-        bienFraccionado.setEstadoInventario(EstadoBien.EN_STOCK);
-        
-        if (this.fecVec != null) {
-            bienFraccionado.setFecVec(new Date(this.fecVec.getTime()));
-        }
-        if (this.fechaIngreso != null) {
-            bienFraccionado.setFechaIngreso(new Date(this.fechaIngreso.getTime()));
-        }
-        
-        return bienFraccionado;
     }
     
     public void validarFechaVencimiento(LocalDate fechaVencimiento) throws ReglaNegocioException {
@@ -194,6 +159,77 @@ public class Bien {
         } else {
             this.fecVec = null;
         }
+    }
+    
+    public void ingresar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.PENDIENTE) {
+            throw new ReglaNegocioException("solo se pueden ingresar al stock bienes pendientes, estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.EN_STOCK;
+    }
+    
+    public void entregar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("solo se pueden entregar bienes que esten en stock, estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.ENTREGADO;
+    }
+    
+    public void darDeBaja(String motivo) throws ReglaNegocioException {
+        if (motivo == null || motivo.trim().isEmpty()) {
+            throw new ReglaNegocioException("el motivo de baja no puede estar vacio");
+        }
+        this.estadoInventario = EstadoBien.BAJA;
+        this.descripcion = (this.descripcion != null ? this.descripcion : "") + " [BAJA: " + motivo + "]";
+    }
+    
+    public Bien fraccionarParaEntrega(int cantidadSolicitada) throws ReglaNegocioException, CampoVacioException {
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("solo se pueden fraccionar bienes en stock, estado actual: " + this.estadoInventario);
+        }
+        if (cantidadSolicitada <= 0) {
+            throw new ReglaNegocioException("la cantidad solicitada debe ser mayor a cero");
+        }
+        if (cantidadSolicitada > this.cantidad) {
+            throw new ReglaNegocioException("stock insuficiente, disponible: " + this.cantidad + ", solicitado: " + cantidadSolicitada);
+        }
+        
+        this.cantidad -= cantidadSolicitada;
+        
+        Bien bienFraccionado = new Bien(cantidadSolicitada, this.categoria);
+        bienFraccionado.setDescripcion(this.descripcion);
+        bienFraccionado.setEstadoInventario(EstadoBien.ENTREGADO);
+        
+        if (this.fecVec != null) {
+            bienFraccionado.setFecVec(new Date(this.fecVec.getTime()));
+        }
+        if (this.fechaIngreso != null) {
+            bienFraccionado.setFechaIngreso(new Date(this.fechaIngreso.getTime()));
+        }
+        
+        return bienFraccionado;
+    }
+    
+    public CategoriaBien getCategoria() {
+        return categoria;
+    }
+    
+    public LocalDate getFechaVencimiento() {
+        return fecVec != null ? fecVec.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+    }
+    
+    public String obtenerDescripcion() {
+        return descripcion;
+    }
+    
+    private int idPedidoDonacion;
+    
+    public int getIdPedidoDonacion() {
+        return idPedidoDonacion;
+    }
+    
+    public void setIdPedidoDonacion(int idPedidoDonacion) {
+        this.idPedidoDonacion = idPedidoDonacion;
     }
     
     @Override

@@ -365,11 +365,22 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
+            List<Bien> bienesNuevos = new ArrayList<>();
+            List<Bien> bienesOriginales = new ArrayList<>();
+            
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
                 Bien bienOriginal = bienDao.findById(entry.getKey());
                 if (bienOriginal == null) throw new ObjetoNuloException("bien id " + entry.getKey() + " no existe");
-                if (bienOriginal.getCantidad() < entry.getValue()) {
-                    throw new ReglaNegocioException("stock insuficiente para el bien " + entry.getKey());
+                
+                int cantidadSolicitada = entry.getValue();
+                
+                if (cantidadSolicitada == bienOriginal.obtenerCantidad()) {
+                    bienOriginal.entregar();
+                    bienesOriginales.add(bienOriginal);
+                } else {
+                    Bien bienFraccionado = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
+                    bienesNuevos.add(bienFraccionado);
+                    bienesOriginales.add(bienOriginal);
                 }
             }
 
@@ -378,7 +389,7 @@ public class PersistenceApi implements IApi {
                 orden.setVoluntario(voluntario);
             }
             
-            ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
+            ordenEntregaDao.crearOrdenConBienes(orden, bienesNuevos, bienesOriginales);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

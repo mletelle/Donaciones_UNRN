@@ -14,13 +14,32 @@ import ar.edu.unrn.seminario.modelo.OrdenEntrega;
 import ar.edu.unrn.seminario.modelo.Usuario;
 import ar.edu.unrn.seminario.modelo.Vehiculo;
 import ar.edu.unrn.seminario.modelo.EstadoEntrega;
+import ar.edu.unrn.seminario.modelo.EstadoBien;
 import ar.edu.unrn.seminario.modelo.Bien;
 
 public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
 
-    private UsuarioDao usuarioDao = new UsuarioDAOJDBC();
-    private VehiculoDao vehiculoDao = new VehiculoDAOJDBC();
-    private BienDao bienDao = new BienDAOJDBC();
+    private static final String SQL_INSERT = "INSERT INTO ordenes_entrega (fecha_generacion, id_beneficiario, id_voluntario, estado) VALUES (?, ?, ?, ?)";
+    private static final String SQL_UPDATE = "UPDATE ordenes_entrega SET id_voluntario = ?, estado = ? WHERE id = ?";
+    private static final String SQL_SELECT_ALL = "SELECT * FROM ordenes_entrega";
+    private static final String SQL_SELECT_BY_ID = "SELECT * FROM ordenes_entrega WHERE id = ?";
+    private static final String SQL_SELECT_BY_ESTADO = "SELECT * FROM ordenes_entrega WHERE estado = ?";
+    private static final String SQL_SELECT_BY_BENEFICIARIO = "SELECT oe.* FROM ordenes_entrega oe JOIN usuarios u ON oe.id_beneficiario = u.id WHERE u.usuario = ?";
+    
+    private static final String SQL_BIEN_SELECT_FOR_UPDATE = "SELECT cantidad, descripcion, categoria, fecha_vencimiento, id_pedido_donacion FROM bienes WHERE id = ?";
+    private static final String SQL_BIEN_UPDATE_ASIGNAR = "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?";
+    private static final String SQL_BIEN_UPDATE_RESTAR = "UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?";
+    private static final String SQL_BIEN_INSERT_FRACCION = "INSERT INTO bienes (id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario, id_orden_entrega) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
+    private final UsuarioDao usuarioDao;
+    private final BienDao bienDao;
+    private final VehiculoDao vehiculoDao;
+    
+    public OrdenEntregaDAOJDBC() {
+        this.usuarioDao = new UsuarioDAOJDBC();
+        this.bienDao = new BienDAOJDBC();
+        this.vehiculoDao = new VehiculoDAOJDBC();
+    }
 
     @Override
     public int create(OrdenEntrega orden) throws PersistenceException {
@@ -79,104 +98,96 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     }
 
     @Override
-    public int crearOrdenConBienes(OrdenEntrega orden, java.util.Map<Integer, Integer> bienesYCantidades) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement stmtOrden = null;
-        PreparedStatement stmtFraccionar = null;
-        PreparedStatement stmtInsertBien = null;
-        PreparedStatement stmtAsociar = null;
-        ResultSet generatedKeys = null;
-        ResultSet generatedKeysBien = null;
+    public void crearOrdenConBienes(OrdenEntrega orden, List<Bien> bienesNuevos, List<Bien> bienesOriginales) throws PersistenceException {
+        String sqlInsertOrden = "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)";
         
-        try {
-            conn = ConnectionManager.getConnection();
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
             
-            stmtOrden = conn.prepareStatement(
-                "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS);
-            
-            stmtOrden.setTimestamp(1, new Timestamp(orden.getFechaGeneracion().getTime()));
-            stmtOrden.setInt(2, mapEstadoToId(orden.getEstado()));
-            stmtOrden.setString(3, orden.getBeneficiario().getUsuario());
-            
-            if (orden.getVoluntario() != null) {
-                stmtOrden.setString(4, orden.getVoluntario().getUsuario());
-            } else {
-                stmtOrden.setNull(4, java.sql.Types.VARCHAR);
-            }
-
-            int affectedRows = stmtOrden.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SQLException("no se pudo crear la orden de entrega");
-            }
-
-            generatedKeys = stmtOrden.getGeneratedKeys();
-            int idOrden;
-            if (generatedKeys.next()) {
-                idOrden = generatedKeys.getInt(1);
-                orden.setId(idOrden);
-            } else {
-                throw new SQLException("no se pudo obtener el id de la orden");
-            }
-            
-            stmtFraccionar = conn.prepareStatement("UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?");
-            // el campo "tipo" estaba generando error
-            stmtInsertBien = conn.prepareStatement(
-            	    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario, id_orden_entrega) "
-            	    + "SELECT id_pedido_donacion, categoria, ?, descripcion, fecha_vencimiento, 'ENTREGADO', ? FROM bienes WHERE id = ?",
-            	    Statement.RETURN_GENERATED_KEYS);
-            stmtAsociar = conn.prepareStatement("UPDATE bienes SET id_orden_entrega = ?, estado_inventario = 'ENTREGADO' WHERE id = ?");
-            
-            for (java.util.Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
-                int idBienOriginal = entry.getKey();
-                int cantidadSolicitada = entry.getValue();
+            try {
+                int idOrden;
                 
-                PreparedStatement stmtVerificar = conn.prepareStatement("SELECT cantidad FROM bienes WHERE id = ?");
-                stmtVerificar.setInt(1, idBienOriginal);
-                ResultSet rs = stmtVerificar.executeQuery();
-                
-                if (rs.next()) {
-                    int cantidadDisponible = rs.getInt("cantidad");
+                try (PreparedStatement stmtOrden = conn.prepareStatement(sqlInsertOrden, Statement.RETURN_GENERATED_KEYS)) {
+                    stmtOrden.setTimestamp(1, new Timestamp(orden.getFechaGeneracion().getTime()));
+                    stmtOrden.setString(2, orden.getEstado().name());
+                    stmtOrden.setString(3, orden.getBeneficiario().getUsuario());
                     
-                    if (cantidadSolicitada == cantidadDisponible) {
-                        stmtAsociar.setInt(1, idOrden);
-                        stmtAsociar.setInt(2, idBienOriginal);
-                        stmtAsociar.executeUpdate();
+                    if (orden.getVoluntario() != null) {
+                        stmtOrden.setString(4, orden.getVoluntario().getUsuario());
                     } else {
-                        stmtFraccionar.setInt(1, cantidadSolicitada);
-                        stmtFraccionar.setInt(2, idBienOriginal);
-                        stmtFraccionar.executeUpdate();
-                        
-                        stmtInsertBien.setInt(1, cantidadSolicitada);
-                        stmtInsertBien.setInt(2, idOrden);
-                        stmtInsertBien.setInt(3, idBienOriginal);
-                        stmtInsertBien.executeUpdate();
+                        stmtOrden.setNull(4, java.sql.Types.VARCHAR);
+                    }
+                    
+                    int affectedRows = stmtOrden.executeUpdate();
+                    if (affectedRows == 0) {
+                        throw new SQLException("no se pudo crear la orden de entrega");
+                    }
+                    
+                    try (ResultSet generatedKeys = stmtOrden.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            idOrden = generatedKeys.getInt(1);
+                            orden.setId(idOrden);
+                        } else {
+                            throw new SQLException("no se pudo obtener el id de la orden");
+                        }
                     }
                 }
-                rs.close();
-                stmtVerificar.close();
+                
+                insertarBienesNuevos(conn, bienesNuevos, idOrden);
+                actualizarBienesOriginales(conn, bienesOriginales, idOrden);
+                
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-            
-            conn.commit();
-            return idOrden;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            throw new PersistenceException("error al crear orden con bienes: " + e.getMessage(), e);
+        }
+    }
+    
+    private void insertarBienesNuevos(Connection conn, List<Bien> bienesNuevos, int idOrden) throws SQLException {
+        if (bienesNuevos == null || bienesNuevos.isEmpty()) {
+            return;
+        }
+        
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_BIEN_INSERT_FRACCION, Statement.RETURN_GENERATED_KEYS)) {
+            for (Bien bien : bienesNuevos) {
+                stmt.setInt(1, bien.getIdPedidoDonacion());
+                stmt.setString(2, bien.getCategoria().name());
+                stmt.setInt(3, bien.obtenerCantidad());
+                stmt.setString(4, bien.obtenerDescripcion());
+                stmt.setDate(5, java.sql.Date.valueOf(bien.getFechaVencimiento()));
+                stmt.setString(6, bien.getEstadoInventario().name());
+                stmt.setInt(7, idOrden);
+                stmt.addBatch();
             }
-            throw new PersistenceException("Error al crear orden con bienes: " + e.getMessage(), e);
-        } finally {
-            if (generatedKeysBien != null) try { generatedKeysBien.close(); } catch (SQLException e) {}
-            if (generatedKeys != null) try { generatedKeys.close(); } catch (SQLException e) {}
-            if (stmtOrden != null) try { stmtOrden.close(); } catch (SQLException e) {}
-            if (stmtFraccionar != null) try { stmtFraccionar.close(); } catch (SQLException e) {}
-            if (stmtInsertBien != null) try { stmtInsertBien.close(); } catch (SQLException e) {}
-            if (stmtAsociar != null) try { stmtAsociar.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            stmt.executeBatch();
+        }
+    }
+    
+    private void actualizarBienesOriginales(Connection conn, List<Bien> bienesOriginales, int idOrden) throws SQLException {
+        if (bienesOriginales == null || bienesOriginales.isEmpty()) {
+            return;
+        }
+        
+        String sqlUpdate = "UPDATE bienes SET cantidad = ?, estado_inventario = ?, id_orden_entrega = ? WHERE id = ?";
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sqlUpdate)) {
+            for (Bien bien : bienesOriginales) {
+                stmt.setInt(1, bien.obtenerCantidad());
+                stmt.setString(2, bien.getEstadoInventario().name());
+                
+                if (bien.getEstadoInventario() == EstadoBien.ENTREGADO) {
+                    stmt.setInt(3, idOrden);
+                } else {
+                    stmt.setNull(3, java.sql.Types.INTEGER);
+                }
+                
+                stmt.setInt(4, bien.getId());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
         }
     }
 
