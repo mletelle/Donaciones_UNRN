@@ -55,8 +55,9 @@ public class MemoryApi implements IApi {
             Usuario donantePrueba = usuarios.stream().filter(u -> u.getUsuario().equals("jperez")).findFirst().orElse(null);
             if (donantePrueba != null) {
                 java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
-                PedidosDonacion pd = new PedidosDonacion(pedidos.size() + 1, ahora, TipoVehiculo.AUTO, donantePrueba);
                 try {
+                    ArrayList<Bien> bienesPedido = new ArrayList<>();
+                    
                     Bien b1 = new Bien(10, CategoriaBien.ALIMENTOS);
                     b1.setDescripcion("Paquete de arroz 1kg");
                     b1.setEstadoInventario(EstadoBien.EN_STOCK);
@@ -67,8 +68,10 @@ public class MemoryApi implements IApi {
                     b2.setEstadoInventario(EstadoBien.EN_STOCK);
                     b2.setId(++secuenciaBien);
 
-                    pd.obtenerBienes().add(b1);
-                    pd.obtenerBienes().add(b2);
+                    bienesPedido.add(b1);
+                    bienesPedido.add(b2);
+                    
+                    PedidosDonacion pd = new PedidosDonacion(ahora, bienesPedido, TipoVehiculo.AUTO, donantePrueba);
                     pedidos.add(pd);
                 } catch (CampoVacioException e) {
                     e.printStackTrace();
@@ -536,8 +539,6 @@ public class MemoryApi implements IApi {
         Visita visita = new Visita(fechaHora, resEnum, observacion);
         visita.setPedidoRelacionado(pedido);
         orden.agregarVisita(visita);
-
-        // polimorfismo: el enum sabe que efectos aplicar
         resEnum.aplicarEfectos(pedido);
     }
 
