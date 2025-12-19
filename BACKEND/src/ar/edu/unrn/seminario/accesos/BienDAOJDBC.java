@@ -5,151 +5,76 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
 import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Bien;
-import ar.edu.unrn.seminario.modelo.EstadoBien;
 import ar.edu.unrn.seminario.modelo.CategoriaBien;
+import ar.edu.unrn.seminario.modelo.EstadoBien;
 
 public class BienDAOJDBC implements BienDao {
 
+    private static final String SQL_INSERT = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String SQL_UPDATE = "UPDATE bienes SET cantidad = ?, descripcion = ?, estado_inventario = ?, fecha_vencimiento = ? WHERE id = ?";
+    private static final String SQL_SELECT_BY_ID = "SELECT * FROM bienes WHERE id = ?";
+    private static final String SQL_SELECT_BY_ESTADO = "SELECT * FROM bienes WHERE estado_inventario = ? AND cantidad > 0";
+    private static final String SQL_UPDATE_ESTADO_PEDIDO = "UPDATE bienes SET estado_inventario = ? WHERE id_pedido_donacion = ?";
+
     @Override
     public void createBatch(List<Bien> bienes, int idPedido) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            conn.setAutoCommit(false);
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_INSERT)) {
             
-            statement = conn.prepareStatement(
-                    "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)");
-            
-            for (Bien bien : bienes) {
-                statement.setInt(1, idPedido);
-                statement.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
-                statement.setInt(3, bien.obtenerCantidad());
-                
-                if (bien.getDescripcion() != null) statement.setString(4, bien.getDescripcion());
-                else statement.setNull(4, java.sql.Types.VARCHAR);
-                
-                if (bien.getFecVec() != null) statement.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
-                else statement.setNull(5, java.sql.Types.DATE);
-                
-                String estado = bien.getEstadoInventario() != null ? bien.getEstadoInventario().name() : "PENDIENTE";
-                statement.setString(6, estado);
+            conn.setAutoCommit(false); // Inicio de transacción explícita para el batch
 
-                statement.addBatch();
+            try {
+                for (Bien bien : bienes) {
+                    setParametrosBien(statement, bien, idPedido);
+                    statement.addBatch();
+                }
+                statement.executeBatch();
+                conn.commit(); // Confirmar transacción
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback en caso de error en el batch
+                throw e; // Re-lanzar para que sea manejada por el bloque externo
             }
-            statement.executeBatch();
-            
-            conn.commit();
+
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+            throw new PersistenceException("Error al crear lote de bienes: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public int create(Bien bien, int idPedidoOriginal) throws PersistenceException {
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
+
+            setParametrosBien(stmt, bien, idPedidoOriginal);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("No se pudo crear el bien, no se modificaron filas.");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("No se obtuvo el ID del bien creado.");
                 }
             }
-            throw new PersistenceException("error al crear batch de bienes: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
-        }
-    }
-
-    @Override
-    public void updateEstadoPorPedido(int idPedido, String nuevoEstado) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            conn.setAutoCommit(false);
-            
-            statement = conn.prepareStatement(
-                "UPDATE bienes SET estado_inventario = ? WHERE id_pedido_donacion = ?");
-            statement.setString(1, nuevoEstado);
-            statement.setInt(2, idPedido);
-            statement.executeUpdate();
-            
-            conn.commit();
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new PersistenceException("error al actualizar estado de bienes: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error al crear un solo bien: " + e.getMessage(), e);
         }
-    }
-
-    @Override
-    public List<Bien> findByEstadoInventario(String estado) throws PersistenceException {
-        Connection conn = null;
-        List<Bien> bienes = new ArrayList<>();
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement("SELECT * FROM bienes WHERE estado_inventario = ? AND cantidad > 0");
-            statement.setString(1, estado);
-            rs = statement.executeQuery();
-            
-            while (rs.next()) {
-                bienes.add(mapearBien(rs));
-            }
-        } catch (SQLException e) {
-            throw new PersistenceException("error al buscar bienes por estado: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
-        }
-        return bienes;
-    }
-
-    @Override
-    public Bien findById(int id) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement("SELECT * FROM bienes WHERE id = ?");
-            statement.setInt(1, id);
-            rs = statement.executeQuery();
-            if (rs.next()) {
-                return mapearBien(rs);
-            }
-        } catch (SQLException e) {
-            throw new PersistenceException("error al buscar bien por id: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
-        }
-        return null;
     }
 
     @Override
     public void update(Bien bien) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            conn.setAutoCommit(false);
-            
-            statement = conn.prepareStatement(
-                "UPDATE bienes SET cantidad = ?, descripcion = ?, estado_inventario = ?, fecha_vencimiento = ? WHERE id = ?");
-            
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_UPDATE)) {
+
             statement.setInt(1, bien.obtenerCantidad());
             statement.setString(2, bien.getDescripcion());
             statement.setString(3, bien.getEstadoInventario().name());
@@ -157,223 +82,210 @@ public class BienDAOJDBC implements BienDao {
             if (bien.getFecVec() != null) {
                 statement.setDate(4, new java.sql.Date(bien.getFecVec().getTime()));
             } else {
-                statement.setNull(4, java.sql.Types.DATE);
+                statement.setNull(4, Types.DATE);
             }
 
-            statement.setInt(5, bien.getId()); 
-            
+            statement.setInt(5, bien.getId());
+
             statement.executeUpdate();
             
-            conn.commit();
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new PersistenceException("error al actualizar bien: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error al actualizar bien ID " + bien.getId() + ": " + e.getMessage(), e);
         }
     }
 
     @Override
-    public void asociarAOrdenEntrega(int idBien, int idOrdenEntrega, String nuevoEstado) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            conn.setAutoCommit(false);
+    public void updateEstadoPorPedido(int idPedido, String nuevoEstado) throws PersistenceException {
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_ESTADO_PEDIDO)) {
+
+            statement.setString(1, nuevoEstado);
+            statement.setInt(2, idPedido);
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new PersistenceException("Error al actualizar estado de bienes del pedido " + idPedido, e);
+        }
+    }
+
+    @Override
+    public List<Bien> findByEstadoInventario(String estado) throws PersistenceException {
+        List<Bien> bienes = new ArrayList<>();
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_SELECT_BY_ESTADO)) {
+
+            statement.setString(1, estado);
             
-            statement = conn.prepareStatement(
-                "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?");
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    bienes.add(mapearBien(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenceException("Error al buscar bienes por estado: " + estado, e);
+        }
+        return bienes;
+    }
+
+    @Override
+    public Bien findById(int id) throws PersistenceException {
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_SELECT_BY_ID)) {
+
+            statement.setInt(1, id);
+            
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return mapearBien(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new PersistenceException("Error al buscar bien por ID: " + id, e);
+        }
+        return null;
+    }
+
+    @Override
+    public void asociarAOrdenEntrega(int idBien, int idOrdenEntrega, String nuevoEstado) throws PersistenceException {
+        String SQL_UPDATE_LOCAL = "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?";
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_UPDATE_LOCAL)) {
+
             statement.setInt(1, idOrdenEntrega);
             statement.setString(2, nuevoEstado);
             statement.setInt(3, idBien);
             statement.executeUpdate();
-            
-            conn.commit();
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            throw new PersistenceException("error al asociar bien a orden: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
-        }
-    }
 
-    private Bien mapearBien(ResultSet rs) throws SQLException {
-        try {
-            CategoriaBien categoria = mapIdToCategoria(rs.getInt("categoria"));
-            
-            Bien bien = new Bien(rs.getInt("cantidad"), categoria);
-            bien.setId(rs.getInt("id")); 
-            
-            bien.setDescripcion(rs.getString("descripcion"));
-            bien.setEstadoInventario(EstadoBien.fromString(rs.getString("estado_inventario")));
-            
-            if (rs.getDate("fecha_vencimiento") != null) {
-                bien.setFecVec(new java.util.Date(rs.getDate("fecha_vencimiento").getTime()));
-            }
-            return bien;
-        } catch (Exception e) {
-            throw new SQLException("error mapeando bien: " + e.getMessage(), e);
+        } catch (SQLException e) {
+            throw new PersistenceException("Error al asociar bien " + idBien + " a orden " + idOrdenEntrega, e);
         }
     }
 
     @Override
     public List<Bien> findByOrdenEntrega(int idOrdenEntrega) throws PersistenceException {
-        Connection conn = null;
         List<Bien> bienes = new ArrayList<>();
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement("SELECT * FROM bienes WHERE id_orden_entrega = ?");
-            statement.setInt(1, idOrdenEntrega);
-            rs = statement.executeQuery();
+        String SQL_SELECT_LOCAL = "SELECT * FROM bienes WHERE id_orden_entrega = ?";
+        
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement statement = conn.prepareStatement(SQL_SELECT_LOCAL)) {
             
-            while (rs.next()) {
-                bienes.add(mapearBien(rs));
+            statement.setInt(1, idOrdenEntrega);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    bienes.add(mapearBien(rs));
+                }
             }
         } catch (SQLException e) {
-            throw new PersistenceException("error al buscar bienes por orden: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error al buscar bienes por orden de entrega: " + idOrdenEntrega, e);
         }
         return bienes;
     }
-    
-    @Override
-    public int create(Bien bien, int idPedidoOriginal) throws PersistenceException {
-        Connection conn = null;
-        String sql = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)";
-        
-        PreparedStatement stmt = null;
-        ResultSet generatedKeys = null;
-        
-        try {
-            conn = ConnectionManager.getConnection();
-            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            
-            stmt.setInt(1, idPedidoOriginal); 
-            stmt.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
-            stmt.setInt(3, bien.obtenerCantidad());
-            
-            if (bien.getDescripcion() != null) stmt.setString(4, bien.getDescripcion());
-            else stmt.setNull(4, java.sql.Types.VARCHAR);
-            
-            if (bien.getFecVec() != null) stmt.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
-            else stmt.setNull(5, java.sql.Types.DATE);
-            
-            stmt.setString(6, bien.getEstadoInventario().name());
 
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) throw new SQLException("no se pudo crear el bien fraccionado");
-
-            generatedKeys = stmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                return generatedKeys.getInt(1);
-            } else {
-                throw new SQLException("no se obtuvo id del bien");
-            }
-        } catch (SQLException e) {
-            throw new PersistenceException("error al crear bien: " + e.getMessage(), e);
-        } finally {
-            if (generatedKeys != null) try { generatedKeys.close(); } catch (SQLException e) {}
-            if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
-        }
-    }
-    
     @Override
     public int fraccionarYCrear(int idBienOriginal, int cantidadSolicitada) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement stmtUpdate = null;
-        PreparedStatement stmtInsert = null;
-        ResultSet generatedKeys = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            conn.setAutoCommit(false);
-            
-            stmtUpdate = conn.prepareStatement("UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?");
-            stmtUpdate.setInt(1, cantidadSolicitada);
-            stmtUpdate.setInt(2, idBienOriginal);
-            stmtUpdate.executeUpdate();
-            
-            stmtInsert = conn.prepareStatement(
-                "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) " +
-                "SELECT id_pedido_donacion, categoria, ?, descripcion, fecha_vencimiento, ? FROM bienes WHERE id = ?",
-                Statement.RETURN_GENERATED_KEYS
-            );
-            stmtInsert.setInt(1, cantidadSolicitada);
-            stmtInsert.setString(2, EstadoBien.EN_STOCK.name());
-            stmtInsert.setInt(3, idBienOriginal);
-            stmtInsert.executeUpdate();
-            
-            generatedKeys = stmtInsert.getGeneratedKeys();
-            int idGenerado;
-            if (generatedKeys.next()) {
-                idGenerado = generatedKeys.getInt(1);
-            } else {
-                throw new SQLException("no se pudo obtener el id del bien fraccionado");
-            }
-            
-            conn.commit();
-            return idGenerado;
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+        String SQL_UPDATE_LOCAL = "UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?";
+        String SQL_SELECT_LOCAL = "SELECT id_pedido_donacion, categoria, ?, descripcion, fecha_vencimiento, ? FROM bienes WHERE id = ?";
+        String SQL_INSERT_LOCAL = "INSERT INTO bienes(id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario) " + SQL_SELECT_LOCAL                           ;
+        
+        try (Connection conn = ConnectionManager.getConnection()) {
+            conn.setAutoCommit(false); 
+
+            try (PreparedStatement stmtUpdate = conn.prepareStatement(SQL_UPDATE_LOCAL);
+                 PreparedStatement stmtInsert = conn.prepareStatement(SQL_INSERT_LOCAL, Statement.RETURN_GENERATED_KEYS)) {
+
+                
+                stmtUpdate.setInt(1, cantidadSolicitada);
+                stmtUpdate.setInt(2, idBienOriginal);
+                stmtUpdate.executeUpdate();
+
+
+                stmtInsert.setInt(1, cantidadSolicitada);
+                stmtInsert.setString(2, EstadoBien.EN_STOCK.name());
+                stmtInsert.setInt(3, idBienOriginal);
+                stmtInsert.executeUpdate();
+
+                conn.commit(); // Todo salió bien
+
+                try (ResultSet generatedKeys = stmtInsert.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    } else {
+                        throw new SQLException("No se pudo obtener el ID del bien fraccionado.");
+                    }
                 }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
-            throw new PersistenceException("error al fraccionar bien: " + e.getMessage(), e);
-        } finally {
-            if (generatedKeys != null) try { generatedKeys.close(); } catch (SQLException e) {}
-            if (stmtUpdate != null) try { stmtUpdate.close(); } catch (SQLException e) {}
-            if (stmtInsert != null) try { stmtInsert.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+        } catch (SQLException e) {
+            throw new PersistenceException("Error al fraccionar el bien ID: " + idBienOriginal, e);
         }
     }
-    
+
     @Override
     public int obtenerIdPedidoDeBien(int idBien) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            stmt = conn.prepareStatement("SELECT id_pedido_donacion FROM bienes WHERE id = ?");
+        String SQL_SELECT_LOCAL = "SELECT id_pedido_donacion FROM bienes WHERE id = ?";
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_LOCAL)) {
+            
             stmt.setInt(1, idBien);
-            rs = stmt.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-            return 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+            return 0; 
         } catch (SQLException e) {
-            throw new PersistenceException("error al obtener pedido del bien: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error al obtener pedido del bien: " + idBien, e);
         }
     }
-    
 
-    
+    private void setParametrosBien(PreparedStatement statement, Bien bien, int idPedido) throws SQLException {
+        statement.setInt(1, idPedido);
+        statement.setInt(2, mapCategoriaToId(bien.obtenerCategoria()));
+        statement.setInt(3, bien.obtenerCantidad());
+
+        if (bien.getDescripcion() != null) {
+            statement.setString(4, bien.getDescripcion());
+        } else {
+            statement.setNull(4, Types.VARCHAR);
+        }
+
+        if (bien.getFecVec() != null) {
+            statement.setDate(5, new java.sql.Date(bien.getFecVec().getTime()));
+        } else {
+            statement.setNull(5, Types.DATE);
+        }
+
+        String estado = (bien.getEstadoInventario() != null) 
+                        ? bien.getEstadoInventario().name() 
+                        : EstadoBien.PENDIENTE.name();
+        statement.setString(6, estado);
+    }
+
+    private Bien mapearBien(ResultSet rs) throws SQLException {
+        try {
+            CategoriaBien categoria = mapIdToCategoria(rs.getInt("categoria"));
+            Bien bien = new Bien(rs.getInt("cantidad"), categoria);
+            
+            bien.setId(rs.getInt("id"));
+            bien.setDescripcion(rs.getString("descripcion"));
+            
+            String estadoStr = rs.getString("estado_inventario");
+            bien.setEstadoInventario(EstadoBien.fromString(estadoStr));
+
+            if (rs.getDate("fecha_vencimiento") != null) {
+                bien.setFecVec(new java.util.Date(rs.getDate("fecha_vencimiento").getTime()));
+            }
+            return bien;
+        } catch (Exception e) {
+            throw new SQLException("Error mapeando resultado a objeto Bien: " + e.getMessage(), e);
+        }
+    }
+
     private int mapCategoriaToId(CategoriaBien categoria) {
+        if (categoria == null) return 10; // Default a OTROS si es nulo
         switch (categoria) {
             case ROPA: return 1;
             case MUEBLES: return 2;
@@ -385,10 +297,10 @@ public class BienDAOJDBC implements BienDao {
             case MEDICAMENTOS: return 8;
             case HIGIENE: return 9;
             case OTROS: return 10;
-            default: throw new IllegalArgumentException("categoria no mapeada: " + categoria);
+            default: return 10;
         }
     }
-    
+
     private CategoriaBien mapIdToCategoria(int id) {
         switch (id) {
             case 1: return CategoriaBien.ROPA;
@@ -401,7 +313,7 @@ public class BienDAOJDBC implements BienDao {
             case 8: return CategoriaBien.MEDICAMENTOS;
             case 9: return CategoriaBien.HIGIENE;
             case 10: return CategoriaBien.OTROS;
-            default: throw new IllegalArgumentException("id categoria desconocido: " + id);
+            default: return CategoriaBien.OTROS; // Manejo seguro por defecto
         }
     }
 }
