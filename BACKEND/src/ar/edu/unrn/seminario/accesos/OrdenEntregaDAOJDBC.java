@@ -47,7 +47,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Insertar la Orden de Entrega
             int idOrdenGenerada;
             try (PreparedStatement stmtOrden = conn.prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
                 stmtOrden.setTimestamp(1, Timestamp.valueOf(java.time.LocalDateTime.now()));
@@ -73,15 +72,13 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
                 }
             }
 
-            // 2. Procesar cada bien solicitado 
             for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
                 int idBienOriginal = entry.getKey();
                 int cantidadSolicitada = entry.getValue();
 
-                // A. Obtener datos actuales del bien
                 int cantidadActual = 0;
                 String descripcion = null;
-                int categoriaId = 0; // O el Enum mapeado
+                int categoriaId = 0; 
                 java.sql.Date fechaVenc = null;
                 int idPedido = 0;
 
@@ -100,9 +97,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
                     }
                 }
 
-                // B. Lógica de Stock
                 if (cantidadSolicitada == cantidadActual) {
-                    // Caso 1: Se lleva todo el bien
                     try (PreparedStatement stmtUpdate = conn.prepareStatement(SQL_BIEN_UPDATE_ASIGNAR)) {
                         stmtUpdate.setInt(1, idOrdenGenerada);
                         stmtUpdate.setString(2, EstadoBien.ENTREGADO.name()); // O 'RESERVADO' según tu lógica
@@ -110,15 +105,12 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
                         stmtUpdate.executeUpdate();
                     }
                 } else if (cantidadSolicitada < cantidadActual) {
-                    // Caso 2: Fraccionamiento.
-                    // 2.1 Restar al original
                     try (PreparedStatement stmtRestar = conn.prepareStatement(SQL_BIEN_UPDATE_RESTAR)) {
                         stmtRestar.setInt(1, cantidadSolicitada);
                         stmtRestar.setInt(2, idBienOriginal);
                         stmtRestar.executeUpdate();
                     }
 
-                    // 2.2 Crear nuevo bien para la orden
                     try (PreparedStatement stmtInsertNuevo = conn.prepareStatement(SQL_BIEN_INSERT_FRACCION)) {
                         stmtInsertNuevo.setInt(1, idPedido);
                         stmtInsertNuevo.setInt(2, categoriaId);
@@ -134,7 +126,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
                 }
             }
 
-            conn.commit(); // Confirmar TODOS los cambios
+            conn.commit(); 
 
         } catch (SQLException e) {
             if (conn != null) {
@@ -251,25 +243,20 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
         }
     }
 
-    // --- Métodos Privados de Mapeo ---
-
     private OrdenEntrega mapearOrden(ResultSet rs) throws SQLException, PersistenceException {
         OrdenEntrega orden = new OrdenEntrega();
         orden.setId(rs.getInt("id"));
         
         Timestamp ts = rs.getTimestamp("fecha_generacion");
         if (ts != null) {
-            // Convertir Timestamp a Date o LocalDateTime según tu modelo
             orden.setFechaGeneracion(ts); 
         }
 
         String estadoStr = rs.getString("estado");
         orden.setEstado(EstadoEntrega.valueOf(estadoStr));
 
-        // Cargar Beneficiario (Lazy o Eager según necesidad, aquí Eager simple)
         int idBeneficiario = rs.getInt("id_beneficiario");
         if (idBeneficiario > 0) {
-            // Nota: Esto podría optimizarse con un JOIN en el SQL principal para no hacer N+1 queries
             Usuario beneficiario = usuarioDao.findByDni(idBeneficiario); 
             orden.setBeneficiario(beneficiario);
         }
