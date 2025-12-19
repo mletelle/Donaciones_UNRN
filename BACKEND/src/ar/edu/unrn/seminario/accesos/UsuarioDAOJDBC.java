@@ -16,203 +16,178 @@ public class UsuarioDAOJDBC implements UsuarioDao {
 
     @Override
     public void create(Usuario usuario) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
-            
-            statement = conn.prepareStatement(
-                "INSERT INTO usuarios(usuario, contrasena, nombre, correo, activo, rol, apellido, dni, direccion, necesidad, personas_cargo, prioridad) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
-            statement.setString(1, usuario.getUsuario());
-            statement.setString(2, usuario.getContrasena());
-            statement.setString(3, usuario.getNombre());
-            statement.setString(4, usuario.getEmail());
-            statement.setBoolean(5, usuario.isActivo());
-            statement.setInt(6, usuario.getRol().getCodigo());
-            statement.setString(7, usuario.getApellido());
-            statement.setInt(8, usuario.getDni());
-            statement.setString(9, usuario.obtenerDireccion());
-            
-            if (usuario.getNecesidad() != null) statement.setString(10, usuario.getNecesidad());
-            else statement.setNull(10, java.sql.Types.VARCHAR);
-            
-            if (usuario.getPersonasACargo() != null) statement.setInt(11, usuario.getPersonasACargo());
-            else statement.setNull(11, java.sql.Types.INTEGER);
-            
-            if (usuario.getPrioridad() != null) statement.setString(12, usuario.getPrioridad());
-            else statement.setNull(12, java.sql.Types.VARCHAR);
-            
-            int cantidad = statement.executeUpdate();
-            if (cantidad <= 0) throw new SQLException("error al insertar usuario");
-            
-            conn.commit();
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                insertarUsuario(conn, usuario);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new PersistenceException("Error al crear usuario: " + e.getMessage(), e);
             }
-            throw new PersistenceException("Error al crear usuario: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+        } catch (SQLException e) {
+            throw new PersistenceException("Error de conexión: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void update(Usuario usuario) throws PersistenceException {
-        Connection conn = null;
-        PreparedStatement statement = null;
-        try {
-            conn = ConnectionManager.getConnection();
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
-            
-            statement = conn.prepareStatement(
-                    "UPDATE usuarios SET contrasena = ?, nombre = ?, correo = ?, activo = ?, apellido = ?, dni = ?, direccion = ? WHERE usuario = ?");
-            statement.setString(1, usuario.getContrasena());
-            statement.setString(2, usuario.getNombre());
-            statement.setString(3, usuario.getEmail());
-            statement.setBoolean(4, usuario.isActivo());
-            statement.setString(5, usuario.getApellido());
-            statement.setInt(6, usuario.getDni());
-            statement.setString(7, usuario.obtenerDireccion());
-            statement.setString(8, usuario.getUsuario());
-            statement.executeUpdate();
-            
-            conn.commit();
-        } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                actualizarUsuario(conn, usuario);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new PersistenceException("Error al actualizar usuario: " + e.getMessage(), e);
             }
-            throw new PersistenceException("Error al actualizar usuario: " + e.getMessage(), e);
-        } finally {
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+        } catch (SQLException e) {
+            throw new PersistenceException("Error de conexión: " + e.getMessage(), e);
         }
     }
 
     @Override
     public Usuario find(String username) throws PersistenceException {
-        Connection conn = null;
-        Usuario usuario = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement(
-                    "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
-                            + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
-                            + "WHERE u.usuario = ?");
-
-            statement.setString(1, username);
-            rs = statement.executeQuery();
-            if (rs.next()) {
-                usuario = mapearUsuario(rs);
+        String sql = "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
+                   + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+                   + "WHERE u.usuario = ?";
+        
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, username);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapearUsuario(rs);
+                }
             }
+            return null;
+        } catch (SQLException e) {
+            throw new PersistenceException("Error buscando usuario: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new PersistenceException("Error buscando usuario " + username + ": " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error al mapear usuario: " + e.getMessage(), e);
         }
-        return usuario;
     }
 
     @Override
     public List<Usuario> findAll() throws PersistenceException {
-        Connection conn = null;
         List<Usuario> usuarios = new ArrayList<>();
-        Statement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.createStatement();
-            rs = statement.executeQuery(
-                    "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
-                            + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo)");
+        String sql = "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
+                   + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo)";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            
             while (rs.next()) {
-                try {
-                    usuarios.add(mapearUsuario(rs));
-                } catch (Exception e) {
-                    System.err.println("error mapeando usuario: " + e.getMessage());
-                }
+                usuarios.add(mapearUsuario(rs));
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new PersistenceException("Error al buscar todos los usuarios: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
         }
         return usuarios;
     }
 
     @Override
     public List<Usuario> findByRol(int codigoRol) throws PersistenceException {
-        Connection conn = null;
         List<Usuario> usuarios = new ArrayList<>();
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement(
-                    "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
-                            + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
-                            + "WHERE r.codigo = ? AND u.activo = 1");
+        String sql = "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
+                   + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+                   + "WHERE r.codigo = ? AND u.activo = 1";
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            statement.setInt(1, codigoRol);
-            rs = statement.executeQuery();
-            while (rs.next()) {
-                usuarios.add(mapearUsuario(rs));
+            stmt.setInt(1, codigoRol);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    usuarios.add(mapearUsuario(rs));
+                }
             }
         } catch (Exception e) {
-            throw new PersistenceException("Error buscando por rol: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error buscando usuarios por rol: " + e.getMessage(), e);
         }
         return usuarios;
     }
 
     @Override
     public Usuario findByDni(int dni) throws PersistenceException {
-        Connection conn = null;
-        Usuario usuario = null;
-        PreparedStatement statement = null;
-        ResultSet rs = null;
-        try {
-            conn = ConnectionManager.getConnection();
-            statement = conn.prepareStatement(
-                    "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
-                            + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
-                            + "WHERE u.dni = ?");
+        String sql = "SELECT u.*, r.codigo as codigo_rol, r.nombre as nombre_rol "
+                   + "FROM usuarios u JOIN roles r ON (u.rol = r.codigo) "
+                   + "WHERE u.dni = ?";
 
-            statement.setInt(1, dni);
-            rs = statement.executeQuery();
-            if (rs.next()) {
-                usuario = mapearUsuario(rs);
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, dni);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapearUsuario(rs);
+                }
             }
+            return null;
         } catch (Exception e) {
-            throw new PersistenceException("Error buscando usuario por dni: " + e.getMessage(), e);
-        } finally {
-            if (rs != null) try { rs.close(); } catch (SQLException e) {}
-            if (statement != null) try { statement.close(); } catch (SQLException e) {}
-            if (conn != null) try { conn.close(); } catch (SQLException e) {}
+            throw new PersistenceException("Error buscando usuario por DNI: " + e.getMessage(), e);
         }
-        return usuario;
     }
-    
+
+    private void insertarUsuario(Connection conn, Usuario usuario) throws SQLException {
+        String sql = "INSERT INTO usuarios(usuario, contrasena, nombre, correo, activo, rol, apellido, dni, direccion, necesidad, personas_cargo, prioridad) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, usuario.getUsuario());
+            stmt.setString(2, usuario.getContrasena());
+            stmt.setString(3, usuario.getNombre());
+            stmt.setString(4, usuario.getEmail());
+            stmt.setBoolean(5, usuario.isActivo());
+            stmt.setInt(6, usuario.getRol().getCodigo());
+            stmt.setString(7, usuario.getApellido());
+            stmt.setInt(8, usuario.getDni());
+            stmt.setString(9, usuario.obtenerDireccion());
+            
+            if (usuario.getNecesidad() != null) {
+                stmt.setString(10, usuario.getNecesidad());
+            } else {
+                stmt.setNull(10, java.sql.Types.VARCHAR);
+            }
+            
+            if (usuario.getPersonasACargo() != null) {
+                stmt.setInt(11, usuario.getPersonasACargo());
+            } else {
+                stmt.setNull(11, java.sql.Types.INTEGER);
+            }
+            
+            if (usuario.getPrioridad() != null) {
+                stmt.setString(12, usuario.getPrioridad());
+            } else {
+                stmt.setNull(12, java.sql.Types.VARCHAR);
+            }
+            
+            stmt.executeUpdate();
+        }
+    }
+
+    private void actualizarUsuario(Connection conn, Usuario usuario) throws SQLException {
+        String sql = "UPDATE usuarios SET contrasena = ?, nombre = ?, correo = ?, activo = ?, apellido = ?, dni = ?, direccion = ? WHERE usuario = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, usuario.getContrasena());
+            stmt.setString(2, usuario.getNombre());
+            stmt.setString(3, usuario.getEmail());
+            stmt.setBoolean(4, usuario.isActivo());
+            stmt.setString(5, usuario.getApellido());
+            stmt.setInt(6, usuario.getDni());
+            stmt.setString(7, usuario.obtenerDireccion());
+            stmt.setString(8, usuario.getUsuario());
+            
+            stmt.executeUpdate();
+        }
+    }
+
     private Usuario mapearUsuario(ResultSet rs) throws Exception {
         Rol rol = new Rol(rs.getInt("codigo_rol"), rs.getString("nombre_rol"));
         
