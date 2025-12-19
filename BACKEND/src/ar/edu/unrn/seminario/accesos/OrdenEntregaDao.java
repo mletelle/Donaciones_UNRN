@@ -8,7 +8,7 @@ public interface OrdenEntregaDao {
     
     int create(OrdenEntrega orden) throws PersistenceException;
 
-    int crearOrdenConBienes(OrdenEntrega orden, java.util.Map<Integer, Integer> bienesYCantidades) throws PersistenceException;
+    void crearOrdenConBienes(OrdenEntrega orden, java.util.Map<Integer, Integer> bienesYCantidades) throws PersistenceException;
 
     List<OrdenEntrega> findByBeneficiario(String usuario) throws PersistenceException;
     
@@ -19,4 +19,6 @@ public interface OrdenEntregaDao {
     void update(OrdenEntrega orden) throws PersistenceException;
     
     OrdenEntrega findById(int id) throws PersistenceException;
+
+	List<OrdenEntrega> findByEstado(String estado) throws PersistenceException;
 }

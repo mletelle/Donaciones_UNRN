@@ -20,7 +20,11 @@ public class OrdenEntrega {
         this.bienes = bienes;
     }
 
-    public int getId() {
+    public OrdenEntrega() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public int getId() {
         return id;
     }
 
@@ -98,4 +102,8 @@ public class OrdenEntrega {
         this.voluntario = voluntario;
         this.vehiculo = vehiculo;
     }
+
+	public void setEstado(EstadoEntrega valueOf) {
+		this.estado = valueOf;
+	}
 }
