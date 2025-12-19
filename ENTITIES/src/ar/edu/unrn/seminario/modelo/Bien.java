@@ -196,6 +196,20 @@ public class Bien {
         }
     }
     
+    public void ingresar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.PENDIENTE) {
+            throw new ReglaNegocioException("Solo se pueden ingresar al stock bienes pendientes, estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.EN_STOCK;
+    }
+    
+    public void entregar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("Solo se pueden entregar bienes que estén 'En Stock'. Estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.ENTREGADO;
+    }
+    
     @Override
     public String toString() {
         String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripcion";
