@@ -1,6 +1,8 @@
 package ar.edu.unrn.seminario.accesos;
 
 import java.util.List;
+import java.util.Map;
+
 import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.OrdenEntrega;
 import ar.edu.unrn.seminario.modelo.Bien;
@@ -20,4 +22,6 @@ public interface OrdenEntregaDao {
     void update(OrdenEntrega orden) throws PersistenceException;
     
     OrdenEntrega findById(int id) throws PersistenceException;
+
+	void crearOrdenConBienes(OrdenEntrega orden, Map<Integer, Integer> bienesYCantidades) throws PersistenceException;
 }

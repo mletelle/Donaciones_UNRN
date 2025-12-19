@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.OrdenEntrega;
@@ -18,15 +19,10 @@ import ar.edu.unrn.seminario.modelo.EstadoBien;
 import ar.edu.unrn.seminario.modelo.Bien;
 
 public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
-
-    private static final String SQL_INSERT = "INSERT INTO ordenes_entrega (fecha_generacion, id_beneficiario, id_voluntario, estado) VALUES (?, ?, ?, ?)";
-    private static final String SQL_UPDATE = "UPDATE ordenes_entrega SET id_voluntario = ?, estado = ? WHERE id = ?";
-    private static final String SQL_SELECT_ALL = "SELECT * FROM ordenes_entrega";
-    private static final String SQL_SELECT_BY_ID = "SELECT * FROM ordenes_entrega WHERE id = ?";
-    private static final String SQL_SELECT_BY_ESTADO = "SELECT * FROM ordenes_entrega WHERE estado = ?";
-    private static final String SQL_SELECT_BY_BENEFICIARIO = "SELECT oe.* FROM ordenes_entrega oe JOIN usuarios u ON oe.id_beneficiario = u.id WHERE u.usuario = ?";
+    // SQL
+    private static final String SQL_INSERT_ORDEN = "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)";
+    private static final String SQL_BIEN_SELECT_FOR_UPDATE = "SELECT * FROM bienes WHERE id = ? FOR UPDATE";
     
-    private static final String SQL_BIEN_SELECT_FOR_UPDATE = "SELECT cantidad, descripcion, categoria, fecha_vencimiento, id_pedido_donacion FROM bienes WHERE id = ?";
     private static final String SQL_BIEN_UPDATE_ASIGNAR = "UPDATE bienes SET id_orden_entrega = ?, estado_inventario = ? WHERE id = ?";
     private static final String SQL_BIEN_UPDATE_RESTAR = "UPDATE bienes SET cantidad = cantidad - ? WHERE id = ?";
     private static final String SQL_BIEN_INSERT_FRACCION = "INSERT INTO bienes (id_pedido_donacion, categoria, cantidad, descripcion, fecha_vencimiento, estado_inventario, id_orden_entrega) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -44,8 +40,6 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     @Override
     public int create(OrdenEntrega orden) throws PersistenceException {
         Connection conn = null;
-        String sql = "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)";
-        
         PreparedStatement stmt = null;
         ResultSet generatedKeys = null;
         
@@ -53,7 +47,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
             
-            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            stmt = conn.prepareStatement(SQL_INSERT_ORDEN, Statement.RETURN_GENERATED_KEYS);
             
             stmt.setTimestamp(1, new Timestamp(orden.getFechaGeneracion().getTime()));
             stmt.setInt(2, mapEstadoToId(orden.getEstado()));
@@ -67,7 +61,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
-                throw new SQLException("no se pudo crear la orden de entrega, no se afectaron filas");
+                throw new SQLException("No se pudo crear la orden de entrega.");
             }
 
             generatedKeys = stmt.getGeneratedKeys();
@@ -76,19 +70,13 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
                 id = generatedKeys.getInt(1);
                 orden.setId(id);
             } else {
-                throw new SQLException("no se pudo crear la orden de entrega, no se obtuvo el id");
+                throw new SQLException("No se obtuvo el ID de la orden creada.");
             }
             
             conn.commit();
             return id;
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) {}
             throw new PersistenceException("Error al crear orden de entrega: " + e.getMessage(), e);
         } finally {
             if (generatedKeys != null) try { generatedKeys.close(); } catch (SQLException e) {}
@@ -98,96 +86,105 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     }
 
     @Override
-    public void crearOrdenConBienes(OrdenEntrega orden, List<Bien> bienesNuevos, List<Bien> bienesOriginales) throws PersistenceException {
-        String sqlInsertOrden = "INSERT INTO ordenes_entrega (fecha_generacion, estado, usuario_beneficiario, usuario_voluntario) VALUES (?, ?, ?, ?)";
-        
-        try (Connection conn = ConnectionManager.getConnection()) {
+    public void crearOrdenConBienes(OrdenEntrega orden, Map<Integer, Integer> bienesYCantidades) throws PersistenceException {
+        Connection conn = null;
+        PreparedStatement stmtOrden = null;
+        ResultSet generatedKeys = null;
+        PreparedStatement stmtSelectBien = null;
+        PreparedStatement stmtUpdateAsignar = null;
+        PreparedStatement stmtUpdateRestar = null;
+        PreparedStatement stmtInsertFraccion = null;
+        ResultSet rsBien = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
             conn.setAutoCommit(false);
+
+
+            stmtOrden = conn.prepareStatement(SQL_INSERT_ORDEN, Statement.RETURN_GENERATED_KEYS);
+            stmtOrden.setTimestamp(1, new Timestamp(orden.getFechaGeneracion().getTime()));
+            stmtOrden.setInt(2, mapEstadoToId(orden.getEstado())); 
+            stmtOrden.setString(3, orden.getBeneficiario().getUsuario());
             
-            try {
-                int idOrden;
+            if (orden.getVoluntario() != null) {
+                stmtOrden.setString(4, orden.getVoluntario().getUsuario());
+            } else {
+                stmtOrden.setNull(4, java.sql.Types.VARCHAR);
+            }
+
+            int affectedRows = stmtOrden.executeUpdate();
+            if (affectedRows == 0) throw new SQLException("No se pudo crear la orden.");
+
+            generatedKeys = stmtOrden.getGeneratedKeys();
+            int idOrden;
+            if (generatedKeys.next()) {
+                idOrden = generatedKeys.getInt(1);
+                orden.setId(idOrden);
+            } else {
+                throw new SQLException("No se obtuvo ID de la orden.");
+            }
+
+            stmtSelectBien = conn.prepareStatement(SQL_BIEN_SELECT_FOR_UPDATE);
+            stmtUpdateAsignar = conn.prepareStatement(SQL_BIEN_UPDATE_ASIGNAR);
+            stmtUpdateRestar = conn.prepareStatement(SQL_BIEN_UPDATE_RESTAR);
+            stmtInsertFraccion = conn.prepareStatement(SQL_BIEN_INSERT_FRACCION);
+
+            for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
+                int idBienOriginal = entry.getKey();
+                int cantidadSolicitada = entry.getValue();
+
+                stmtSelectBien.setInt(1, idBienOriginal);
+                rsBien = stmtSelectBien.executeQuery();
                 
-                try (PreparedStatement stmtOrden = conn.prepareStatement(sqlInsertOrden, Statement.RETURN_GENERATED_KEYS)) {
-                    stmtOrden.setTimestamp(1, new Timestamp(orden.getFechaGeneracion().getTime()));
-                    stmtOrden.setString(2, orden.getEstado().name());
-                    stmtOrden.setString(3, orden.getBeneficiario().getUsuario());
-                    
-                    if (orden.getVoluntario() != null) {
-                        stmtOrden.setString(4, orden.getVoluntario().getUsuario());
-                    } else {
-                        stmtOrden.setNull(4, java.sql.Types.VARCHAR);
-                    }
-                    
-                    int affectedRows = stmtOrden.executeUpdate();
-                    if (affectedRows == 0) {
-                        throw new SQLException("no se pudo crear la orden de entrega");
-                    }
-                    
-                    try (ResultSet generatedKeys = stmtOrden.getGeneratedKeys()) {
-                        if (generatedKeys.next()) {
-                            idOrden = generatedKeys.getInt(1);
-                            orden.setId(idOrden);
-                        } else {
-                            throw new SQLException("no se pudo obtener el id de la orden");
-                        }
-                    }
+                if (!rsBien.next()) throw new SQLException("El bien ID " + idBienOriginal + " no existe.");
+                
+                int cantidadDisponible = rsBien.getInt("cantidad");
+                
+                if (cantidadDisponible < cantidadSolicitada) {
+                    throw new SQLException("Stock insuficiente para bien ID " + idBienOriginal + ". Disponible: " + cantidadDisponible);
                 }
-                
-                insertarBienesNuevos(conn, bienesNuevos, idOrden);
-                actualizarBienesOriginales(conn, bienesOriginales, idOrden);
-                
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (SQLException e) {
-            throw new PersistenceException("error al crear orden con bienes: " + e.getMessage(), e);
-        }
-    }
-    
-    private void insertarBienesNuevos(Connection conn, List<Bien> bienesNuevos, int idOrden) throws SQLException {
-        if (bienesNuevos == null || bienesNuevos.isEmpty()) {
-            return;
-        }
-        
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_BIEN_INSERT_FRACCION, Statement.RETURN_GENERATED_KEYS)) {
-            for (Bien bien : bienesNuevos) {
-                stmt.setInt(1, bien.getIdPedidoDonacion());
-                stmt.setString(2, bien.getCategoria().name());
-                stmt.setInt(3, bien.obtenerCantidad());
-                stmt.setString(4, bien.obtenerDescripcion());
-                stmt.setDate(5, java.sql.Date.valueOf(bien.getFechaVencimiento()));
-                stmt.setString(6, bien.getEstadoInventario().name());
-                stmt.setInt(7, idOrden);
-                stmt.addBatch();
-            }
-            stmt.executeBatch();
-        }
-    }
-    
-    private void actualizarBienesOriginales(Connection conn, List<Bien> bienesOriginales, int idOrden) throws SQLException {
-        if (bienesOriginales == null || bienesOriginales.isEmpty()) {
-            return;
-        }
-        
-        String sqlUpdate = "UPDATE bienes SET cantidad = ?, estado_inventario = ?, id_orden_entrega = ? WHERE id = ?";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(sqlUpdate)) {
-            for (Bien bien : bienesOriginales) {
-                stmt.setInt(1, bien.obtenerCantidad());
-                stmt.setString(2, bien.getEstadoInventario().name());
-                
-                if (bien.getEstadoInventario() == EstadoBien.ENTREGADO) {
-                    stmt.setInt(3, idOrden);
+
+                if (cantidadDisponible == cantidadSolicitada) {
+                    stmtUpdateAsignar.setInt(1, idOrden);
+                    stmtUpdateAsignar.setString(2, EstadoBien.ENTREGADO.name());
+                    stmtUpdateAsignar.setInt(3, idBienOriginal);
+                    stmtUpdateAsignar.executeUpdate();
                 } else {
-                    stmt.setNull(3, java.sql.Types.INTEGER);
+                    stmtUpdateRestar.setInt(1, cantidadSolicitada);
+                    stmtUpdateRestar.setInt(2, idBienOriginal);
+                    stmtUpdateRestar.executeUpdate();
+                    int idPedido = rsBien.getInt("id_pedido_donacion");
+                    int categoriaInt = rsBien.getInt("categoria"); 
+                    String descripcion = rsBien.getString("descripcion");
+                    java.sql.Date fechaVenc = rsBien.getDate("fecha_vencimiento");
+
+                    stmtInsertFraccion.setInt(1, idPedido);
+                    stmtInsertFraccion.setInt(2, categoriaInt);
+                    stmtInsertFraccion.setInt(3, cantidadSolicitada);
+                    stmtInsertFraccion.setString(4, descripcion);
+                    stmtInsertFraccion.setDate(5, fechaVenc);
+                    stmtInsertFraccion.setString(6, EstadoBien.ENTREGADO.name());
+                    stmtInsertFraccion.setInt(7, idOrden);
+                    
+                    stmtInsertFraccion.executeUpdate();
                 }
-                
-                stmt.setInt(4, bien.getId());
-                stmt.addBatch();
+                rsBien.close();
             }
-            stmt.executeBatch();
+
+            conn.commit(); 
+
+        } catch (SQLException e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) {}
+            throw new PersistenceException("Error transaccional al crear orden con bienes: " + e.getMessage(), e);
+        } finally {
+            if (generatedKeys != null) try { generatedKeys.close(); } catch (SQLException e) {}
+            if (stmtOrden != null) try { stmtOrden.close(); } catch (SQLException e) {}
+            if (stmtSelectBien != null) try { stmtSelectBien.close(); } catch (SQLException e) {}
+            if (stmtUpdateAsignar != null) try { stmtUpdateAsignar.close(); } catch (SQLException e) {}
+            if (stmtUpdateRestar != null) try { stmtUpdateRestar.close(); } catch (SQLException e) {}
+            if (stmtInsertFraccion != null) try { stmtInsertFraccion.close(); } catch (SQLException e) {}
+            if (rsBien != null) try { rsBien.close(); } catch (SQLException e) {}
+            if (conn != null) try { conn.close(); } catch (SQLException e) {}
         }
     }
 
@@ -224,6 +221,7 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
     public List<OrdenEntrega> findAllPendientes() throws PersistenceException {
         Connection conn = null;
         List<OrdenEntrega> ordenes = new ArrayList<>();
+
         String sql = "SELECT * FROM ordenes_entrega WHERE estado = 1 ORDER BY fecha_generacion ASC";
         Statement stmt = null;
         ResultSet rs = null;
@@ -278,30 +276,23 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             conn.setAutoCommit(false);
             
             stmt = conn.prepareStatement(sql);
-			stmt.setInt(1, mapEstadoToId(orden.getEstado()));
-			
-			if (orden.getVoluntario() != null) stmt.setString(2, orden.getVoluntario().getUsuario());
-			else stmt.setNull(2, java.sql.Types.VARCHAR);
-			
-			if (orden.getEstado() == EstadoEntrega.COMPLETADO) {
-				stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-			} else {
-				stmt.setNull(3, java.sql.Types.TIMESTAMP);
-			}
+            stmt.setInt(1, mapEstadoToId(orden.getEstado()));
+            
+            if (orden.getVoluntario() != null) stmt.setString(2, orden.getVoluntario().getUsuario());
+            else stmt.setNull(2, java.sql.Types.VARCHAR);
+            
+            if (orden.getEstado() == EstadoEntrega.COMPLETADO) {
+                stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            } else {
+                stmt.setNull(3, java.sql.Types.TIMESTAMP);
+            }
             
             stmt.setInt(4, orden.getId());
             
             stmt.executeUpdate();
-            
             conn.commit();
         } catch (SQLException e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) {}
             throw new PersistenceException("Error al actualizar orden de entrega: " + e.getMessage(), e);
         } finally {
             if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
@@ -378,4 +369,9 @@ public class OrdenEntregaDAOJDBC implements OrdenEntregaDao {
             default: throw new IllegalArgumentException("id de estado desconocido en bd: " + id);
         }
     }
+
+	@Override
+	public void crearOrdenConBienes(OrdenEntrega orden, List<Bien> bienesNuevos, List<Bien> bienesOriginales)
+			throws PersistenceException {
+	}
 }

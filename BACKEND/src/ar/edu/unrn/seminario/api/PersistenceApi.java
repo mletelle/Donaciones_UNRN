@@ -356,6 +356,7 @@ public class PersistenceApi implements IApi {
     public void crearOrdenEntrega(String userBeneficiario, Map<Integer, Integer> bienesYCantidades, String userVoluntario)
             throws ObjetoNuloException, ReglaNegocioException, CampoVacioException {
         try {
+
             Usuario beneficiario = usuarioDao.find(userBeneficiario);
             if (beneficiario == null) throw new ObjetoNuloException("beneficiario no existe");
 
@@ -365,31 +366,11 @@ public class PersistenceApi implements IApi {
                 if (voluntario == null) throw new ObjetoNuloException("voluntario no encontrado");
             }
 
-            List<Bien> bienesNuevos = new ArrayList<>();
-            List<Bien> bienesOriginales = new ArrayList<>();
-            
-            for (Map.Entry<Integer, Integer> entry : bienesYCantidades.entrySet()) {
-                Bien bienOriginal = bienDao.findById(entry.getKey());
-                if (bienOriginal == null) throw new ObjetoNuloException("bien id " + entry.getKey() + " no existe");
-                
-                int cantidadSolicitada = entry.getValue();
-                
-                if (cantidadSolicitada == bienOriginal.obtenerCantidad()) {
-                    bienOriginal.entregar();
-                    bienesOriginales.add(bienOriginal);
-                } else {
-                    Bien bienFraccionado = bienOriginal.fraccionarParaEntrega(cantidadSolicitada);
-                    bienesNuevos.add(bienFraccionado);
-                    bienesOriginales.add(bienOriginal);
-                }
-            }
-
             OrdenEntrega orden = new OrdenEntrega(beneficiario, new ArrayList<>());
             if (voluntario != null) {
                 orden.setVoluntario(voluntario);
             }
-            
-            ordenEntregaDao.crearOrdenConBienes(orden, bienesNuevos, bienesOriginales);
+            ordenEntregaDao.crearOrdenConBienes(orden, bienesYCantidades);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
