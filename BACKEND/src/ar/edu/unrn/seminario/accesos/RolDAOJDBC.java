@@ -8,61 +8,58 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Rol;
 
 public class RolDAOJDBC implements RolDao {
+    
+    private static final String SQL_SELECT_BY_CODIGO = "SELECT r.codigo, r.nombre, r.activo FROM roles r WHERE r.codigo = ?";
+    private static final String SQL_SELECT_ALL = "SELECT r.nombre, r.codigo, r.activo FROM roles r";
 
 	@Override
-	public Rol find(Integer codigo, Connection conn) throws SQLException {
-		Rol rol = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		try {
-			statement = conn.prepareStatement(
-					"SELECT r.codigo, r.nombre, r.activo FROM roles r WHERE r.codigo = ?");
-
-			statement.setInt(1, codigo);
-			rs = statement.executeQuery();
-			if (rs.next()) {
-				try {
-					rol = new Rol(rs.getInt("codigo"), rs.getString("nombre"));
-					rol.setActivo(rs.getBoolean("activo"));
-				} catch (Exception e) {
-					throw new SQLException("Error Rol", e);
+	public Rol find(Integer codigo) throws PersistenceException {
+		try (Connection conn = ConnectionManager.getConnection();
+		     PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_BY_CODIGO)) {
+			stmt.setInt(1, codigo);
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next()) {
+					return mapearRol(rs);
 				}
 			}
-		} finally {
-			if (rs != null) rs.close();
-			if (statement != null) statement.close();
+			return null;
+		} catch (SQLException e) {
+			throw new PersistenceException("error al buscar rol por codigo " + codigo + ": " + e.getMessage(), e);
+		} catch (Exception e) {
+			throw new PersistenceException("error al mapear datos del rol: " + e.getMessage(), e);
 		}
-		return rol;
+	}
+	
+	@Override
+	public Rol findById(Integer codigo) throws PersistenceException {
+		return find(codigo);
 	}
 
 	@Override
-	public List<Rol> findAll(Connection conn) throws SQLException {
-		List<Rol> listado = new ArrayList<Rol>();
-		Statement sentencia = null;
-		ResultSet resultado = null;
-		try {
-			sentencia = conn.createStatement();
-			resultado = sentencia.executeQuery("SELECT r.nombre, r.codigo, r.activo FROM roles r");
-
-			while (resultado.next()) {
-				try {
-					Rol rol = new Rol();
-					rol.setNombre(resultado.getString("nombre"));
-					rol.setCodigo(resultado.getInt("codigo"));
-					rol.setActivo(resultado.getBoolean("activo"));
-					listado.add(rol);
-				} catch (Exception e) {
-					System.err.println("Error Rol: " + e.getMessage());
-				}
+	public List<Rol> findAll() throws PersistenceException {
+		List<Rol> listado = new ArrayList<>();
+		try (Connection conn = ConnectionManager.getConnection();
+		     Statement stmt = conn.createStatement();
+		     ResultSet rs = stmt.executeQuery(SQL_SELECT_ALL)) {
+			while (rs.next()) {
+				listado.add(mapearRol(rs));
 			}
-		} finally {
-			if (resultado != null) resultado.close();
-			if (sentencia != null) sentencia.close();
+		} catch (SQLException e) {
+			throw new PersistenceException("error al buscar todos los roles: " + e.getMessage(), e);
+		} catch (Exception e) {
+			throw new PersistenceException("error al mapear lista de roles: " + e.getMessage(), e);
 		}
 		return listado;
+	}
+	
+	private Rol mapearRol(ResultSet rs) throws Exception {
+		Rol rol = new Rol(rs.getInt("codigo"), rs.getString("nombre"));
+		rol.setActivo(rs.getBoolean("activo"));
+		return rol;
 	}
 
 }

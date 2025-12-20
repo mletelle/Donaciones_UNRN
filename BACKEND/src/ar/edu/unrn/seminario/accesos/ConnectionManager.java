@@ -5,61 +5,25 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConnectionManager {
-	// private static String DRIVER = "com.mysql.jdbc.Driver";.
-
-// Base local
-	private static String URL_DB = "jdbc:mysql://localhost:3306/";
-	protected static String DB = "seminario_2025_1";
-	protected static String user = "seminario"; 
-	protected static String pass = "Seminario_Pass_123!"; 
-
-	/*
-	// Base externa Railway MySQL 
-	// Host y Puerto de MYSQL_PUBLIC_URL 
-	private static String URL_DB = "jdbc:mysql://yamanote.proxy.rlwy.net:43821/"; 
-    // Base de datos de MYSQLDATABASE
-	protected static String DB = "railway";
-    // Usuario de MYSQLUSER
-	protected static String user = "root"; 
-    // Contraseña de MYSQL_ROOT_PASSWORD
-	protected static String pass = "vduEoaIuUWIxXJpQDzQXGBQrfBiTbDaY"; 
-*/
-	protected static Connection conn = null;
-
-	public static void connect() {
+	
+	private static final String URL_DB = "jdbc:mysql://localhost:3306/";
+	private static final String DB = "seminario_2025_1";
+	private static final String USER = "seminario"; 
+	private static final String PASS = "Seminario_Pass_123!";
+	
+	static {
 		try {
-			// permitir recuperacion de clave publica cuando se usa auth caching_sha2_password
-			// y deshabilitar ssl por defecto en entorno local
-			String url = URL_DB + DB + "?useSSL=false&allowPublicKeyRetrieval=true";
-			conn = DriverManager.getConnection(url, user, pass);
-		} catch (SQLException sqlEx) {
-			System.out.println("No se ha podido conectar a " + URL_DB + DB + ". " + sqlEx.getMessage());
-			// imprimir stacktrace para diagnostico
-			sqlEx.printStackTrace();
+			Class.forName("com.mysql.cj.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("error cargando driver mysql", e);
 		}
 	}
-
-	public static void disconnect() {
-		if (conn != null) {
-			try {
-				conn.close();
-				conn = null;
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
+	
+	private ConnectionManager() {}
+	
+	public static Connection getConnection() throws SQLException {
+		String url = URL_DB + DB + "?useSSL=false&allowPublicKeyRetrieval=true";
+		return DriverManager.getConnection(url, USER, PASS);
 	}
-
-	public static void reconnect() {
-		disconnect();
-		connect();
-	}
-
-	public static Connection getConnection() {
-		if (conn == null) {
-			connect();
-		}
-		return conn;
-	}
-
 }
+

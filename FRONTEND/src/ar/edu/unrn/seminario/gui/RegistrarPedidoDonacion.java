@@ -81,7 +81,6 @@ public class RegistrarPedidoDonacion extends JDialog {
         bienesTable = new JTable(new BienTableModel(bienes));
         JScrollPane scrollPane = new JScrollPane(bienesTable);
         
-        // Layout de formulario (Norte)
         JPanel panelFormulario = new JPanel(new GridLayout(4, 2, 10, 10));
         panelFormulario.add(new JLabel("Fecha (dd/MM/yyyy):"));
         panelFormulario.add(fechaTextField);
@@ -93,10 +92,8 @@ public class RegistrarPedidoDonacion extends JDialog {
         panelFormulario.add(btnAgregarBien);
         contentPane.add(panelFormulario, BorderLayout.NORTH);
 
-        // Centro (Tabla de Bienes)
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-        // Sur (Botones de acción)
         JPanel panelBotonesAccion = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelBotonesAccion.add(btnAceptar);
         panelBotonesAccion.add(btnCancelar);
@@ -105,9 +102,6 @@ public class RegistrarPedidoDonacion extends JDialog {
         setPreferredSize(new Dimension(600, 400));
         pack();
         
-        // --- LISTENERS ---
-        
-        // Accion del boton "Agregar bien"
         btnAgregarBien.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AgregarBienDialog dialog = new AgregarBienDialog(RegistrarPedidoDonacion.this);
@@ -115,7 +109,6 @@ public class RegistrarPedidoDonacion extends JDialog {
                 BienDTO bien = dialog.getBien();
                 if (bien != null) {
                     bienes.add(bien);
-                    // Usar fireTableDataChanged en el modelo de tabla para refrescar
                     if (bienesTable.getModel() instanceof BienTableModel) {
                         ((BienTableModel) bienesTable.getModel()).setBienes(bienes);
                     }
@@ -211,12 +204,10 @@ public class RegistrarPedidoDonacion extends JDialog {
         });
     }
 
-    // Constructor que recibe el ID del donante
     public RegistrarPedidoDonacion(IApi api, int donanteId) {
-        this(api); // Llama al constructor base
+        this(api);
         this.donanteId = donanteId;
 
-        // Búsqueda del donante para preseleccionar y deshabilitar el combo
         if (this.donanteId != -1) {
             donanteComboBox.setEnabled(false);
             for (int i = 0; i < donanteComboBox.getItemCount(); i++) {
@@ -236,11 +227,9 @@ public class RegistrarPedidoDonacion extends JDialog {
         try {
             List<UsuarioDTO> donantes = api.obtenerDonantes();
             
-            // --- USO DE OBJETONULOEXCEPTION (Validar resultado de API) ---
             if (donantes == null) {
                 throw new ObjetoNuloException("La API devolvió un resultado nulo. No se pudo cargar la lista de donantes.");
             }
-            // -----------------------------------------------------------
             
             for (UsuarioDTO donante : donantes) {
                 donanteComboBox.addItem(donante);
@@ -251,9 +240,7 @@ public class RegistrarPedidoDonacion extends JDialog {
             }
             
         } catch (ObjetoNuloException ex) {
-            // Manejo de la excepción custom
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
-            // Deshabilita el combo si falla la carga
             donanteComboBox.setEnabled(false);
         }
     }

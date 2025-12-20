@@ -1,6 +1,7 @@
 package ar.edu.unrn.seminario.modelo;
 
 import java.util.ArrayList;
+import java.util.List;
 import ar.edu.unrn.seminario.exception.CampoVacioException;
 import ar.edu.unrn.seminario.exception.ObjetoNuloException;
 
@@ -30,24 +31,19 @@ public class Usuario {
                    String apellido, int dni, String direccion, String necesidad, 
                    Integer personasACargo, String prioridad) throws CampoVacioException, ObjetoNuloException {
         
-        // Validaciones Generales
         if (esVacio(usuario)) throw new CampoVacioException("El usuario es obligatorio.");
         if (esVacio(contrasena)) throw new CampoVacioException("La contraseña es obligatoria.");
         if (esVacio(nombre)) throw new CampoVacioException("El nombre es obligatorio.");
         if (rol == null) throw new ObjetoNuloException("El rol no puede ser nulo.");
         if (dni <= 0) throw new CampoVacioException("DNI inválido.");
 
-        // Lógica de Negocio: DONANTE (3) requiere Dirección
-        if (rol.getCodigo() == 3 && esVacio(direccion)) {
+        if (rol.getCodigo() == Rol.ROL_DONANTE && esVacio(direccion)) {
             throw new CampoVacioException("La dirección es obligatoria para los Donantes.");
         }
 
-        // Lógica de Negocio: APELLIDO obligatorio (EXCEPTO Beneficiarios Institucionales)
-        // Si NO es beneficiario (4), el apellido es obligatorio.
-        if (rol.getCodigo() != 4 && esVacio(apellido)) {
+        if (rol.getCodigo() != Rol.ROL_BENEFICIARIO && esVacio(apellido)) {
             throw new CampoVacioException("El apellido es obligatorio.");
         }
-        //Si ES beneficiario (4) y el apellido está vacío, se asume que es una INSTITUCIÓN.
 
         this.usuario = usuario;
         this.contrasena = contrasena;
@@ -169,11 +165,11 @@ public class Usuario {
     	}
 
     // Listas
-    public ArrayList<PedidosDonacion> getPedidos() {
-    	return pedidos;
+    public List<PedidosDonacion> getPedidos() {
+    	return pedidos != null ? java.util.Collections.unmodifiableList(pedidos) : java.util.Collections.emptyList();
     	}
-    public ArrayList<OrdenRetiro> getOrdenesAsignadas() {
-    	return ordenesAsignadas;
+    public List<OrdenRetiro> getOrdenesAsignadas() {
+    	return ordenesAsignadas != null ? java.util.Collections.unmodifiableList(ordenesAsignadas) : java.util.Collections.emptyList();
     	}
     public void agregarPedido(PedidosDonacion pedido) {
     	this.pedidos.add(pedido);
@@ -183,6 +179,7 @@ public class Usuario {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        // se usa solo DNI para identificar unicidad de usuarios en el dominio
         result = prime * result + dni; 
         return result;
     }
@@ -193,6 +190,7 @@ public class Usuario {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         Usuario other = (Usuario) obj;
+        // usuarios con mismo DNI se consideran iguales (unicidad por DNI)
         return this.dni == other.dni;
     }
 
@@ -207,6 +205,6 @@ public class Usuario {
     }
     
     public boolean esDonante() {
-        return this.rol != null && this.rol.getCodigo() == 3;
+        return this.rol != null && this.rol.getCodigo() == Rol.ROL_DONANTE;
     }
 }

@@ -1,14 +1,12 @@
 package ar.edu.unrn.seminario.accesos;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
+import ar.edu.unrn.seminario.exception.PersistenceException;
 import ar.edu.unrn.seminario.modelo.Vehiculo;
 
 public interface VehiculoDao {
 	
-	Vehiculo findByPatente(String patente, Connection conn) throws SQLException;
+	Vehiculo findByPatente(String patente) throws PersistenceException;
 	
-	Vehiculo findDisponible(String tipoVehiculo, Connection conn) throws SQLException;
+	Vehiculo findDisponible(String tipoVehiculo) throws PersistenceException;
 	
 }

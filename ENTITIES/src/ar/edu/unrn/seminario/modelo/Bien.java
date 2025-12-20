@@ -1,33 +1,17 @@
 package ar.edu.unrn.seminario.modelo;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 import ar.edu.unrn.seminario.exception.CampoVacioException;
+import ar.edu.unrn.seminario.exception.ReglaNegocioException;
 
 public class Bien {
 
-    // constantes tipo
-	private static final int TIPO_ALIMENTO = 1;
-	private static final int TIPO_ROPA = 2;
-	private static final int TIPO_MOBILIARIO = 3;
-	private static final int TIPO_HIGIENE = 4;
-
-	// constantes categoria (tipo de bien)
-	private static final int CATEGORIA_ROPA = 1;
-	private static final int CATEGORIA_MUEBLES = 2;
-	private static final int CATEGORIA_ALIMENTOS = 3;
-	private static final int CATEGORIA_ELECTRODOMESTICOS = 4;
-	private static final int CATEGORIA_HERRAMIENTAS = 5;
-	private static final int CATEGORIA_JUGUETES = 6;
-	private static final int CATEGORIA_LIBROS = 7;
-	private static final int CATEGORIA_MEDICAMENTOS = 8;
-	private static final int CATEGORIA_HIGIENE = 9;
-	private static final int CATEGORIA_OTROS = 10;
-    
-	private int id; // nuevo atributo
-    private int tipo;
-	private int cantidad;
-    private int categoria;
+    private int id;
+    private int cantidad;
+    private CategoriaBien categoria;
     private boolean perecedero;
     private Date fecVec = null;
     private Date fechaIngreso = new Date();
@@ -35,62 +19,45 @@ public class Bien {
     private String descripcion;
     private Vehiculo vehiculo;
     
-
-    
-    // Estados del inventario
-    public static final String ESTADO_PENDIENTE = "PENDIENTE";
-    public static final String ESTADO_EN_STOCK = "EN_STOCK";
-    public static final String ESTADO_ENTREGADO = "ENTREGADO";
-    public static final String ESTADO_BAJA = "BAJA";
-
-    private String estadoInventario; 
+    private EstadoBien estadoInventario; 
     
     
-    public Bien(int tipo, int cantidad, int categoria) throws CampoVacioException {
-        if (cantidad <= 0) {
-            throw new CampoVacioException("La cantidad debe ser mayor a cero.");
-        }
-        if (categoria < CATEGORIA_ROPA || categoria > CATEGORIA_OTROS) {
-            throw new CampoVacioException("La categoria es invalida.");
-        }
-        this.tipo = tipo;
+    public Bien(int cantidad, CategoriaBien categoria) throws CampoVacioException {
+        if (categoria == null) throw new CampoVacioException("La categoria no puede ser nula.");
+        if (cantidad < 0) throw new CampoVacioException("La cantidad debe ser mayor a cero.");
+        
         this.cantidad = cantidad;
         this.categoria = categoria;
-        this.estadoInventario = ESTADO_PENDIENTE;
+        this.estadoInventario = EstadoBien.PENDIENTE;
     }
 
-    public Bien(int tipo, int cantidad, int categoria, Vehiculo vehiculo) throws CampoVacioException {
-        this(tipo, cantidad, categoria);
+    public Bien(int cantidad, CategoriaBien categoria, Vehiculo vehiculo) throws CampoVacioException {
+        this(cantidad, categoria);
         this.vehiculo = vehiculo;
     }
     
-    public String getEstadoInventario() {
+    public EstadoBien getEstadoInventario() {
         return estadoInventario;
     }
 
-    public void setEstadoInventario(String estadoInventario) {
+    public void setEstadoInventario(EstadoBien estadoInventario) {
         this.estadoInventario = estadoInventario;
-    }
-    
-    
-    public int obtenerTipo() {
-        return tipo;
     }
 
     public int obtenerCantidad() {
         return cantidad;
     }
 
-    public int obtenerCategoria() {
+    public CategoriaBien obtenerCategoria() {
         return categoria;
     }
     
     public Date getFecVec() {
-		return fecVec;
+		return fecVec != null ? new Date(fecVec.getTime()) : null;
 	}
     
 	public Date getFechaIngreso() {
-		return fechaIngreso;
+		return fechaIngreso != null ? new Date(fechaIngreso.getTime()) : null;
 	}
 	
 	public String getEstado() {
@@ -106,11 +73,11 @@ public class Bien {
     }
     
 	public void setFecVec(Date fecVec) {
-		this.fecVec = fecVec;
+		this.fecVec = fecVec != null ? new Date(fecVec.getTime()) : null;
 	}
 
 	public void setFechaIngreso(Date fechaIngreso) {
-		this.fechaIngreso = fechaIngreso;
+		this.fechaIngreso = fechaIngreso != null ? new Date(fechaIngreso.getTime()) : null;
 	}
 	
 	public void setEstado(String estado) {
@@ -147,63 +114,142 @@ public class Bien {
 		this.cantidad = cantidad;
 	}
     
+    public void descontarStock(int cantidadSolicitada) throws ReglaNegocioException {
+        if (cantidadSolicitada <= 0) {
+            throw new IllegalArgumentException("la cantidad debe ser positiva");
+        }
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("el bien " + this.descripcion + " no esta disponible");
+        }
+        if (cantidadSolicitada > this.cantidad) {
+            throw new ReglaNegocioException("stock insuficiente para: " + this.descripcion);
+        }
+        this.cantidad -= cantidadSolicitada;
+    }
     
-    //metodos de ayuda para el toString
-    private String describirTipo() {
-        switch (tipo) {
-            case TIPO_ALIMENTO:
-                return "ALIMENTO";
-            case TIPO_ROPA:
-                return "ROPA";
-            case TIPO_MOBILIARIO:
-                return "MOBILIARIO";
-            case TIPO_HIGIENE:
-                return "HIGIENE";
-            default:
-                return "OTRO";
+    public void validarFechaVencimiento(LocalDate fechaVencimiento) throws ReglaNegocioException {
+        if (fechaVencimiento == null) return;
+        
+        boolean requiereVencimiento = this.categoria == CategoriaBien.ALIMENTOS 
+                                    || this.categoria == CategoriaBien.MEDICAMENTOS;
+        
+        if (requiereVencimiento && fechaVencimiento.isBefore(LocalDate.now())) {
+            throw new ReglaNegocioException("esa fecha esta vencida, debe ser posterior a " + LocalDate.now());
         }
     }
-  
-    private String describirCategoria() {
-        switch (categoria) {
-            case CATEGORIA_ROPA:
-                return "Ropa";
-            case CATEGORIA_MUEBLES:
-                return "Muebles";
-            case CATEGORIA_ALIMENTOS:
-                return "Alimentos";
-            case CATEGORIA_ELECTRODOMESTICOS:
-                return "Electrodomesticos";
-            case CATEGORIA_HERRAMIENTAS:
-                return "Herramientas";
-            case CATEGORIA_JUGUETES:
-                return "Juguetes";
-            case CATEGORIA_LIBROS:
-                return "Libros";
-            case CATEGORIA_MEDICAMENTOS:
-                return "Medicamentos";
-            case CATEGORIA_HIGIENE:
-                return "Higiene";
-            default:
-                return "Otros";
+    
+    public void actualizarDatos(int cantidad, String descripcion, LocalDate fechaVencimiento) throws ReglaNegocioException {
+        if (cantidad < 0) {
+            throw new ReglaNegocioException("la cantidad no puede ser negativa");
         }
+        
+        boolean requiereVencimiento = this.categoria == CategoriaBien.ALIMENTOS 
+                                    || this.categoria == CategoriaBien.MEDICAMENTOS;
+        
+        if (requiereVencimiento && fechaVencimiento == null) {
+            throw new ReglaNegocioException("la fecha de vencimiento es obligatoria para alimentos y medicamentos");
+        }
+        
+        validarFechaVencimiento(fechaVencimiento);
+        
+        this.cantidad = cantidad;
+        this.descripcion = descripcion;
+        if (fechaVencimiento != null) {
+            this.fecVec = Date.from(fechaVencimiento.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        } else {
+            this.fecVec = null;
+        }
+    }
+    
+    public void ingresar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.PENDIENTE) {
+            throw new ReglaNegocioException("solo se pueden ingresar al stock bienes pendientes, estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.EN_STOCK;
+    }
+    
+    public void entregar() throws ReglaNegocioException {
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("solo se pueden entregar bienes que esten en stock, estado actual: " + this.estadoInventario);
+        }
+        this.estadoInventario = EstadoBien.ENTREGADO;
+    }
+    
+    public void darDeBaja(String motivo) throws ReglaNegocioException {
+        if (motivo == null || motivo.trim().isEmpty()) {
+            throw new ReglaNegocioException("el motivo de baja no puede estar vacio");
+        }
+        this.estadoInventario = EstadoBien.BAJA;
+        this.descripcion = (this.descripcion != null ? this.descripcion : "") + " [BAJA: " + motivo + "]";
+    }
+    
+    public Bien fraccionarParaEntrega(int cantidadSolicitada) throws ReglaNegocioException, CampoVacioException {
+        if (this.estadoInventario != EstadoBien.EN_STOCK) {
+            throw new ReglaNegocioException("solo se pueden fraccionar bienes en stock, estado actual: " + this.estadoInventario);
+        }
+        if (cantidadSolicitada <= 0) {
+            throw new ReglaNegocioException("la cantidad solicitada debe ser mayor a cero");
+        }
+        if (cantidadSolicitada > this.cantidad) {
+            throw new ReglaNegocioException("stock insuficiente, disponible: " + this.cantidad + ", solicitado: " + cantidadSolicitada);
+        }
+        
+        this.cantidad -= cantidadSolicitada;
+        
+        Bien bienFraccionado = new Bien(cantidadSolicitada, this.categoria);
+        bienFraccionado.setDescripcion(this.descripcion);
+        bienFraccionado.setEstadoInventario(EstadoBien.ENTREGADO);
+        
+        if (this.fecVec != null) {
+            bienFraccionado.setFecVec(new Date(this.fecVec.getTime()));
+        }
+        if (this.fechaIngreso != null) {
+            bienFraccionado.setFechaIngreso(new Date(this.fechaIngreso.getTime()));
+        }
+        
+        return bienFraccionado;
+    }
+    
+    public CategoriaBien getCategoria() {
+        return categoria;
+    }
+    
+    public LocalDate getFechaVencimiento() {
+        return fecVec != null ? fecVec.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+    }
+    
+    public String obtenerDescripcion() {
+        return descripcion;
+    }
+    
+    private int idPedidoDonacion;
+    
+    public int getIdPedidoDonacion() {
+        return idPedidoDonacion;
+    }
+    
+    public void setIdPedidoDonacion(int idPedidoDonacion) {
+        this.idPedidoDonacion = idPedidoDonacion;
     }
     
     @Override
     public String toString() {
-        // Formato: "Descripción (Categoría) x Cantidad"
-        // Ejemplo: "Paquete de Arroz (Alimentos) x 2"
-        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripción";
-        return desc + " (" + describirCategoria() + ") x " + cantidad;
+        String desc = (descripcion != null && !descripcion.isEmpty()) ? descripcion : "Sin descripcion";
+        return desc + " (" + categoria.toString() + ") x " + cantidad;
     }
 
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
+		if (obj == null)
+			return false;
 		Bien other = (Bien) obj;
-		return cantidad == other.cantidad && categoria == other.categoria && tipo == other.tipo;
+		return cantidad == other.cantidad && categoria == other.categoria;
 	}
 
-    
+	@Override
+	public int hashCode() {
+		return java.util.Objects.hash(cantidad, categoria);
+	}
 }

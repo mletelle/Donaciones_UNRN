@@ -125,7 +125,7 @@ public class ListadoOrdenesAsignadasVoluntario extends JFrame {
             
             for (OrdenRetiroDTO orden : ordenes) {
                 // Se asume que getFechaCreacion() y getEstado() son Strings o tienen toString() adecuado
-                modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaCreacion(), orden.getEstado(), orden.getDescripcion()});
+                modeloTabla.addRow(new Object[]{orden.getId(), orden.getFechaFormateada(), orden.getEstado(), orden.getDescripcion()});
             }
         } catch (ObjetoNuloException ex) {
             // Manejo de la excepción custom para datos nulos

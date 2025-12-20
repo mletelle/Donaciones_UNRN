@@ -7,21 +7,15 @@ public class OrdenEntrega {
 
     private int id;
     private Date fechaGeneracion;
-    private int estado;
+    private EstadoEntrega estado;
     private Usuario beneficiario;
     private Usuario voluntario;
     private Vehiculo vehiculo;
     private List<Bien> bienes;
 
-    // Constantes de estado
-    public static final int ESTADO_PENDIENTE = 1;
-    public static final int ESTADO_COMPLETADO = 3;
-    public static final int ESTADO_CANCELADO = 4;
-
-    // Constructor para NUEVAS ordenes
     public OrdenEntrega(Usuario beneficiario, List<Bien> bienes) {
         this.fechaGeneracion = new Date();
-        this.estado = ESTADO_PENDIENTE;
+        this.estado = EstadoEntrega.PENDIENTE;
         this.beneficiario = beneficiario;
         this.bienes = bienes;
     }
@@ -42,12 +36,30 @@ public class OrdenEntrega {
         this.fechaGeneracion = fechaGeneracion;
     }
 
-    public int getEstado() {
+    public EstadoEntrega getEstado() {
         return estado;
     }
 
-    public void setEstado(int estado) {
+    public void forzarEstadoDesdeBD(EstadoEntrega estado) {
         this.estado = estado;
+    }
+    
+    private void transicionarA(EstadoEntrega nuevoEstado) {
+        if (!this.estado.esTransicionValida(nuevoEstado)) {
+            throw new IllegalStateException(
+                String.format("no se puede pasar la orden %d de %s a %s", 
+                this.id, this.estado, nuevoEstado)
+            );
+        }
+        this.estado = nuevoEstado;
+    }
+    
+    public void marcarComoCompletada() {
+        transicionarA(EstadoEntrega.COMPLETADO);
+    }
+    
+    public boolean estaPendiente() {
+        return this.estado == EstadoEntrega.PENDIENTE;
     }
 
     public Usuario getBeneficiario() {
@@ -80,13 +92,6 @@ public class OrdenEntrega {
 
     public void setBienes(List<Bien> bienes) {
         this.bienes = bienes;
-    }
-
-    public String obtenerEstadoString() {
-        if (estado == ESTADO_PENDIENTE) return "PENDIENTE";
-        if (estado == ESTADO_COMPLETADO) return "COMPLETADO";
-        if (estado == ESTADO_CANCELADO) return "CANCELADO";
-        return "DESCONOCIDO";
     }
 
     public void asignarRecursos(Usuario voluntario, Vehiculo vehiculo) {

@@ -25,7 +25,7 @@ public class ListadoVisitasDialog extends JDialog {
             setModal(true);
             setLocationRelativeTo(null);
     
-            String[] columnNames = {"Fecha", "Donante", "Resultado", "Bienes Retirados", "Observaciones"};
+            String[] columnNames = {"Fecha", "Donante", "Resultado", "Observaciones"};
             DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
     
             List<VisitaDTO> visitas = api.obtenerVisitasPorVoluntario(voluntario); 
@@ -44,20 +44,11 @@ public class ListadoVisitasDialog extends JDialog {
                 if (visita.getFechaDeVisita() == null) {
                     throw new ObjetoNuloException("Una visita no pudo ser cargada debido a que la fecha es nula. ID de la visita: [Pendiente de implementar ID]");
                 }
-
-                // Formatear la lista de bienes como texto
-                String bienesTexto;
-                if (visita.getBienesRetirados() != null && !visita.getBienesRetirados().isEmpty()) {
-                    bienesTexto = String.join(", ", visita.getBienesRetirados());
-                } else {
-                    bienesTexto = "-";
-                }
                 
                 tableModel.addRow(new Object[]{
                     visita.getFechaDeVisita(),
                     visita.getDonante() != null ? visita.getDonante() : "Sin datos",
                     visita.getResultado() != null ? visita.getResultado() : "Sin resultado",
-                    bienesTexto,
                     visita.getObservacion() != null ? visita.getObservacion() : ""
                 });
             }

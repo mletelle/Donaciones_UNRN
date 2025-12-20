@@ -193,14 +193,13 @@ public class RegistrarVisitaDialog extends JDialog {
                     // la gui solo envia los datos primitivos que tiene
                     // la api es responsable de construir la entidad
                     api.registrarVisita(idOrden, idPedido, fechaHora, resultado, observaciones);
-                    
                     return "OK";
                 }
 
                 @Override
                 protected void done() {
                     try {
-                        get(); // Lanza la excepción ocurrida en doInBackground()
+                        get(); 
                         
                         JOptionPane.showMessageDialog(RegistrarVisitaDialog.this, "Visita registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                         
